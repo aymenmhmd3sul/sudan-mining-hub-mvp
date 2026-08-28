@@ -7,6 +7,7 @@ def test_security_module():
     raw_pwd = "SecretPassword123!"
     hashed = get_password_hash(raw_pwd)
     assert verify_password(raw_pwd, hashed), "فشل التحقق من كلمة المرور المشفّرة!"
+    assert not verify_password("WrongPassword", hashed), "تم قبول كلمة مرور خاطئة!"
     print("[1/2] تم التشفير والتحقق من كلمة المرور بنجاح.")
 
     # 2. اختبار توليد وفك تشفير Token
