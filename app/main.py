@@ -1,11 +1,10 @@
 from fastapi import FastAPI
+from app.routers import auth
 
-app = FastAPI(
-    title="Sudan Mining Hub API",
-    version="0.1.0",
-    description="Backend API for Sudan Mining Hub MVP"
-)
+app = FastAPI(title="Sudan Mining Hub MVP")
+
+app.include_router(auth.router)
 
 @app.get("/")
 def read_root():
-    return {"status": "healthy", "service": "Sudan Mining Hub MVP"}
+    return {"message": "Welcome to Sudan Mining Hub API"}
