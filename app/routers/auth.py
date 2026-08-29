@@ -134,6 +134,18 @@ def get_current_user(
     return user
 
 
+def require_role(*allowed_roles):
+    def role_guard(user: UserModel = Depends(get_current_user)):
+        if user.role.value not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        return user
+
+    return role_guard
+
+
 @router.get("/me", response_model=UserOut)
 def current_user(user: UserModel = Depends(get_current_user)):
     return user
