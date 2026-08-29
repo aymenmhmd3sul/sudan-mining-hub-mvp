@@ -1,5 +1,46 @@
 {
   "app.name": "Sudan Mining Hub",
+
+  "gateway.tagline": "Sudan Mining Platform",
+  "gateway.eyebrow": "Mining • Marketplace • Sudan",
+  "gateway.title": "Your gateway to Sudan's mining market",
+  "gateway.description": "One platform for mining assets, equipment, services, and commercial opportunities in a structured and secure environment.",
+  "gateway.explore": "Explore the platform",
+  "gateway.login": "Sign in",
+
+  "modules.marketplace.title": "Marketplace",
+  "modules.marketplace.description": "Assets, equipment, and services",
+
+  "modules.requests.title": "Requests",
+  "modules.requests.description": "Buyer requests and opportunities",
+
+  "modules.negotiation.title": "Negotiation",
+  "modules.negotiation.description": "Private and structured negotiation",
+
+  "modules.services.title": "Services",
+  "modules.services.description": "Mining sector solutions and services",
+
+  "pages.login.eyebrow": "AUTHENTICATION",
+  "pages.login.title": "Sign in",
+  "pages.login.description": "Sign in to your Sudan Mining Hub account.",
+
+  "pages.marketplace.eyebrow": "MARKETPLACE",
+  "pages.marketplace.title": "Marketplace",
+  "pages.marketplace.description": "Mining assets, equipment, and services.",
+
+  "pages.requests.eyebrow": "REQUESTS",
+  "pages.requests.title": "Requests",
+  "pages.requests.description": "Buyer requests and commercial opportunities.",
+
+  "pages.negotiation.eyebrow": "NEGOTIATION",
+  "pages.negotiation.title": "Negotiation",
+  "pages.negotiation.description": "A private and structured negotiation space for authorized parties.",
+
+  "pages.services.eyebrow": "SERVICES",
+  "pages.services.title": "Services",
+  "pages.services.description": "Solutions and services for the mining sector.",
+
+  "common.back_to_gateway": "Back to gateway",
   "common.welcome": "Welcome to Sudan Mining Hub",
   "common.success": "Operation completed successfully",
   "common.error": "An error occurred"

@@ -1,0 +1,138 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+<main class="gateway">
+
+    <header class="gateway-header">
+
+        <div class="brand">
+            <div class="brand-mark">SMH</div>
+
+            <div class="brand-copy">
+                <strong>{{ t("app.name") }}</strong>
+                <span data-i18n="gateway.tagline">
+                    {{ t("gateway.tagline") }}
+                </span>
+            </div>
+        </div>
+
+        <button
+            id="languageToggle"
+            class="language-toggle"
+            type="button"
+            aria-label="Change language"
+        >
+            <span id="languageLabel">
+                {% if lang == "ar" %}EN{% else %}العربية{% endif %}
+            </span>
+        </button>
+
+    </header>
+
+
+    <section class="gateway-hero">
+
+        <div class="hero-content">
+
+            <span class="eyebrow" data-i18n="gateway.eyebrow">
+                {{ t("gateway.eyebrow") }}
+            </span>
+
+            <h1 data-i18n="gateway.title">
+                {{ t("gateway.title") }}
+            </h1>
+
+            <p data-i18n="gateway.description">
+                {{ t("gateway.description") }}
+            </p>
+
+            <div class="hero-actions">
+
+                <button
+                    id="exploreBtn"
+                    class="btn btn-primary"
+                    type="button"
+                >
+                    <span data-i18n="gateway.explore">
+                        {{ t("gateway.explore") }}
+                    </span>
+                </button>
+
+                <button
+                    id="loginBtn"
+                    class="btn btn-secondary"
+                    type="button"
+                >
+                    <span data-i18n="gateway.login">
+                        {{ t("gateway.login") }}
+                    </span>
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section
+        id="gatewayModules"
+        class="gateway-modules"
+        aria-label="Platform modules"
+    >
+
+        <button class="module-card" data-module="marketplace">
+            <span class="module-icon">01</span>
+            <strong data-i18n="modules.marketplace.title">
+                {{ t("modules.marketplace.title") }}
+            </strong>
+            <span data-i18n="modules.marketplace.description">
+                {{ t("modules.marketplace.description") }}
+            </span>
+        </button>
+
+        <button class="module-card" data-module="requests">
+            <span class="module-icon">02</span>
+            <strong data-i18n="modules.requests.title">
+                {{ t("modules.requests.title") }}
+            </strong>
+            <span data-i18n="modules.requests.description">
+                {{ t("modules.requests.description") }}
+            </span>
+        </button>
+
+        <button class="module-card" data-module="negotiation">
+            <span class="module-icon">03</span>
+            <strong data-i18n="modules.negotiation.title">
+                {{ t("modules.negotiation.title") }}
+            </strong>
+            <span data-i18n="modules.negotiation.description">
+                {{ t("modules.negotiation.description") }}
+            </span>
+        </button>
+
+        <button class="module-card" data-module="services">
+            <span class="module-icon">04</span>
+            <strong data-i18n="modules.services.title">
+                {{ t("modules.services.title") }}
+            </strong>
+            <span data-i18n="modules.services.description">
+                {{ t("modules.services.description") }}
+            </span>
+        </button>
+
+    </section>
+
+
+    <section
+        id="gatewayStatus"
+        class="gateway-status"
+        aria-live="polite"
+        hidden
+    >
+    </section>
+
+</main>
+
+{% endblock %}

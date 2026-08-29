@@ -1,0 +1,29 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="gateway">
+    <section class="gateway-hero">
+        <div class="hero-content">
+
+            <span class="eyebrow">
+                {{ t("pages.marketplace.eyebrow") }}
+            </span>
+
+            <h1>
+                {{ t("pages.marketplace.title") }}
+            </h1>
+
+            <p>
+                {{ t("pages.marketplace.description") }}
+            </p>
+
+            <div class="hero-actions">
+                <a class="btn btn-secondary" href="/">
+                    {{ t("common.back_to_gateway") }}
+                </a>
+            </div>
+
+        </div>
+    </section>
+</main>
+{% endblock %}
