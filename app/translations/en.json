@@ -57,5 +57,7 @@
   "marketplace.empty": "No results",
   "marketplace.error": "Unable to load results",
   "marketplace.result_singular": "result",
-  "marketplace.result_plural": "results"
+  "marketplace.result_plural": "results",
+  "marketplace.start_negotiation": "Start negotiation",
+  "marketplace.negotiation_failed": "Unable to start negotiation"
 }

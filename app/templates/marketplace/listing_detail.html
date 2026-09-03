@@ -2,10 +2,8 @@
 
 {% block content %}
 <main class="marketplace-page">
-
     <section class="marketplace-hero">
         <div class="marketplace-hero-content">
-
             <span class="marketplace-eyebrow">
                 {{ t("pages.marketplace.eyebrow") }}
             </span>
@@ -26,7 +24,6 @@
                     {{ t("marketplace.back_to_marketplace") }}
                 </a>
             </div>
-
         </div>
     </section>
 
@@ -34,9 +31,7 @@
         class="marketplace-browser marketplace-listing-detail"
         aria-label="{{ listing.title }}"
     >
-
         <article class="marketplace-listing-detail-card">
-
             {% if listing.description %}
             <div class="marketplace-listing-detail-section">
                 <h2>{{ t("marketplace.description_label") }}</h2>
@@ -45,7 +40,6 @@
             {% endif %}
 
             <div class="marketplace-listing-detail-grid">
-
                 {% if listing.price is not none %}
                 <div class="marketplace-listing-detail-item">
                     <span>{{ t("marketplace.price_label") }}</span>
@@ -70,18 +64,76 @@
                     <span>{{ t("marketplace.listing_id_label") }}</span>
                     <strong>#{{ listing.id }}</strong>
                 </div>
-
             </div>
 
+            {% if listing.is_negotiable %}
+            <div class="marketplace-hero-actions">
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="startNegotiation"
+                    data-listing-id="{{ listing.id }}" data-error-message="{{ t("marketplace.negotiation_failed") }}"
+                >
+                    {{ t("marketplace.start_negotiation") }}
+                </button>
+
+                <a class="btn btn-secondary" href="/marketplace">
+                    {{ t("marketplace.back_to_marketplace") }}
+                </a>
+            </div>
+            {% else %}
+            <div class="marketplace-hero-actions">
+                <a class="btn btn-primary" href="/marketplace">
+                    {{ t("marketplace.back_to_marketplace") }}
+                </a>
+            </div>
+            {% endif %}
         </article>
-
-        <div class="marketplace-hero-actions">
-            <a class="btn btn-primary" href="/marketplace">
-                {{ t("marketplace.back_to_marketplace") }}
-            </a>
-        </div>
-
     </section>
-
 </main>
+
+<script>
+(function () {
+    const button = document.getElementById("startNegotiation");
+    if (!button) return;
+
+    button.addEventListener("click", async function () {
+        const listingId = button.dataset.listingId;
+        if (!listingId) return;
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(
+                "/api/v1/listings/" +
+                encodeURIComponent(listingId) +
+                "/negotiate",
+                {
+                    method: "POST",
+                    credentials: "same-origin"
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "/login";
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || button.dataset.errorMessage
+                );
+            }
+
+            window.location.href = "/negotiation";
+        } catch (error) {
+            console.error("Negotiation error:", error);
+            button.disabled = false;
+            alert(error.message);
+        }
+    });
+})();
+</script>
 {% endblock %}

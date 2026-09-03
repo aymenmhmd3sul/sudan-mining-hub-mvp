@@ -57,5 +57,7 @@
   "marketplace.empty": "لا توجد نتائج",
   "marketplace.error": "تعذر تحميل النتائج",
   "marketplace.result_singular": "نتيجة",
-  "marketplace.result_plural": "نتائج"
+  "marketplace.result_plural": "نتائج",
+  "marketplace.start_negotiation": "بدء التفاوض",
+  "marketplace.negotiation_failed": "تعذر بدء التفاوض"
 }
