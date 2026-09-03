@@ -43,5 +43,11 @@
   "common.back_to_gateway": "Back to gateway",
   "common.welcome": "Welcome to Sudan Mining Hub",
   "common.success": "Operation completed successfully",
-  "common.error": "An error occurred"
+  "common.error": "An error occurred",
+  "marketplace.description_label": "Description",
+  "marketplace.price_label": "Price",
+  "marketplace.category_label": "Category",
+  "marketplace.listing_id_label": "Listing ID",
+  "marketplace.back_to_marketplace": "Back to marketplace",
+  "marketplace.negotiable": "Negotiable"
 }

@@ -43,5 +43,11 @@
   "common.back_to_gateway": "العودة إلى البوابة",
   "common.welcome": "مرحباً بك في منصة التعدين السودانية",
   "common.success": "تمت العملية بنجاح",
-  "common.error": "حدث خطأ"
+  "common.error": "حدث خطأ",
+  "marketplace.description_label": "الوصف",
+  "marketplace.price_label": "السعر",
+  "marketplace.category_label": "الفئة",
+  "marketplace.listing_id_label": "رقم الإعلان",
+  "marketplace.back_to_marketplace": "العودة إلى السوق",
+  "marketplace.negotiable": "قابل للتفاوض"
 }

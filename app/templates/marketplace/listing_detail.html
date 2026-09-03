@@ -1,0 +1,87 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="marketplace-page">
+
+    <section class="marketplace-hero">
+        <div class="marketplace-hero-content">
+
+            <span class="marketplace-eyebrow">
+                {{ t("pages.marketplace.eyebrow") }}
+            </span>
+
+            <h1>{{ listing.title }}</h1>
+
+            <p>
+                {% if listing.listing_type %}
+                    {{ listing.listing_type.value }}
+                {% endif %}
+                {% if listing.is_negotiable %}
+                    · {{ t("marketplace.negotiable") }}
+                {% endif %}
+            </p>
+
+            <div class="marketplace-hero-actions">
+                <a class="btn btn-secondary" href="/marketplace">
+                    {{ t("marketplace.back_to_marketplace") }}
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+    <section
+        class="marketplace-browser marketplace-listing-detail"
+        aria-label="{{ listing.title }}"
+    >
+
+        <article class="marketplace-listing-detail-card">
+
+            {% if listing.description %}
+            <div class="marketplace-listing-detail-section">
+                <h2>{{ t("marketplace.description_label") }}</h2>
+                <p>{{ listing.description }}</p>
+            </div>
+            {% endif %}
+
+            <div class="marketplace-listing-detail-grid">
+
+                {% if listing.price is not none %}
+                <div class="marketplace-listing-detail-item">
+                    <span>{{ t("marketplace.price_label") }}</span>
+                    <strong>
+                        {{ listing.price }}
+                        {{ listing.currency }}
+                    </strong>
+                </div>
+                {% endif %}
+
+                <div class="marketplace-listing-detail-item">
+                    <span>{{ t("marketplace.type_label") }}</span>
+                    <strong>{{ listing.listing_type.value }}</strong>
+                </div>
+
+                <div class="marketplace-listing-detail-item">
+                    <span>{{ t("marketplace.category_label") }}</span>
+                    <strong>{{ listing.category.name }}</strong>
+                </div>
+
+                <div class="marketplace-listing-detail-item">
+                    <span>{{ t("marketplace.listing_id_label") }}</span>
+                    <strong>#{{ listing.id }}</strong>
+                </div>
+
+            </div>
+
+        </article>
+
+        <div class="marketplace-hero-actions">
+            <a class="btn btn-primary" href="/marketplace">
+                {{ t("marketplace.back_to_marketplace") }}
+            </a>
+        </div>
+
+    </section>
+
+</main>
+{% endblock %}
