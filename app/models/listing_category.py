@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 
 from app.db.session import Base
@@ -23,3 +24,24 @@ class ListingCategory(Base):
     description = Column(String, nullable=True)
 
     sort_order = Column(Integer, nullable=True)
+
+    parent = relationship(
+        "ListingCategory",
+        remote_side=[category_id],
+        back_populates="children",
+    )
+
+    children = relationship(
+        "ListingCategory",
+        back_populates="parent",
+    )
+
+    listings = relationship(
+        "Listing",
+        back_populates="category",
+    )
+
+    request_items = relationship(
+        "RequestItem",
+        back_populates="category",
+    )

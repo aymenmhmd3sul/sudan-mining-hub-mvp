@@ -1,0 +1,38 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="gateway">
+    <section class="gateway-hero">
+
+        <div class="hero-content">
+
+            <span class="eyebrow">
+                ADMIN CONTROL
+            </span>
+
+            <h1>
+                لوحة المشرف
+            </h1>
+
+            <p>
+                مرحبًا {{ user.full_name or user.email }}.
+                تم التحقق من صلاحيات حساب المشرف بنجاح.
+            </p>
+
+            <div class="hero-actions">
+
+                <a class="btn btn-secondary" href="/">
+                    العودة إلى البوابة
+                </a>
+
+                <a class="btn btn-primary" href="/auth/me">
+                    التحقق من الحساب
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+</main>
+{% endblock %}
