@@ -59,5 +59,16 @@
   "marketplace.result_singular": "result",
   "marketplace.result_plural": "results",
   "marketplace.start_negotiation": "Start negotiation",
-  "marketplace.negotiation_failed": "Unable to start negotiation"
+  "marketplace.negotiation_failed": "Unable to start negotiation",
+  "negotiation.listing": "Listing",
+  "negotiation.messages": "Messages",
+  "negotiation.you": "You",
+  "negotiation.other_party": "Other party",
+  "negotiation.no_messages": "No messages yet.",
+  "negotiation.message_placeholder": "Write your message",
+  "negotiation.send": "Send",
+  "negotiation.offers": "Offers",
+  "negotiation.no_offers": "No offers yet.",
+  "negotiation.room_required": "Negotiation room ID is required.",
+  "negotiation.send_failed": "Unable to send message."
 }

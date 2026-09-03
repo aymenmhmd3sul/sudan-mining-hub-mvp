@@ -1,29 +1,168 @@
 {% extends "base/base.html" %}
 
 {% block content %}
-<main class="gateway">
-    <section class="gateway-hero">
-        <div class="hero-content">
-
-            <span class="eyebrow">
+<main class="marketplace-page">
+    <section class="marketplace-hero">
+        <div class="marketplace-hero-content">
+            <span class="marketplace-eyebrow">
                 {{ t("pages.negotiation.eyebrow") }}
             </span>
+            <h1>{{ t("pages.negotiation.title") }}</h1>
 
-            <h1>
-                {{ t("pages.negotiation.title") }}
-            </h1>
+            {% if listing %}
+            <p>{{ listing.title }}</p>
+            {% endif %}
 
-            <p>
-                {{ t("pages.negotiation.description") }}
-            </p>
-
-            <div class="hero-actions">
-                <a class="btn btn-secondary" href="/">
-                    {{ t("common.back_to_gateway") }}
+            <div class="marketplace-hero-actions">
+                <a class="btn btn-secondary" href="/marketplace">
+                    {{ t("marketplace.back_to_marketplace") }}
                 </a>
             </div>
-
         </div>
     </section>
+
+    <section class="marketplace-browser marketplace-listing-detail">
+        <article class="marketplace-listing-detail-card">
+
+            {% if listing %}
+            <div class="marketplace-listing-detail-section">
+                <h2>{{ t("negotiation.listing") }}</h2>
+                <p>{{ listing.title }}</p>
+                {% if listing.description %}
+                <p>{{ listing.description }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="marketplace-listing-detail-section">
+                <h2>{{ t("negotiation.messages") }}</h2>
+
+                <div id="negotiationMessages">
+                    {% for message in messages %}
+                    <div class="marketplace-listing-detail-item">
+                        <span>
+                            {% if message.sender_id == current_user.id %}
+                                {{ t("negotiation.you") }}
+                            {% else %}
+                                {{ t("negotiation.other_party") }}
+                            {% endif %}
+                        </span>
+                        <strong>{{ message.body }}</strong>
+                    </div>
+                    {% else %}
+                    <p>{{ t("negotiation.no_messages") }}</p>
+                    {% endfor %}
+                </div>
+
+                <form id="negotiationMessageForm">
+                    <label for="negotiationMessage">
+                        {{ t("negotiation.message_placeholder") }}
+                    </label>
+                    <textarea
+                        id="negotiationMessage"
+                        name="body"
+                        rows="4"
+                        required
+                    ></textarea>
+
+                    <div class="marketplace-hero-actions">
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            id="sendNegotiationMessage"
+                        >
+                            {{ t("negotiation.send") }}
+                        </button>
+                    </div>
+
+                    <p id="negotiationMessageError" hidden></p>
+                </form>
+            </div>
+
+            <div class="marketplace-listing-detail-section">
+                <h2>{{ t("negotiation.offers") }}</h2>
+
+                {% for offer in offers %}
+                <div class="marketplace-listing-detail-item">
+                    <span>{{ offer.status.value }}</span>
+                    <strong>
+                        {{ offer.amount or "-" }}
+                        {{ offer.currency or "" }}
+                    </strong>
+                    {% if offer.message %}
+                    <p>{{ offer.message }}</p>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p>{{ t("negotiation.no_offers") }}</p>
+                {% endfor %}
+            </div>
+
+        </article>
+    </section>
 </main>
+
+<script>
+(function () {
+    const form = document.getElementById("negotiationMessageForm");
+    const textarea = document.getElementById("negotiationMessage");
+    const button = document.getElementById("sendNegotiationMessage");
+    const errorBox = document.getElementById("negotiationMessageError");
+
+    if (!form || !textarea || !button) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("room_id");
+
+    if (!roomId) {
+        button.disabled = true;
+        errorBox.textContent = "{{ t('negotiation.room_required') }}";
+        errorBox.hidden = false;
+        return;
+    }
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const body = textarea.value.trim();
+        if (!body) return;
+
+        button.disabled = true;
+        errorBox.hidden = true;
+
+        try {
+            const response = await fetch(
+                "/api/v1/negotiation/" +
+                encodeURIComponent(roomId) +
+                "/messages?body=" +
+                encodeURIComponent(body),
+                {
+                    method: "POST",
+                    credentials: "same-origin"
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "/login";
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || "{{ t('negotiation.send_failed') }}"
+                );
+            }
+
+            window.location.reload();
+        } catch (error) {
+            console.error("Negotiation message error:", error);
+            errorBox.textContent = error.message;
+            errorBox.hidden = false;
+            button.disabled = false;
+        }
+    });
+})();
+</script>
 {% endblock %}

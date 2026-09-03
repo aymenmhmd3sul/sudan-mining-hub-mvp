@@ -59,5 +59,16 @@
   "marketplace.result_singular": "نتيجة",
   "marketplace.result_plural": "نتائج",
   "marketplace.start_negotiation": "بدء التفاوض",
-  "marketplace.negotiation_failed": "تعذر بدء التفاوض"
+  "marketplace.negotiation_failed": "تعذر بدء التفاوض",
+  "negotiation.listing": "الإعلان",
+  "negotiation.messages": "الرسائل",
+  "negotiation.you": "أنت",
+  "negotiation.other_party": "الطرف الآخر",
+  "negotiation.no_messages": "لا توجد رسائل بعد.",
+  "negotiation.message_placeholder": "اكتب رسالتك",
+  "negotiation.send": "إرسال",
+  "negotiation.offers": "العروض",
+  "negotiation.no_offers": "لا توجد عروض بعد.",
+  "negotiation.room_required": "معرّف غرفة التفاوض مطلوب.",
+  "negotiation.send_failed": "تعذر إرسال الرسالة."
 }

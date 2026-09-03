@@ -127,7 +127,9 @@
                 );
             }
 
-            window.location.href = "/negotiation";
+            window.location.href =
+                "/negotiation?room_id=" +
+                encodeURIComponent(data.id);
         } catch (error) {
             console.error("Negotiation error:", error);
             button.disabled = false;
