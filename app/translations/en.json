@@ -1,45 +1,34 @@
 {
   "app.name": "Sudan Mining Hub",
-
   "gateway.tagline": "Sudan Mining Platform",
   "gateway.eyebrow": "Mining • Marketplace • Sudan",
   "gateway.title": "Your gateway to Sudan's mining market",
   "gateway.description": "One platform for mining assets, equipment, services, and commercial opportunities in a structured and secure environment.",
   "gateway.explore": "Explore the platform",
   "gateway.login": "Sign in",
-
   "modules.marketplace.title": "Marketplace",
   "modules.marketplace.description": "Assets, equipment, and services",
-
   "modules.requests.title": "Requests",
   "modules.requests.description": "Buyer requests and opportunities",
-
   "modules.negotiation.title": "Negotiation",
   "modules.negotiation.description": "Private and structured negotiation",
-
   "modules.services.title": "Services",
   "modules.services.description": "Mining sector solutions and services",
-
   "pages.login.eyebrow": "AUTHENTICATION",
   "pages.login.title": "Sign in",
   "pages.login.description": "Sign in to your Sudan Mining Hub account.",
-
   "pages.marketplace.eyebrow": "MARKETPLACE",
   "pages.marketplace.title": "Marketplace",
   "pages.marketplace.description": "Mining assets, equipment, and services.",
-
   "pages.requests.eyebrow": "REQUESTS",
   "pages.requests.title": "Requests",
   "pages.requests.description": "Buyer requests and commercial opportunities.",
-
   "pages.negotiation.eyebrow": "NEGOTIATION",
   "pages.negotiation.title": "Negotiation",
   "pages.negotiation.description": "A private and structured negotiation space for authorized parties.",
-
   "pages.services.eyebrow": "SERVICES",
   "pages.services.title": "Services",
   "pages.services.description": "Solutions and services for the mining sector.",
-
   "common.back_to_gateway": "Back to gateway",
   "common.welcome": "Welcome to Sudan Mining Hub",
   "common.success": "Operation completed successfully",
@@ -49,5 +38,24 @@
   "marketplace.category_label": "Category",
   "marketplace.listing_id_label": "Listing ID",
   "marketplace.back_to_marketplace": "Back to marketplace",
-  "marketplace.negotiable": "Negotiable"
+  "marketplace.negotiable": "Negotiable",
+  "marketplace.search_label": "Search marketplace",
+  "marketplace.search_button": "Search",
+  "marketplace.type_label": "Type",
+  "marketplace.all_types": "All types",
+  "marketplace.type_asset": "Asset",
+  "marketplace.type_equipment": "Equipment",
+  "marketplace.type_service": "Service",
+  "marketplace.type_opportunity": "Opportunity",
+  "marketplace.loading": "Loading listings...",
+  "marketplace.empty_title": "No listings found",
+  "marketplace.empty_description": "No matching listings were found.",
+  "marketplace.error_title": "Unable to load marketplace",
+  "marketplace.error_description": "An error occurred while loading listings. Please try again.",
+  "marketplace.retry": "Retry",
+  "marketplace.search_placeholder": "Search for an asset, equipment, or service...",
+  "marketplace.empty": "No results",
+  "marketplace.error": "Unable to load results",
+  "marketplace.result_singular": "result",
+  "marketplace.result_plural": "results"
 }

@@ -1,45 +1,34 @@
 {
   "app.name": "Sudan Mining Hub",
-
   "gateway.tagline": "منصة التعدين السودانية",
   "gateway.eyebrow": "التعدين • السوق • السودان",
   "gateway.title": "بوابتك إلى سوق التعدين السوداني",
   "gateway.description": "منصة واحدة للوصول إلى الأصول التعدينية والخدمات والفرص التجارية بطريقة منظمة وآمنة.",
   "gateway.explore": "استكشف المنصة",
   "gateway.login": "تسجيل الدخول",
-
   "modules.marketplace.title": "السوق",
   "modules.marketplace.description": "الأصول والمعدات والخدمات",
-
   "modules.requests.title": "الطلبات",
   "modules.requests.description": "طلبات المشترين والفرص",
-
   "modules.negotiation.title": "التفاوض",
   "modules.negotiation.description": "تفاوض خاص ومنظم",
-
   "modules.services.title": "الخدمات",
   "modules.services.description": "حلول وخدمات قطاع التعدين",
-
   "pages.login.eyebrow": "المصادقة",
   "pages.login.title": "تسجيل الدخول",
   "pages.login.description": "صفحة الدخول إلى حسابك في منصة التعدين السودانية.",
-
   "pages.marketplace.eyebrow": "السوق",
   "pages.marketplace.title": "السوق",
   "pages.marketplace.description": "الأصول والمعدات والخدمات التعدينية.",
-
   "pages.requests.eyebrow": "الطلبات",
   "pages.requests.title": "الطلبات",
   "pages.requests.description": "طلبات المشترين والفرص التجارية.",
-
   "pages.negotiation.eyebrow": "التفاوض",
   "pages.negotiation.title": "التفاوض",
   "pages.negotiation.description": "مساحة التفاوض الخاصة والمنظمة بين الأطراف المصرح لها.",
-
   "pages.services.eyebrow": "الخدمات",
   "pages.services.title": "الخدمات",
   "pages.services.description": "حلول وخدمات قطاع التعدين.",
-
   "common.back_to_gateway": "العودة إلى البوابة",
   "common.welcome": "مرحباً بك في منصة التعدين السودانية",
   "common.success": "تمت العملية بنجاح",
@@ -49,5 +38,24 @@
   "marketplace.category_label": "الفئة",
   "marketplace.listing_id_label": "رقم الإعلان",
   "marketplace.back_to_marketplace": "العودة إلى السوق",
-  "marketplace.negotiable": "قابل للتفاوض"
+  "marketplace.negotiable": "قابل للتفاوض",
+  "marketplace.search_label": "ابحث في السوق",
+  "marketplace.search_button": "بحث",
+  "marketplace.type_label": "النوع",
+  "marketplace.all_types": "كل الأنواع",
+  "marketplace.type_asset": "أصل",
+  "marketplace.type_equipment": "معدات",
+  "marketplace.type_service": "خدمة",
+  "marketplace.type_opportunity": "فرصة",
+  "marketplace.loading": "جارٍ تحميل الإعلانات...",
+  "marketplace.empty_title": "لا توجد إعلانات",
+  "marketplace.empty_description": "لم يتم العثور على إعلانات مطابقة.",
+  "marketplace.error_title": "تعذر تحميل السوق",
+  "marketplace.error_description": "حدث خطأ أثناء تحميل الإعلانات. حاول مرة أخرى.",
+  "marketplace.retry": "إعادة المحاولة",
+  "marketplace.search_placeholder": "ابحث عن أصل أو معدات أو خدمة...",
+  "marketplace.empty": "لا توجد نتائج",
+  "marketplace.error": "تعذر تحميل النتائج",
+  "marketplace.result_singular": "نتيجة",
+  "marketplace.result_plural": "نتائج"
 }
