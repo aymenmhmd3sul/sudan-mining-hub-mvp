@@ -27,7 +27,19 @@ def load_translations(lang: str) -> dict:
     path = BASE_DIR / f"{lang}.json"
 
     with path.open(encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+
+    def flatten(value: dict, prefix: str = "") -> dict:
+        result = {}
+        for key, item in value.items():
+            full_key = f"{prefix}.{key}" if prefix else key
+            if isinstance(item, dict):
+                result.update(flatten(item, full_key))
+            else:
+                result[full_key] = item
+        return result
+
+    return flatten(data)
 
 
 def translate(key: str, lang: str = DEFAULT_LANGUAGE) -> str:
