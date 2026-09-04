@@ -28,6 +28,12 @@ class BuyerRequest(Base):
         index=True,
     )
 
+    listing_id = Column(
+        Integer,
+        ForeignKey("listings.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
 
@@ -60,6 +66,10 @@ class BuyerRequest(Base):
         foreign_keys=[buyer_id],
     )
 
+    listing = relationship(
+        "Listing",
+        foreign_keys=[listing_id],
+    )
     items = relationship(
         "RequestItem",
         back_populates="request",

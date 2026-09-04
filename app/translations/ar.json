@@ -70,5 +70,7 @@
   "negotiation.offers": "العروض",
   "negotiation.no_offers": "لا توجد عروض بعد.",
   "negotiation.room_required": "معرّف غرفة التفاوض مطلوب.",
-  "negotiation.send_failed": "تعذر إرسال الرسالة."
+  "negotiation.send_failed": "تعذر إرسال الرسالة.",
+  "negotiation.error": "تعذر تنفيذ العملية",
+  "negotiation.close": "حسنًا"
 }

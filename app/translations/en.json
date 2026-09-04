@@ -70,5 +70,7 @@
   "negotiation.offers": "Offers",
   "negotiation.no_offers": "No offers yet.",
   "negotiation.room_required": "Negotiation room ID is required.",
-  "negotiation.send_failed": "Unable to send message."
+  "negotiation.send_failed": "Unable to send message.",
+  "negotiation.error": "Operation failed",
+  "negotiation.close": "OK"
 }
