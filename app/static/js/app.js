@@ -69,7 +69,20 @@
         });
     }
 
-    function bindModuleCards() {
+    function bindRegisterButton() {
+    const registerBtn =
+        document.getElementById("registerBtn");
+
+    if (!registerBtn) {
+        return;
+    }
+
+    registerBtn.addEventListener("click", function () {
+        window.location.href = "/register";
+    });
+}
+
+function bindModuleCards() {
         const moduleRoutes = {
             marketplace: "/marketplace",
             requests: "/requests",
@@ -350,6 +363,7 @@
         bindLanguageToggle();
         bindExploreButton();
         bindLoginButton();
+    bindRegisterButton();
         bindModuleCards();
         bindMarketplace();
     }

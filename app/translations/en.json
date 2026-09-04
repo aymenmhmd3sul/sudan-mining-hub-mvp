@@ -105,5 +105,6 @@
       "title": "Create your Sudan Mining Hub account",
       "description": "Create an account to access mining market services and products."
     }
-  }
+  },
+  "gateway.register": "Create account"
 }

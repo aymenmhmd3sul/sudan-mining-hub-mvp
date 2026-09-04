@@ -105,5 +105,6 @@
       "title": "أنشئ حسابك في Sudan Mining Hub",
       "description": "أنشئ حسابك للوصول إلى خدمات ومنتجات سوق التعدين."
     }
-  }
+  },
+  "gateway.register": "إنشاء حساب"
 }
