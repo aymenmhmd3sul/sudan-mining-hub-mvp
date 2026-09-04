@@ -72,5 +72,38 @@
   "negotiation.room_required": "معرّف غرفة التفاوض مطلوب.",
   "negotiation.send_failed": "تعذر إرسال الرسالة.",
   "negotiation.error": "تعذر تنفيذ العملية",
-  "negotiation.close": "حسنًا"
+  "negotiation.close": "حسنًا",
+  "auth": {
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "show_password": "إظهار كلمة المرور",
+    "hide_password": "إخفاء كلمة المرور",
+    "login": "تسجيل الدخول",
+    "logging_in": "جارٍ تسجيل الدخول...",
+    "login_failed": "فشل تسجيل الدخول",
+    "token_missing": "لم يتم استلام رمز المصادقة",
+    "user_check_failed": "تعذر التحقق من بيانات المستخدم",
+    "login_success": "تم تسجيل الدخول بنجاح",
+    "role_route_missing": "لا يوجد مسار مناسب لهذا الدور",
+    "full_name": "الاسم الكامل",
+    "full_name_placeholder": "أدخل اسمك الكامل",
+    "phone_number": "رقم الهاتف",
+    "phone_placeholder": "أدخل رقم الهاتف",
+    "role": "نوع الحساب",
+    "role_buyer": "مشتري",
+    "role_merchant": "تاجر",
+    "role_agent": "وكيل",
+    "register": "إنشاء الحساب",
+    "have_account": "لديك حساب بالفعل؟ تسجيل الدخول",
+    "registering": "جارٍ إنشاء الحساب...",
+    "registration_failed": "فشل إنشاء الحساب",
+    "registration_success": "تم إنشاء الحساب بنجاح"
+  },
+  "pages": {
+    "register": {
+      "eyebrow": "إنشاء حساب",
+      "title": "أنشئ حسابك في Sudan Mining Hub",
+      "description": "أنشئ حسابك للوصول إلى خدمات ومنتجات سوق التعدين."
+    }
+  }
 }

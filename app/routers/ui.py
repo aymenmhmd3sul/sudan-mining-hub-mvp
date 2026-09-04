@@ -34,6 +34,14 @@ def render(request: Request, template_name: str, title_key: str):
     )
 
 
+@router.get("/register")
+def register_page(request: Request):
+    return render(
+        request,
+        "auth/register.html",
+        "pages.register.title",
+    )
+
 @router.get("/login")
 def login_page(request: Request):
     return render(

@@ -72,5 +72,38 @@
   "negotiation.room_required": "Negotiation room ID is required.",
   "negotiation.send_failed": "Unable to send message.",
   "negotiation.error": "Operation failed",
-  "negotiation.close": "OK"
+  "negotiation.close": "OK",
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
+    "login": "Login",
+    "logging_in": "Signing in...",
+    "login_failed": "Login failed",
+    "token_missing": "Authentication token was not received",
+    "user_check_failed": "Unable to verify user information",
+    "login_success": "Login successful",
+    "role_route_missing": "No route is configured for this role",
+    "full_name": "Full name",
+    "full_name_placeholder": "Enter your full name",
+    "phone_number": "Phone number",
+    "phone_placeholder": "Enter your phone number",
+    "role": "Account type",
+    "role_buyer": "Buyer",
+    "role_merchant": "Merchant",
+    "role_agent": "Agent",
+    "register": "Create account",
+    "have_account": "Already have an account? Sign in",
+    "registering": "Creating account...",
+    "registration_failed": "Registration failed",
+    "registration_success": "Account created successfully"
+  },
+  "pages": {
+    "register": {
+      "eyebrow": "Create account",
+      "title": "Create your Sudan Mining Hub account",
+      "description": "Create an account to access mining market services and products."
+    }
+  }
 }
