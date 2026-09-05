@@ -3,9 +3,28 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.models.commission import Commission, CommissionStatus
+from app.models.commission_settings import CommissionSettings
 
 
 class CommissionService:
+    @staticmethod
+    def get_active_settings(
+        db: Session,
+        currency: str,
+    ) -> CommissionSettings:
+        settings = (
+            db.query(CommissionSettings)
+            .filter(
+                CommissionSettings.currency == currency,
+                CommissionSettings.is_active.is_(True),
+            )
+            .first()
+        )
+        if settings is None:
+            raise ValueError(
+                f"No active commission settings for currency {currency}"
+            )
+        return settings
 
     @staticmethod
     def get_for_deal(
@@ -54,8 +73,12 @@ class CommissionService:
         else:
             proposed = Decimal("0")
 
+        effective_minimum = (
+            Decimal("0") if minimum_amount is None else minimum_amount
+        )
+
         platform_required = max(
-            minimum_amount,
+            effective_minimum,
             deal_amount * platform_rate / Decimal("100"),
         )
 
@@ -74,7 +97,8 @@ class CommissionService:
         proposed_currency: str | None,
         proposed_rate: Decimal | None,
         platform_amount: Decimal,
-        platform_rate: Decimal | None,
+        platform_rate: Decimal,
+        minimum_amount: Decimal | None,
         final_amount: Decimal,
         currency: str,
         adjusted_by_platform: bool,
@@ -95,64 +119,60 @@ class CommissionService:
             proposed_rate=proposed_rate,
             platform_amount=platform_amount,
             platform_rate=platform_rate,
+            minimum_amount=minimum_amount,
             final_amount=final_amount,
             currency=currency,
             adjusted_by_platform=adjusted_by_platform,
             merchant_accepted=False,
-            status=CommissionStatus.PENDING,
+            status=CommissionStatus.CALCULATED,
         )
 
         db.add(commission)
-        db.commit()
-        db.refresh(commission)
+        db.flush()
 
         return commission
 
     @staticmethod
-    def accept_by_merchant(
+    def mark_due(
         db: Session,
         commission: Commission,
     ) -> Commission:
-
-        commission.merchant_accepted = True
-
-        db.commit()
-        db.refresh(commission)
-
-        return commission
-
-    @staticmethod
-    def claim(
-        db: Session,
-        commission: Commission,
-    ) -> Commission:
-
-        if not commission.merchant_accepted:
+        if commission.status != CommissionStatus.CALCULATED:
             raise ValueError(
-                "Merchant acceptance is required before claiming commission"
+                "Only CALCULATED commissions can become DUE"
             )
 
-        commission.status = CommissionStatus.CLAIMED
-
-        db.commit()
-        db.refresh(commission)
-
+        commission.status = CommissionStatus.DUE
+        db.flush()
         return commission
 
     @staticmethod
-    def mark_paid(
+    def settle(
         db: Session,
         commission: Commission,
     ) -> Commission:
-
-        if commission.status != CommissionStatus.CLAIMED:
+        if commission.status != CommissionStatus.DUE:
             raise ValueError(
-                "Commission must be claimed before payment"
+                "Only DUE commissions can be settled"
             )
 
-        commission.status = CommissionStatus.PAID
+        from datetime import datetime, timezone
 
-        db.commit()
-        db.refresh(commission)
+        commission.status = CommissionStatus.SETTLED
+        commission.settled_at = datetime.now(timezone.utc)
+        db.flush()
+        return commission
 
+    @staticmethod
+    def waive(
+        db: Session,
+        commission: Commission,
+    ) -> Commission:
+        if commission.status == CommissionStatus.SETTLED:
+            raise ValueError(
+                "Settled commissions cannot be waived"
+            )
+
+        commission.status = CommissionStatus.WAIVED
+        db.flush()
         return commission

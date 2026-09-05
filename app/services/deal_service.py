@@ -6,6 +6,7 @@ from app.models.deal import Deal, DealStatus
 from app.models.deal_item import DealItem
 from app.models.offer_item import OfferItem
 from app.models.request_item import RequestItem
+from app.services.commission_service import CommissionService
 
 
 class DealService:
@@ -85,6 +86,7 @@ class DealService:
         return deal
 
     @staticmethod
+    @staticmethod
     def approve_by_buyer(
         db: Session,
         deal: Deal,
@@ -92,25 +94,64 @@ class DealService:
     ) -> Deal:
         if deal.buyer_id != buyer_id:
             raise PermissionError("Only the buyer can approve the deal")
-
         if deal.status != DealStatus.PENDING_BUYER_APPROVAL:
             raise ValueError(
                 "Only deals pending buyer approval can be approved"
             )
-
         if deal.buyer_approved:
             raise ValueError("Deal has already been approved by the buyer")
 
         from datetime import datetime, timezone
 
-        deal.buyer_approved = True
-        deal.status = DealStatus.CONFIRMED
-        deal.approved_at = datetime.now(timezone.utc)
+        try:
+            settings = CommissionService.get_active_settings(
+                db,
+                deal.currency,
+            )
 
-        db.commit()
-        db.refresh(deal)
+            final_commission, adjusted_by_platform = (
+                CommissionService.calculate_platform_commission(
+                    deal_amount=Decimal(str(deal.final_amount)),
+                    merchant_amount=None,
+                    merchant_rate=None,
+                    minimum_amount=settings.minimum_amount,
+                    platform_rate=settings.commission_rate,
+                    currency=deal.currency,
+                )
+            )
 
-        return deal
+            platform_amount = (
+                Decimal(str(deal.final_amount))
+                * settings.commission_rate
+                / Decimal("100")
+            )
+
+            CommissionService.create(
+                db,
+                deal_id=deal.id,
+                merchant_id=deal.merchant_id,
+                proposed_amount=None,
+                proposed_currency=None,
+                proposed_rate=None,
+                platform_amount=platform_amount,
+                platform_rate=settings.commission_rate,
+                minimum_amount=settings.minimum_amount,
+                final_amount=final_commission,
+                currency=deal.currency,
+                adjusted_by_platform=adjusted_by_platform,
+            )
+
+            deal.buyer_approved = True
+            deal.status = DealStatus.CONFIRMED
+            deal.approved_at = datetime.now(timezone.utc)
+
+            db.commit()
+            db.refresh(deal)
+            return deal
+
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def mark_delivered(
@@ -152,6 +193,10 @@ class DealService:
         if deal.received_at is not None:
             raise ValueError("Deal has already been marked as received")
 
+        commission = CommissionService.get_for_deal(db, deal.id)
+        if commission is not None:
+            CommissionService.mark_due(db, commission)
+
         from datetime import datetime, timezone
 
         now = datetime.now(timezone.utc)
@@ -182,6 +227,10 @@ class DealService:
             raise ValueError(
                 "Completed deals cannot be cancelled"
             )
+
+        commission = CommissionService.get_for_deal(db, deal.id)
+        if commission is not None:
+            CommissionService.waive(db, commission)
 
         deal.status = DealStatus.CANCELLED
 

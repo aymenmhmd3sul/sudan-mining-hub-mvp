@@ -18,9 +18,10 @@ from app.db.session import Base
 
 
 class CommissionStatus(str, enum.Enum):
-    PENDING = "PENDING"
-    CLAIMED = "CLAIMED"
-    PAID = "PAID"
+    CALCULATED = "CALCULATED"
+    DUE = "DUE"
+    SETTLED = "SETTLED"
+    WAIVED = "WAIVED"
 
 
 class Commission(Base):
@@ -65,6 +66,11 @@ class Commission(Base):
 
     platform_rate = Column(
         Numeric(8, 4),
+        nullable=False,
+    )
+
+    minimum_amount = Column(
+        Numeric(18, 2),
         nullable=True,
     )
 
@@ -94,16 +100,11 @@ class Commission(Base):
     status = Column(
         SQLEnum(CommissionStatus),
         nullable=False,
-        default=CommissionStatus.PENDING,
+        default=CommissionStatus.CALCULATED,
         index=True,
     )
 
-    claimed_at = Column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
-    paid_at = Column(
+    settled_at = Column(
         DateTime(timezone=True),
         nullable=True,
     )
