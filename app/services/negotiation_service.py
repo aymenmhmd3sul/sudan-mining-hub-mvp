@@ -96,13 +96,15 @@ class NegotiationService:
 
         room = (
             db.query(NegotiationRoom)
-            .filter(NegotiationRoom.offer_id == offer.id)
+            .filter(NegotiationRoom.request_id == request.id)
+            .order_by(NegotiationRoom.id.desc())
             .first()
         )
         if room is None:
             raise ValueError("Negotiation room not found")
 
         offer.status = OfferStatus.ACCEPTED
+        room.offer_id = offer.id
         room.status = NegotiationStatus.AGREED
         request.status = RequestStatus.NEGOTIATING
 
