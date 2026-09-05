@@ -2,12 +2,36 @@
 
 {% block content %}
 <main class="gateway">
+    <header class="gateway-header">
+        <div class="brand">
+            <div class="brand-mark">SMH</div>
+            <div class="brand-copy">
+                <strong>{{ t("app.name") }}</strong>
+                <span>{{ t("gateway.tagline") }}</span>
+            </div>
+        </div>
+        <button
+            id="languageToggle"
+            class="language-toggle"
+            type="button"
+            aria-label="Change language"
+        >
+            <span id="languageLabel">
+                {% if lang == "ar" %}EN{% else %}العربية{% endif %}
+            </span>
+        </button>
+    </header>
+
     <section class="gateway-hero">
+        <div class="hero-orbit hero-orbit-one"></div>
+        <div class="hero-orbit hero-orbit-two"></div>
         <div class="hero-content">
 
-            <span class="eyebrow">
-                {{ t("pages.login.eyebrow") }}
-            </span>
+            <div class="hero-kicker">
+            <span class="hero-dot"></span>
+            {{ t("pages.login.eyebrow") }}
+        </div>
+
 
             <h1>
                 {{ t("pages.login.title") }}
@@ -17,6 +41,57 @@
                 {{ t("pages.login.description") }}
             </p>
 
+            <form id="loginForm" class="login-form">
+
+                <label for="loginEmail">{{ t("auth.email") }}</label>
+
+                <input
+                    id="loginEmail"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    required
+                    placeholder="example@email.com"
+                >
+
+                <label for="loginPassword">{{ t("auth.password") }}</label>
+
+                <div class="password-field">
+                    <input
+                        id="loginPassword"
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        id="togglePassword"
+                        class="password-toggle"
+                        aria-label="{{ t('auth.show_password') }}"
+                    >
+                        👁
+                    </button>
+                </div>
+
+                <div
+                    id="loginStatus"
+                    class="login-status"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+                <button
+                    type="submit"
+                    id="loginSubmit"
+                    class="btn btn-primary"
+                >
+                    {{ t("auth.login") }}
+                </button>
+
+            </form>
+
             <div class="hero-actions">
                 <a class="btn btn-secondary" href="/">
                     {{ t("common.back_to_gateway") }}
@@ -24,6 +99,117 @@
             </div>
 
         </div>
+
+        <div class="hero-emblem" aria-hidden="true">
+            <div class="emblem-ring emblem-ring-outer"></div>
+            <div class="emblem-ring emblem-ring-inner"></div>
+            <div class="emblem-core">
+                <span>Au</span>
+                <small>SMH</small>
+            </div>
+        </div>
     </section>
 </main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("loginForm");
+    const email = document.getElementById("loginEmail");
+    const password = document.getElementById("loginPassword");
+    const toggle = document.getElementById("togglePassword");
+    const status = document.getElementById("loginStatus");
+    const submit = document.getElementById("loginSubmit");
+
+    toggle.addEventListener("click", function () {
+        const visible = password.type === "text";
+
+        password.type = visible ? "password" : "text";
+        toggle.textContent = visible ? "👁" : "🙈";
+        toggle.setAttribute(
+            "aria-label",
+            visible
+                ? "{{ t('auth.show_password') }}"
+                : "{{ t('auth.hide_password') }}"
+        );
+    });
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        status.textContent = "{{ t('auth.logging_in') }}";
+        submit.disabled = true;
+
+        try {
+            const response = await fetch("/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    email: email.value.trim(),
+                    password: password.value
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || "{{ t('auth.login_failed') }}"
+                );
+            }
+
+            if (!data.access_token) {
+                throw new Error("{{ t('auth.token_missing') }}");
+            }
+
+            /*
+             * The server has already established authentication
+             * and set the access_token cookie.
+             *
+             * Ask /auth/me for the authoritative role instead
+             * of guessing the role from the login form.
+             */
+            const meResponse = await fetch("/auth/me", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                },
+                credentials: "same-origin"
+            });
+
+            if (!meResponse.ok) {
+                throw new Error("{{ t('auth.user_check_failed') }}");
+            }
+
+            const me = await meResponse.json();
+
+            status.textContent = "{{ t('auth.login_success') }}";
+
+            const routes = {
+                ADMIN: "/admin/",
+                BUYER: "/marketplace",
+                MERCHANT: "/marketplace",
+                AGENT: "/services"
+            };
+
+            const route = routes[me.role];
+
+            if (!route) {
+                throw new Error("{{ t('auth.role_route_missing') }}");
+            }
+
+            window.location.href = route;
+
+        } catch (error) {
+            status.textContent = error.message;
+            submit.disabled = false;
+        }
+    });
+});
+</script>
 {% endblock %}
