@@ -1,8 +1,9 @@
+import app.db.base  # CENTRAL ORM REGISTRY — SINGLE SOURCE OF TRUTH
 from app.db.session import SessionLocal
 from app.models.user import UserModel, UserRole
 from app.core.security import get_password_hash
 
-DEMO_PASSWORD = "Test1234!"
+DEMO_PASSWORD = "password123"
 
 DEMO_USERS = [
     {
@@ -46,7 +47,13 @@ def main():
             )
 
             if existing:
-                print(f"EXISTS: {data['email']}")
+                existing.hashed_password = password_hash
+                existing.full_name = data["full_name"]
+                existing.phone_number = data["phone_number"]
+                existing.role = data["role"]
+                existing.is_approved = True
+                print(f"UPDATE: {data['email']} [{data['role'].value}]")
+                db.commit()
                 continue
 
             user = UserModel(
@@ -66,7 +73,7 @@ def main():
         print("===== DEMO USERS SEED PASS =====")
         print("MERCHANTS: 2")
         print("BUYERS: 2")
-        print("PASSWORD: Test1234!")
+        print("PASSWORD: password123")
 
     finally:
         db.close()
