@@ -20,6 +20,7 @@ from app.db.session import Base
 class DealStatus(str, enum.Enum):
     PENDING_BUYER_APPROVAL = "PENDING_BUYER_APPROVAL"
     CONFIRMED = "CONFIRMED"
+    DELIVERED = "DELIVERED"
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
 
@@ -97,6 +98,16 @@ class Deal(Base):
     )
 
     approved_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    delivered_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    received_at = Column(
         DateTime(timezone=True),
         nullable=True,
     )

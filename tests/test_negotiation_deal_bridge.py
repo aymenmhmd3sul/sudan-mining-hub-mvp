@@ -1,16 +1,4 @@
-import app.models.user
-import app.models.listing_category
-import app.models.listing
-import app.models.listing_location
-import app.models.listing_spec
-import app.models.listing_media
-import app.models.buyer_request
-import app.models.request_item
-import app.models.offer
-import app.models.negotiation
-import app.models.deal
-import app.models.deal_item
-import app.models.commission
+import app.db.base
 
 from app.db.session import SessionLocal
 from app.models.buyer_request import BuyerRequest, RequestStatus
@@ -25,20 +13,19 @@ MERCHANT_1_ID = 4
 MERCHANT_2_ID = 5
 
 
-def test_accept_offer_creates_pending_deal():
+def test_accept_offer_uses_existing_request_room_and_creates_pending_deal():
     db = SessionLocal()
 
     request = None
     offer_winner = None
     offer_competitor = None
-    room_winner = None
-    room_competitor = None
+    room = None
     deal = None
 
     try:
         request = BuyerRequest(
             buyer_id=BUYER_ID,
-            title="D12 Accepted Offer → Deal Bridge Test",
+            title="D12 Existing Room → Accepted Offer → Deal",
             description="Temporary integration test",
             status=RequestStatus.OPEN,
             currency="SDG",
@@ -46,6 +33,17 @@ def test_accept_offer_creates_pending_deal():
         db.add(request)
         db.commit()
         db.refresh(request)
+
+        room = NegotiationRoom(
+            request_id=request.id,
+            offer_id=None,
+            status=NegotiationStatus.OPEN,
+        )
+        db.add(room)
+        db.commit()
+        db.refresh(room)
+
+        original_room_id = room.id
 
         offer_winner = Offer(
             request_id=request.id,
@@ -72,22 +70,11 @@ def test_accept_offer_creates_pending_deal():
         db.refresh(offer_winner)
         db.refresh(offer_competitor)
 
-        room_winner = NegotiationRoom(
-            request_id=request.id,
-            offer_id=offer_winner.id,
-            status=NegotiationStatus.OPEN,
+        rooms_before = (
+            db.query(NegotiationRoom)
+            .filter(NegotiationRoom.request_id == request.id)
+            .count()
         )
-
-        room_competitor = NegotiationRoom(
-            request_id=request.id,
-            offer_id=offer_competitor.id,
-            status=NegotiationStatus.OPEN,
-        )
-
-        db.add_all([room_winner, room_competitor])
-        db.commit()
-        db.refresh(room_winner)
-        db.refresh(room_competitor)
 
         result_room = NegotiationService.accept_offer(
             db,
@@ -97,8 +84,7 @@ def test_accept_offer_creates_pending_deal():
 
         db.refresh(offer_winner)
         db.refresh(offer_competitor)
-        db.refresh(room_winner)
-        db.refresh(room_competitor)
+        db.refresh(room)
 
         deal = (
             db.query(Deal)
@@ -106,21 +92,26 @@ def test_accept_offer_creates_pending_deal():
             .first()
         )
 
-        assert result_room.id == room_winner.id
-
-        assert offer_winner.status == OfferStatus.ACCEPTED
-        assert room_winner.status == NegotiationStatus.AGREED
-
-        assert offer_competitor.status == OfferStatus.REJECTED
-        assert room_competitor.status == NegotiationStatus.CLOSED
-
-        assert deal is not None, (
-            "ACCEPTED OFFER did not create a Deal"
+        rooms_after = (
+            db.query(NegotiationRoom)
+            .filter(NegotiationRoom.request_id == request.id)
+            .count()
         )
 
+        assert result_room.id == original_room_id
+        assert rooms_before == 1
+        assert rooms_after == 1
+
+        assert offer_winner.status == OfferStatus.ACCEPTED
+        assert room.offer_id == offer_winner.id
+        assert room.status == NegotiationStatus.AGREED
+
+        assert offer_competitor.status == OfferStatus.REJECTED
+
+        assert deal is not None
         assert deal.request_id == request.id
         assert deal.offer_id == offer_winner.id
-        assert deal.negotiation_room_id == room_winner.id
+        assert deal.negotiation_room_id == room.id
         assert deal.buyer_id == BUYER_ID
         assert deal.merchant_id == MERCHANT_1_ID
         assert str(deal.final_amount) == "600000.00"
@@ -128,24 +119,24 @@ def test_accept_offer_creates_pending_deal():
         assert deal.status == DealStatus.PENDING_BUYER_APPROVAL
         assert deal.buyer_approved is False
 
-        print("===== D12 NEGOTIATION → DEAL BRIDGE PASS =====")
+        print("===== D12 EXISTING ROOM → DEAL BRIDGE PASS =====")
 
     finally:
         if deal is not None:
             db.delete(deal)
             db.commit()
 
-        if room_winner is not None:
-            db.delete(room_winner)
-        if room_competitor is not None:
-            db.delete(room_competitor)
-        db.commit()
+        if room is not None:
+            db.delete(room)
+            db.commit()
 
         if offer_winner is not None:
             db.delete(offer_winner)
+            db.commit()
+
         if offer_competitor is not None:
             db.delete(offer_competitor)
-        db.commit()
+            db.commit()
 
         if request is not None:
             db.delete(request)
@@ -155,4 +146,4 @@ def test_accept_offer_creates_pending_deal():
 
 
 if __name__ == "__main__":
-    test_accept_offer_creates_pending_deal()
+    test_accept_offer_uses_existing_request_room_and_creates_pending_deal()

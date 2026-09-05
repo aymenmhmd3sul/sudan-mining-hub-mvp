@@ -88,9 +88,76 @@ class DealService:
     def approve_by_buyer(
         db: Session,
         deal: Deal,
+        buyer_id: int,
     ) -> Deal:
+        if deal.buyer_id != buyer_id:
+            raise PermissionError("Only the buyer can approve the deal")
+
+        if deal.status != DealStatus.PENDING_BUYER_APPROVAL:
+            raise ValueError(
+                "Only deals pending buyer approval can be approved"
+            )
+
+        if deal.buyer_approved:
+            raise ValueError("Deal has already been approved by the buyer")
+
+        from datetime import datetime, timezone
+
         deal.buyer_approved = True
         deal.status = DealStatus.CONFIRMED
+        deal.approved_at = datetime.now(timezone.utc)
+
+        db.commit()
+        db.refresh(deal)
+
+        return deal
+
+    @staticmethod
+    def mark_delivered(
+        db: Session,
+        deal: Deal,
+        merchant_id: int,
+    ) -> Deal:
+        if deal.merchant_id != merchant_id:
+            raise PermissionError("Only the merchant can mark the deal as delivered")
+
+        if deal.status != DealStatus.CONFIRMED:
+            raise ValueError("Only CONFIRMED deals can be marked as delivered")
+
+        if deal.delivered_at is not None:
+            raise ValueError("Deal has already been delivered")
+
+        from datetime import datetime, timezone
+
+        deal.status = DealStatus.DELIVERED
+        deal.delivered_at = datetime.now(timezone.utc)
+
+        db.commit()
+        db.refresh(deal)
+
+        return deal
+
+    @staticmethod
+    def mark_received(
+        db: Session,
+        deal: Deal,
+        buyer_id: int,
+    ) -> Deal:
+        if deal.buyer_id != buyer_id:
+            raise PermissionError("Only the buyer can mark the deal as received")
+
+        if deal.status != DealStatus.DELIVERED:
+            raise ValueError("Only DELIVERED deals can be marked as received")
+
+        if deal.received_at is not None:
+            raise ValueError("Deal has already been marked as received")
+
+        from datetime import datetime, timezone
+
+        now = datetime.now(timezone.utc)
+        deal.status = DealStatus.COMPLETED
+        deal.received_at = now
+        deal.completed_at = now
 
         db.commit()
         db.refresh(deal)
@@ -102,17 +169,9 @@ class DealService:
         db: Session,
         deal: Deal,
     ) -> Deal:
-        if not deal.buyer_approved:
-            raise ValueError(
-                "Buyer approval is required before completing the deal"
-            )
-
-        deal.status = DealStatus.COMPLETED
-
-        db.commit()
-        db.refresh(deal)
-
-        return deal
+        raise ValueError(
+            "Direct completion is disabled; buyer receipt is required"
+        )
 
     @staticmethod
     def cancel(
