@@ -194,11 +194,26 @@ def requests_page(request: Request):
 @router.get("/negotiation")
 def negotiation_page(
     request: Request,
-    room_id: int,
+    room_id: int | None = None,
     db: Session = Depends(get_db),
     user=Depends(require_role("BUYER", "MERCHANT")),
 ):
-    room = NegotiationService.get_room(db, room_id)
+    if room_id is not None:
+        room = NegotiationService.get_room(db, room_id)
+    else:
+        room = (
+            db.query(NegotiationRoom)
+            .join(
+                NegotiationParticipant,
+                NegotiationParticipant.room_id == NegotiationRoom.id,
+            )
+            .filter(
+                NegotiationParticipant.user_id == user.id,
+                NegotiationRoom.status == NegotiationStatus.OPEN,
+            )
+            .order_by(NegotiationRoom.id.desc())
+            .first()
+        )
 
     if room is None:
         raise HTTPException(status_code=404, detail="Negotiation room not found")
