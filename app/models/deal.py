@@ -181,7 +181,6 @@ class Deal(Base):
         "Commission",
         back_populates="deal",
         uselist=False,
-        cascade="all, delete-orphan",
     )
 
     __table_args__ = (
