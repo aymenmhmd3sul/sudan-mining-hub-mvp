@@ -1595,3 +1595,6 @@ h1 {
         padding-inline-end: 50px;
     }
 }
+
+/* Native hidden attribute must remain hidden */
+[hidden] { display: none !important; }
