@@ -73,6 +73,8 @@
   "negotiation.send_failed": "تعذر إرسال الرسالة.",
   "negotiation.error": "تعذر تنفيذ العملية",
   "negotiation.close": "حسنًا",
+  "negotiation.new": "تفاوض جديد",
+  "negotiation.unread": "رسائل غير مقروءة",
   "auth": {
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",

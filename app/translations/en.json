@@ -73,6 +73,8 @@
   "negotiation.send_failed": "Unable to send message.",
   "negotiation.error": "Operation failed",
   "negotiation.close": "OK",
+  "negotiation.new": "New negotiation",
+  "negotiation.unread": "Unread messages",
   "auth": {
     "email": "Email",
     "password": "Password",

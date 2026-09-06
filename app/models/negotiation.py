@@ -145,6 +145,11 @@ class NegotiationParticipant(Base):
         nullable=False,
     )
 
+    last_read_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
     __table_args__ = (
         Index(
             "ix_negotiation_participants_room_user",

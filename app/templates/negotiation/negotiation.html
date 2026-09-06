@@ -9,6 +9,47 @@
             </span>
             <h1>{{ t("pages.negotiation.title") }}</h1>
 
+            <div class="marketplace-listing-detail-section negotiation-inbox">
+                <h2>{{ t("negotiation.messages") }}</h2>
+
+                {% for item in inbox_rooms %}
+                        <a
+                            class="marketplace-listing-detail-item{% if item.is_new or item.unread_count > 0 %} negotiation-inbox-unread{% endif %}"
+                            href="/negotiation?room_id={{ item.room.id }}"
+                            style="display:block;text-decoration:none;"
+                        >
+                            <strong>
+                                {% if item.other_user %}
+                                    {{ item.other_user.email }}
+                                {% else %}
+                                    {{ t("negotiation.other_party") }}
+                                {% endif %}
+                            </strong>
+
+                            <span>{{ item.room.status.value }}</span>
+
+                            {% if item.is_new %}
+                                <span class="negotiation-new-badge">
+                                    {{ t("negotiation.new") }}
+                                </span>
+                            {% endif %}
+
+                            {% if item.unread_count > 0 %}
+                                <span class="negotiation-unread-badge">
+                                    {{ item.unread_count }} {{ t("negotiation.unread") }}
+                                </span>
+                            {% endif %}
+
+                            {% if item.latest_message %}
+                                <p>{{ item.latest_message.body }}</p>
+                                <small>{{ item.latest_message.created_at }}</small>
+                            {% else %}
+                                <p>{{ t("negotiation.no_messages") }}</p>
+                            {% endif %}
+                        </a>
+                    {% endfor %}
+            </div>
+
             {% if listing %}
             <p>{{ listing.title }}</p>
             {% endif %}

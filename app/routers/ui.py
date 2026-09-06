@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Depends, HTTPException
 from app.db.session import get_db
 from app.services.listing_service import ListingService
@@ -12,7 +13,8 @@ from app.models.negotiation import (
     NegotiationStatus,
 )
 from app.models.offer import Offer
-from app.routers.auth import require_role
+from app.models.user import UserModel
+from app.routers.auth import get_current_user, require_role
 from sqlalchemy.orm import Session
 from fastapi.templating import Jinja2Templates
 
@@ -76,7 +78,7 @@ def marketplace_listing_detail(
 def start_listing_negotiation(
     listing_id: int,
     db: Session = Depends(get_db),
-    user=Depends(require_role("BUYER")),
+    user=Depends(get_current_user),
 ):
     listing = ListingService.get_by_id(db, listing_id)
 
@@ -215,47 +217,130 @@ def negotiation_page(
             .first()
         )
 
-    if room is None:
+    if room_id is not None and room is None:
         raise HTTPException(status_code=404, detail="Negotiation room not found")
 
-    participant = (
-        db.query(NegotiationParticipant)
-        .filter(
-            NegotiationParticipant.room_id == room.id,
-            NegotiationParticipant.user_id == user.id,
+    if room is not None:
+        participant = (
+            db.query(NegotiationParticipant)
+            .filter(
+                NegotiationParticipant.room_id == room.id,
+                NegotiationParticipant.user_id == user.id,
+            )
+            .first()
         )
-        .first()
-    )
 
-    if participant is None:
-        raise HTTPException(status_code=403, detail="You are not a participant in this negotiation")
+        if participant is None:
+            raise HTTPException(status_code=403, detail="You are not a participant in this negotiation")
 
-    request_obj = room.request
+        # Opening the room marks it as read for the current participant.
+        participant.last_read_at = datetime.now(timezone.utc)
+        db.commit()
 
-    if request_obj is None:
-        raise HTTPException(status_code=404, detail="Negotiation request not found")
+    inbox_rooms = []
 
-    listing = request_obj.listing
+    for candidate in (
+        db.query(NegotiationRoom)
+        .join(
+            NegotiationParticipant,
+            NegotiationParticipant.room_id == NegotiationRoom.id,
+        )
+        .filter(NegotiationParticipant.user_id == user.id)
+        .order_by(NegotiationRoom.updated_at.desc(), NegotiationRoom.id.desc())
+        .all()
+    ):
+        candidate_participant = (
+            db.query(NegotiationParticipant)
+            .filter(
+                NegotiationParticipant.room_id == candidate.id,
+                NegotiationParticipant.user_id == user.id,
+            )
+            .first()
+        )
+
+        latest_message = (
+            db.query(NegotiationMessage)
+            .filter(NegotiationMessage.room_id == candidate.id)
+            .order_by(
+                NegotiationMessage.created_at.desc(),
+                NegotiationMessage.id.desc(),
+            )
+            .first()
+        )
+
+        unread_query = db.query(NegotiationMessage).filter(
+            NegotiationMessage.room_id == candidate.id,
+            NegotiationMessage.sender_id != user.id,
+        )
+
+        if (
+            candidate_participant is not None
+            and candidate_participant.last_read_at is not None
+        ):
+            unread_query = unread_query.filter(
+                NegotiationMessage.created_at
+                > candidate_participant.last_read_at
+            )
+
+        unread_count = unread_query.count()
+
+        other_participant = (
+            db.query(NegotiationParticipant)
+            .join(UserModel, UserModel.id == NegotiationParticipant.user_id)
+            .filter(
+                NegotiationParticipant.room_id == candidate.id,
+                NegotiationParticipant.user_id != user.id,
+            )
+            .first()
+        )
+
+        inbox_rooms.append(
+            {
+                "room": candidate,
+                "latest_message": latest_message,
+                "other_user": (
+                    other_participant.user
+                    if other_participant
+                    else None
+                ),
+                "unread_count": unread_count,
+                "is_new": (
+                    candidate_participant is not None
+                    and candidate_participant.last_read_at is None
+                ),
+            }
+        )
+
+    request_obj = room.request if room is not None else None
+
+    listing = request_obj.listing if request_obj is not None else None
 
     messages = (
         db.query(NegotiationMessage)
         .filter(NegotiationMessage.room_id == room.id)
-        .order_by(NegotiationMessage.created_at.asc(), NegotiationMessage.id.asc())
+        .order_by(
+            NegotiationMessage.created_at.asc(),
+            NegotiationMessage.id.asc(),
+        )
         .all()
-    )
+    ) if room is not None else []
 
     offers = (
         db.query(Offer)
         .filter(Offer.request_id == request_obj.id)
-        .order_by(Offer.created_at.asc(), Offer.id.asc())
+        .order_by(
+            Offer.created_at.asc(),
+            Offer.id.asc(),
+        )
         .all()
-    )
+    ) if request_obj is not None else []
 
     context = template_context(request)
     context.update(
         {
             "title": context["t"]("pages.negotiation.title"),
             "room": room,
+            "inbox_rooms": inbox_rooms,
             "request_obj": request_obj,
             "listing": listing,
             "messages": messages,

@@ -1229,6 +1229,69 @@ h1 {
     line-height: 1.65;
 }
 
+/* Negotiation Inbox */
+.negotiation-inbox {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.negotiation-inbox .marketplace-listing-detail-item {
+    position: relative;
+    display: block;
+    padding: 14px 15px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.025);
+    transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease;
+}
+
+.negotiation-inbox .marketplace-listing-detail-item:hover {
+    border-color: var(--gold-line);
+    background: rgba(214, 168, 79, 0.055);
+    transform: translateY(-1px);
+}
+
+.negotiation-inbox-unread {
+    border-color: var(--gold-line) !important;
+    background: rgba(214, 168, 79, 0.075) !important;
+}
+
+.negotiation-new-badge,
+.negotiation-unread-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    margin-inline-start: 7px;
+    padding-inline: 8px;
+    border-radius: 999px;
+    background: var(--gold-soft);
+    color: var(--gold-light);
+    font-size: .68rem;
+    font-weight: 800;
+    vertical-align: middle;
+}
+
+.negotiation-inbox .negotiation-unread-badge {
+    margin-top: 7px;
+}
+
+.negotiation-inbox .marketplace-listing-detail-item > p {
+    margin: 7px 0 0;
+    color: var(--text);
+    line-height: 1.55;
+}
+
+.negotiation-inbox .marketplace-listing-detail-item > small {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: .7rem;
+}
+
 #negotiationMessages {
     display: flex;
     flex-direction: column;
