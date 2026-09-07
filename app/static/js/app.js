@@ -459,3 +459,155 @@ function bindListingCreate() {
 document.addEventListener("DOMContentLoaded", function () {
     bindListingCreate();
 });
+
+/* ADMIN LISTING REVIEW */
+function bindAdminListingReview() {
+    const container = document.getElementById("adminPendingListings");
+    const status = document.getElementById("adminPendingListingsStatus");
+
+    if (!container || !status) {
+        return;
+    }
+
+    function renderListings(listings) {
+        container.innerHTML = "";
+
+        if (!listings.length) {
+            status.textContent = "لا توجد إعلانات قيد المراجعة.";
+            return;
+        }
+
+        status.textContent =
+            "عدد الإعلانات قيد المراجعة: " + listings.length;
+
+        listings.forEach(function (listing) {
+            const card = document.createElement("article");
+            card.className = "marketplace-listing-detail-card";
+
+            card.innerHTML = `
+                <div class="marketplace-listing-detail-section">
+                    <h3>${escapeHtml(listing.title)}</h3>
+
+                    <p>
+                        ${escapeHtml(listing.description || "لا يوجد وصف.")}
+                    </p>
+
+                    <p>
+                        <strong>التصنيف:</strong>
+                        ${escapeHtml(String(listing.category_id))}
+                    </p>
+
+                    <p>
+                        <strong>النوع:</strong>
+                        ${escapeHtml(listing.listing_type)}
+                    </p>
+
+                    <p>
+                        <strong>السعر:</strong>
+                        ${listing.price === null
+                            ? "غير محدد"
+                            : escapeHtml(
+                                String(listing.price) +
+                                " " +
+                                String(listing.currency)
+                            )
+                        }
+                    </p>
+
+                    <p>
+                        <strong>الحالة:</strong>
+                        ${escapeHtml(listing.status)}
+                    </p>
+
+                    <button
+                        class="btn btn-primary admin-approve-listing"
+                        type="button"
+                        data-listing-id="${listing.id}"
+                    >
+                        اعتماد الإعلان
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+
+        container.querySelectorAll(".admin-approve-listing")
+            .forEach(function (button) {
+                button.addEventListener("click", function () {
+                    approveListing(button);
+                });
+            });
+    }
+
+    async function loadPendingListings() {
+        try {
+            const response = await fetch("/admin/listings/pending");
+
+            if (!response.ok) {
+                throw new Error(
+                    response.status === 401 || response.status === 403
+                        ? "غير مصرح بالدخول"
+                        : "فشل تحميل الإعلانات"
+                );
+            }
+
+            const listings = await response.json();
+            renderListings(listings);
+        } catch (error) {
+            console.error(
+                "Admin pending listings load failed:",
+                error
+            );
+            status.textContent =
+                "تعذر تحميل الإعلانات: " + error.message;
+        }
+    }
+
+    async function approveListing(button) {
+        const listingId = button.dataset.listingId;
+
+        button.disabled = true;
+        button.textContent = "جارٍ الاعتماد...";
+
+        try {
+            const response = await fetch(
+                "/admin/listings/" +
+                encodeURIComponent(listingId) +
+                "/approve",
+                {
+                    method: "POST"
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || "فشل اعتماد الإعلان"
+                );
+            }
+
+            button.textContent = "تم الاعتماد";
+
+            await loadPendingListings();
+        } catch (error) {
+            console.error(
+                "Admin listing approval failed:",
+                error
+            );
+
+            button.disabled = false;
+            button.textContent = "اعتماد الإعلان";
+
+            status.textContent =
+                "تعذر اعتماد الإعلان: " + error.message;
+        }
+    }
+
+    loadPendingListings();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    bindAdminListingReview();
+});

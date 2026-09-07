@@ -3,36 +3,48 @@
 {% block content %}
 <main class="gateway">
     <section class="gateway-hero">
-
         <div class="hero-content">
+            <span class="eyebrow">ADMIN CONTROL</span>
 
-            <span class="eyebrow">
-                ADMIN CONTROL
-            </span>
-
-            <h1>
-                لوحة المشرف
-            </h1>
+            <h1>لوحة المشرف</h1>
 
             <p>
                 مرحبًا {{ user.full_name or user.email }}.
-                تم التحقق من صلاحيات حساب المشرف بنجاح.
+                من هنا تتم مراجعة إعلانات التجار قبل نشرها في السوق.
             </p>
 
             <div class="hero-actions">
-
                 <a class="btn btn-secondary" href="/">
                     العودة إلى البوابة
                 </a>
 
-                <a class="btn btn-primary" href="/auth/me">
-                    التحقق من الحساب
+                <a class="btn btn-primary" href="/marketplace">
+                    فتح السوق
                 </a>
+            </div>
+        </div>
+    </section>
 
+    <section class="marketplace-browser">
+        <div class="marketplace-listing-detail-section">
+            <h2>إعلانات قيد المراجعة</h2>
+            <p>
+                الإعلانات التي أنشأها التجار ولم تعتمد بعد.
+            </p>
+
+            <div
+                id="adminPendingListingsStatus"
+                class="marketplace-status"
+                role="status"
+            >
+                جارٍ تحميل الإعلانات...
             </div>
 
+            <div
+                id="adminPendingListings"
+                class="marketplace-listings"
+            ></div>
         </div>
-
     </section>
 </main>
 {% endblock %}

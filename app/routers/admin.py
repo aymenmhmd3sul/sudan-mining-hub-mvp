@@ -39,6 +39,17 @@ def admin_dashboard(
     )
 
 
+@router.get(
+    "/listings/pending",
+    response_model=list[ListingResponse],
+)
+def list_pending_listings(
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    return ListingService.list_pending(db)
+
+
 @router.post(
     "/listings/{listing_id}/approve",
     response_model=ListingResponse,

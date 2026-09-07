@@ -46,6 +46,19 @@ class ListingService:
         )
 
     @staticmethod
+    def list_pending(
+        db: Session,
+        limit: int = 100,
+    ) -> list[Listing]:
+        return (
+            db.query(Listing)
+            .filter(Listing.status == ListingStatus.DRAFT)
+            .order_by(Listing.id.desc())
+            .limit(limit)
+            .all()
+        )
+
+    @staticmethod
     def approve(db: Session, listing_id: int) -> Listing:
         listing = (
             db.query(Listing)
