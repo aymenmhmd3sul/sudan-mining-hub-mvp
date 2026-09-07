@@ -1,0 +1,106 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="marketplace-page">
+    <section class="marketplace-hero">
+        <div class="marketplace-hero-content">
+            <span class="marketplace-eyebrow">SMH • MERCHANT</span>
+
+            <h1>إضافة سلعة</h1>
+
+            <p>
+                أنشئ إعلان السلعة ليتم مراجعته من الإدارة قبل ظهوره في السوق.
+            </p>
+
+            <div class="marketplace-hero-actions">
+                <a class="btn btn-secondary" href="/marketplace">
+                    العودة إلى السوق
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="marketplace-browser">
+        <form id="listingCreateForm" class="listing-create-form">
+
+            <div class="form-field">
+                <label for="listingTitle">اسم السلعة</label>
+                <input
+                    id="listingTitle"
+                    name="title"
+                    type="text"
+                    maxlength="255"
+                    required
+                    placeholder="مثال: ذهب خام"
+                >
+            </div>
+
+            <div class="form-field">
+                <label for="listingCategory">التصنيف</label>
+                <select id="listingCategory" name="category_id" required>
+                    <option value="">اختر التصنيف</option>
+                </select>
+            </div>
+
+            <div class="form-field">
+                <label for="listingType">نوع العرض</label>
+                <select id="listingType" name="listing_type">
+                    <option value="ASSET">سلعة / أصل</option>
+                    <option value="EQUIPMENT">معدات</option>
+                    <option value="SERVICE">خدمة</option>
+                    <option value="OPPORTUNITY">فرصة</option>
+                </select>
+            </div>
+
+            <div class="form-field">
+                <label for="listingDescription">الوصف</label>
+                <textarea
+                    id="listingDescription"
+                    name="description"
+                    rows="5"
+                    placeholder="اكتب وصفًا واضحًا للسلعة..."
+                ></textarea>
+            </div>
+
+            <div class="form-field">
+                <label for="listingPrice">السعر</label>
+                <input
+                    id="listingPrice"
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="اختياري"
+                >
+            </div>
+
+            <div class="form-field">
+                <label for="listingCurrency">العملة</label>
+                <select id="listingCurrency" name="currency">
+                    <option value="USD">USD</option>
+                    <option value="SDG">SDG</option>
+                </select>
+            </div>
+
+            <label class="form-checkbox">
+                <input
+                    id="listingNegotiable"
+                    name="is_negotiable"
+                    type="checkbox"
+                    checked
+                >
+                <span>السعر قابل للتفاوض</span>
+            </label>
+
+            <div id="listingCreateStatus" class="marketplace-status" role="status"></div>
+
+            <button class="btn btn-primary" type="submit">
+                إنشاء الإعلان
+            </button>
+
+        </form>
+    </section>
+</main>
+{% endblock %}
+
+<script src="/static/js/app.js"></script>

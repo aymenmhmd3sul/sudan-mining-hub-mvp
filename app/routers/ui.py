@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Request, Depends, HTTPException, Cookie
 from app.db.session import get_db
 from app.services.listing_service import ListingService
 from app.services.negotiation_service import NegotiationService
@@ -23,6 +23,19 @@ from app.translations.templates import template_context
 router = APIRouter(tags=["UI"])
 
 templates = Jinja2Templates(directory="app/templates")
+
+
+def get_optional_current_user(
+    access_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+):
+    if not access_token:
+        return None
+
+    try:
+        return get_current_user(access_token=access_token, db=db)
+    except HTTPException:
+        return None
 
 
 def render(request: Request, template_name: str, title_key: str):
@@ -50,6 +63,38 @@ def login_page(request: Request):
         request,
         "auth/login.html",
         "pages.login.title",
+    )
+
+
+@router.get("/merchant")
+def merchant_dashboard(
+    request: Request,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("MERCHANT")),
+):
+    pending_offers_count = (
+        db.query(Offer)
+        .filter(
+            Offer.merchant_id == user.id,
+            Offer.status == "SUBMITTED",
+        )
+        .count()
+    )
+
+    context = template_context(request)
+    context.update(
+        {
+            "title": context["t"]("dashboard.merchant_label"),
+            "current_user": user,
+            "role": "MERCHANT",
+            "pending_offers_count": pending_offers_count,
+        }
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard/dashboard.html",
+        context=context,
     )
 
 
@@ -176,11 +221,18 @@ def start_listing_negotiation(
 
 
 @router.get("/marketplace")
-def marketplace_page(request: Request):
-    return render(
-        request,
-        "marketplace/marketplace.html",
-        "pages.marketplace.title",
+def marketplace_page(
+    request: Request,
+    user=Depends(get_optional_current_user),
+):
+    context = template_context(request)
+    context["title"] = context["t"]("pages.marketplace.title")
+    context["current_user"] = user
+
+    return templates.TemplateResponse(
+        request=request,
+        name="marketplace/marketplace.html",
+        context=context,
     )
 
 

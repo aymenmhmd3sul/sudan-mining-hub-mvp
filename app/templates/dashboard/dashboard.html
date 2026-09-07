@@ -1,0 +1,154 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="gateway dashboard-page">
+
+    <header class="gateway-header">
+        <div class="brand">
+            <div class="brand-mark">SMH</div>
+            <div class="brand-copy">
+                <strong>{{ t("app.name") }}</strong>
+                <span>{{ t("gateway.tagline") }}</span>
+            </div>
+        </div>
+
+        <button
+            id="languageToggle"
+            class="language-toggle"
+            type="button"
+            aria-label="Change language"
+        >
+            <span id="languageLabel">
+                {% if lang == "ar" %}EN{% else %}العربية{% endif %}
+            </span>
+        </button>
+    </header>
+
+    <section class="gateway-hero dashboard-hero">
+        <div class="hero-orbit hero-orbit-one"></div>
+        <div class="hero-orbit hero-orbit-two"></div>
+
+        <div class="hero-content">
+            <div class="hero-kicker">
+                <span class="hero-dot"></span>
+                <span>
+                    {% if role == "MERCHANT" %}
+                        {{ t("dashboard.merchant_label") }}
+                    {% else %}
+                        {{ t("dashboard.buyer_label") }}
+                    {% endif %}
+                </span>
+            </div>
+
+            <h1>
+                {{ t("common.welcome") }}، {{ current_user.full_name }}
+            </h1>
+
+            <p>
+                {% if role == "MERCHANT" %}
+                    {{ t("dashboard.merchant_description") }}
+                {% else %}
+                    {{ t("dashboard.buyer_description") }}
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="hero-emblem" aria-hidden="true">
+            <div class="emblem-ring emblem-ring-outer"></div>
+            <div class="emblem-ring emblem-ring-inner"></div>
+            <div class="emblem-core">
+                <span>Au</span>
+                <small>SMH</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="gateway-modules dashboard-modules">
+
+        <a class="module-card module-card-main" href="/marketplace">
+            <span class="module-top">
+                <span class="module-icon">01</span>
+                <span class="module-arrow">↗</span>
+            </span>
+            <span class="module-content">
+                <strong>{{ t("modules.marketplace.title") }}</strong>
+                <span>{{ t("modules.marketplace.description") }}</span>
+            </span>
+        </a>
+
+        <a class="module-card" href="/requests">
+            <span class="module-top">
+                <span class="module-icon">02</span>
+                <span class="module-arrow">↗</span>
+            </span>
+            <span class="module-content">
+                <strong>
+                    {% if role == "MERCHANT" %}
+                        {{ t("modules.requests.title") }}
+                    {% else %}
+                        {{ t("dashboard.my_requests_title") }}
+                    {% endif %}
+                </strong>
+                <span>{{ t("modules.requests.description") }}</span>
+            </span>
+        </a>
+
+        {% if role == "MERCHANT" %}
+        <a class="module-card dashboard-listing-create-card" href="/merchant/listings/new">
+            <span class="module-top">
+                <span class="module-icon">01+</span>
+                <span class="module-arrow">↗</span>
+            </span>
+            <span class="module-content">
+                <strong>إضافة سلعة</strong>
+                <span>أنشئ إعلان سلعة جديدة لعرضها في السوق.</span>
+            </span>
+        </a>
+
+        <a class="module-card dashboard-offers-card" href="/requests">
+            <span class="module-top">
+                <span class="module-icon">03</span>
+                <span class="module-arrow">↗</span>
+            </span>
+            <span class="module-content">
+                <strong>{{ t("dashboard.offers_title") }}</strong>
+                <span>{{ t("dashboard.offers_description") }}</span>
+                {% if pending_offers_count > 0 %}
+                    <span class="dashboard-alert-badge">
+                        {{ pending_offers_count }}
+                    </span>
+                {% endif %}
+            </span>
+        </a>
+        {% endif %}
+
+        <a class="module-card" href="/negotiation">
+            <span class="module-top">
+                <span class="module-icon">
+                    {% if role == "MERCHANT" %}04{% else %}03{% endif %}
+                </span>
+                <span class="module-arrow">↗</span>
+            </span>
+            <span class="module-content">
+                <strong>{{ t("modules.negotiation.title") }}</strong>
+                <span>{{ t("modules.negotiation.description") }}</span>
+            </span>
+        </a>
+
+        {% if role == "BUYER" %}
+        <a class="module-card" href="/services">
+            <span class="module-top">
+                <span class="module-icon">04</span>
+                <span class="module-arrow">↗</span>
+            </span>
+            <span class="module-content">
+                <strong>{{ t("modules.services.title") }}</strong>
+                <span>{{ t("modules.services.description") }}</span>
+            </span>
+        </a>
+        {% endif %}
+
+    </section>
+
+</main>
+{% endblock %}

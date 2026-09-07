@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.listing import ListingStatus, ListingType
+from app.models.listing_category import ListingCategory
 from app.models.user import UserModel
 from app.routers.auth import require_role
 from app.schemas.listing import ListingCreate, ListingResponse
@@ -29,6 +30,18 @@ def list_listings(
         search=search,
         listing_type=listing_type,
         category_id=category_id,
+    )
+
+
+@router.get("/categories")
+def list_categories(
+    db: Session = Depends(get_db),
+):
+    return (
+        db.query(ListingCategory)
+        .filter(ListingCategory.status == "ACTIVE")
+        .order_by(ListingCategory.sort_order, ListingCategory.category_id)
+        .all()
     )
 
 

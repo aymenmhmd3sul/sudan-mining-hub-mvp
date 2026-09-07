@@ -375,3 +375,87 @@ function bindModuleCards() {
         }
     );
 })();
+
+/* MERCHANT LISTING CREATE */
+function bindListingCreate() {
+    const form = document.getElementById("listingCreateForm");
+    const categorySelect = document.getElementById("listingCategory");
+    const status = document.getElementById("listingCreateStatus");
+
+    if (!form || !categorySelect || !status) {
+        return;
+    }
+
+    async function loadCategories() {
+        try {
+            const response = await fetch("/api/v1/listings/categories");
+
+            if (!response.ok) {
+                throw new Error("Categories request failed");
+            }
+
+            const categories = await response.json();
+
+            categorySelect.innerHTML = '<option value="">اختر التصنيف</option>';
+
+            categories.forEach(function (category) {
+                const option = document.createElement("option");
+                option.value = category.category_id;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Listing categories load failed:", error);
+            status.textContent = "تعذر تحميل التصنيفات.";
+        }
+    }
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        status.textContent = "جارٍ إنشاء الإعلان...";
+
+        const priceValue = document.getElementById("listingPrice").value;
+
+        const payload = {
+            title: document.getElementById("listingTitle").value.trim(),
+            description: document.getElementById("listingDescription").value.trim() || null,
+            category_id: Number(categorySelect.value),
+            listing_type: document.getElementById("listingType").value,
+            price: priceValue === "" ? null : Number(priceValue),
+            currency: document.getElementById("listingCurrency").value,
+            is_negotiable: document.getElementById("listingNegotiable").checked
+        };
+
+        try {
+            const response = await fetch("/api/v1/listings", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Listing creation failed");
+            }
+
+            status.textContent =
+                "تم إنشاء الإعلان بنجاح. الحالة: " + data.status;
+
+            form.reset();
+            document.getElementById("listingNegotiable").checked = true;
+        } catch (error) {
+            console.error("Listing creation failed:", error);
+            status.textContent = "تعذر إنشاء الإعلان: " + error.message;
+        }
+    });
+
+    loadCategories();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    bindListingCreate();
+});
