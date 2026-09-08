@@ -4,3 +4,17 @@ __pycache__/
 .env
 .DS_Store
 *.tar.gz
+
+# Local Python environments
+.venv/
+.venv*/
+venv/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Runtime / editor artifacts
+*.log
+.DS_Store

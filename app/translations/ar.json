@@ -108,5 +108,12 @@
       "description": "أنشئ حسابك للوصول إلى خدمات ومنتجات سوق التعدين."
     }
   },
-  "gateway.register": "إنشاء حساب"
+  "gateway.register": "إنشاء حساب",
+  "dashboard.merchant_label": "مساحة التاجر",
+  "dashboard.buyer_label": "مساحة المشتري",
+  "dashboard.merchant_description": "إدارة عروضك ومتابعة طلبات المشترين والتفاوض على الفرص.",
+  "dashboard.buyer_description": "تابع طلباتك واستكشف السوق وواصل مفاوضاتك من مساحة عمل واحدة.",
+  "dashboard.offers_title": "عروض تحتاج إلى مراجعة",
+  "dashboard.offers_description": "عروض جديدة مرتبطة بطلبات المشترين وتحتاج إلى مراجعتك.",
+  "dashboard.my_requests_title": "طلباتي"
 }

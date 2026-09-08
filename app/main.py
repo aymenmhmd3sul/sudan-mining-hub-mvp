@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.routers import auth, ui, admin, deals, offers
+from app.routers import auth, ui, admin, deals, offers, requests
 from app.routers import marketplace
 from app.translations.middleware import LanguageMiddleware
 from app.translations.templates import template_context
@@ -36,4 +36,5 @@ app.include_router(admin.router)
 app.include_router(deals.router)
 
 app.include_router(offers.router)
+app.include_router(requests.router)
 app.include_router(marketplace.router)

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.user import UserModel
+from app.models.user import UserModel, UserRole
 from app.schemas.user import UserCreate, UserOut, UserLogin, Token
 from app.core.security import (
     get_password_hash,
@@ -40,7 +40,7 @@ def register_user(
         hashed_password=get_password_hash(user_in.password),
         full_name=user_in.full_name,
         phone_number=user_in.phone_number,
-        role=user_in.role,
+        role=UserRole(user_in.role.value),
     )
 
     db.add(new_user)

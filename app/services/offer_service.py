@@ -33,6 +33,7 @@ class OfferService:
         db: Session,
         *,
         items: list[dict] | None = None,
+        commit: bool = True,
         **data,
     ) -> Offer:
         items = items or []
@@ -98,11 +99,14 @@ class OfferService:
 
         db.add(offer)
 
-        try:
-            db.commit()
-            db.refresh(offer)
-        except Exception:
-            db.rollback()
-            raise
+        if commit:
+            try:
+                db.commit()
+                db.refresh(offer)
+            except Exception:
+                db.rollback()
+                raise
+        else:
+            db.flush()
 
         return offer

@@ -1,11 +1,12 @@
 {% extends "base/base.html" %}
 
 {% block content %}
-<main class="gateway">
-    <section class="gateway-hero">
-        <div class="hero-content">
+<main class="marketplace-page">
 
-            <span class="eyebrow">
+    <section class="marketplace-hero">
+        <div class="marketplace-hero-content">
+
+            <span class="marketplace-eyebrow">
                 {{ t("pages.marketplace.eyebrow") }}
             </span>
 
@@ -17,7 +18,13 @@
                 {{ t("pages.marketplace.description") }}
             </p>
 
-            <div class="hero-actions">
+            <div class="marketplace-hero-actions">
+                {% if current_user and current_user.role.value == "MERCHANT" %}
+                <a class="btn btn-primary" href="/merchant/listings/new">
+                    إضافة سلعة
+                </a>
+                {% endif %}
+
                 <a class="btn btn-secondary" href="/">
                     {{ t("common.back_to_gateway") }}
                 </a>
@@ -25,5 +32,86 @@
 
         </div>
     </section>
+
+
+    <section class="marketplace-browser" aria-label="{{ t('pages.marketplace.title') }}">
+
+        <div class="marketplace-toolbar">
+
+            <div class="marketplace-search">
+                <label class="marketplace-sr-only" for="marketplaceSearch">
+                    {{ t("marketplace.search_label") }}
+                </label>
+
+                <div class="marketplace-search-control">
+                    <input
+                        id="marketplaceSearch"
+                        type="search"
+                        autocomplete="off"
+                        placeholder="{{ t('marketplace.search_placeholder') }}"
+                        aria-label="{{ t('marketplace.search_label') }}"
+                    >
+
+                    <button
+                        id="marketplaceSearchBtn"
+                        class="btn btn-primary marketplace-search-btn"
+                        type="button"
+                    >
+                        {{ t("marketplace.search_button") }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="marketplace-filter">
+                <label class="marketplace-sr-only" for="marketplaceType">
+                    {{ t("marketplace.type_label") }}
+                </label>
+
+                <select id="marketplaceType">
+                    <option value="ALL">{{ t("marketplace.all_types") }}</option>
+                    <option value="ASSET">{{ t("marketplace.type_asset") }}</option>
+                    <option value="EQUIPMENT">{{ t("marketplace.type_equipment") }}</option>
+                    <option value="SERVICE">{{ t("marketplace.type_service") }}</option>
+                    <option value="OPPORTUNITY">{{ t("marketplace.type_opportunity") }}</option>
+                </select>
+            </div>
+
+        </div>
+
+
+        <div
+            id="marketplaceStatus"
+            class="marketplace-status"
+            data-loading="{{ t('marketplace.loading') }}"
+            data-empty="{{ t('marketplace.empty') }}"
+            data-error="{{ t('marketplace.error') }}"
+            data-count-singular="{{ t('marketplace.result_singular') }}"
+            data-count-plural="{{ t('marketplace.result_plural') }}"
+            aria-live="polite"
+        >
+            {{ t("marketplace.loading") }}
+        </div>
+
+
+        <div id="marketplaceListings" class="marketplace-listings"></div>
+
+
+        <div id="marketplaceEmpty" class="marketplace-empty" hidden>
+            <div class="marketplace-empty-icon">⌕</div>
+            <h2>{{ t("marketplace.empty_title") }}</h2>
+            <p>{{ t("marketplace.empty_description") }}</p>
+        </div>
+
+
+        <div id="marketplaceError" class="marketplace-error" hidden>
+            <h2>{{ t("marketplace.error_title") }}</h2>
+            <p>{{ t("marketplace.error_description") }}</p>
+            <button id="marketplaceRetry" class="btn btn-primary" type="button">
+                {{ t("marketplace.retry") }}
+            </button>
+        </div>
+
+    </section>
+
 </main>
 {% endblock %}

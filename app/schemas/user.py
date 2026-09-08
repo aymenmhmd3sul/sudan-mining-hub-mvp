@@ -1,17 +1,26 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
 from datetime import datetime
+from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr
+
 from app.models.user import UserRole
 
-# مخطط إنشاء مستخدم جديد
+
+class PublicRegistrationRole(str, Enum):
+    MERCHANT = "MERCHANT"
+    BUYER = "BUYER"
+    AGENT = "AGENT"
+
+
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
-    role: UserRole = UserRole.BUYER
+    role: PublicRegistrationRole = PublicRegistrationRole.BUYER
 
-# مخطط إرجاع بيانات المستخدم (Response)
+
 class UserOut(BaseModel):
     id: int
     email: EmailStr
@@ -24,15 +33,16 @@ class UserOut(BaseModel):
     class Config:
         from_attributes = True
 
-# مخطط تسجيل الدخول
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-# مخطط الـ Token
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+
 
 class TokenData(BaseModel):
     email: Optional[str] = None

@@ -108,5 +108,12 @@
       "description": "Create an account to access mining market services and products."
     }
   },
-  "gateway.register": "Create account"
+  "gateway.register": "Create account",
+  "dashboard.merchant_label": "Merchant Workspace",
+  "dashboard.buyer_label": "Buyer Workspace",
+  "dashboard.merchant_description": "Manage your offers, follow buyer requests, and negotiate opportunities.",
+  "dashboard.buyer_description": "Track your requests, explore the marketplace, and continue negotiations from one workspace.",
+  "dashboard.offers_title": "Offers Needing Review",
+  "dashboard.offers_description": "New offers linked to buyer requests that need your review.",
+  "dashboard.my_requests_title": "My Requests"
 }

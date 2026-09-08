@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.offer import OfferStatus
+from app.models.negotiation import NegotiationParticipant, NegotiationRoom, NegotiationStatus
 from app.models.user import UserModel
 from app.routers.auth import require_role
 from app.services.offer_service import OfferService
@@ -44,7 +45,33 @@ def create_offer(
             message=payload.message,
             status=payload.status,
             items=[item.model_dump() for item in payload.items],
+            commit=False,
         )
+
+        room = NegotiationRoom(
+            request_id=offer.request_id,
+            offer_id=offer.id,
+            status=NegotiationStatus.OPEN,
+        )
+        db.add(room)
+        db.flush()
+
+        db.add_all(
+            [
+                NegotiationParticipant(
+                    room_id=room.id,
+                    user_id=offer.request.buyer_id,
+                ),
+                NegotiationParticipant(
+                    room_id=room.id,
+                    user_id=offer.merchant_id,
+                ),
+            ]
+        )
+
+        db.commit()
+        db.refresh(offer)
+        db.refresh(room)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
