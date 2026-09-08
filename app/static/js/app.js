@@ -104,14 +104,14 @@ function bindModuleCards() {
             });
     }
 
-    function escapeHtml(value) {
+    window.escapeHtml = function escapeHtml(value) {
         return String(value ?? "")
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
-    }
+    };
 
     function formatPrice(price, currency) {
         if (price === null || price === undefined || price === "") {
