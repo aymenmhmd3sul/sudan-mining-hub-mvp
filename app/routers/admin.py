@@ -6,7 +6,7 @@ from app.models.user import UserModel
 from app.models.commission import Commission
 from app.routers.auth import require_role
 from app.db.session import get_db
-from app.schemas.listing import ListingResponse
+from app.schemas.listing import ListingResponse, AdminListingReviewResponse
 from app.schemas.commission_settings import (
     CommissionSettingsCreate,
     CommissionSettingsResponse,
@@ -41,13 +41,34 @@ def admin_dashboard(
 
 @router.get(
     "/listings/pending",
-    response_model=list[ListingResponse],
+    response_model=list[AdminListingReviewResponse],
 )
 def list_pending_listings(
     db: Session = Depends(get_db),
     user=Depends(require_role("ADMIN")),
 ):
-    return ListingService.list_pending(db)
+    listings = ListingService.list_pending(db)
+    return [
+        {
+            "id": listing.id,
+            "owner_id": listing.owner_id,
+            "owner_name": (listing.owner.full_name or listing.owner.email),
+            "owner_email": listing.owner.email,
+            "owner_phone": listing.owner.phone_number,
+            "category_id": listing.category_id,
+            "title": listing.title,
+            "description": listing.description,
+            "listing_type": listing.listing_type,
+            "price": listing.price,
+            "currency": listing.currency,
+            "is_negotiable": listing.is_negotiable,
+            "status": listing.status,
+            "version": listing.version,
+            "created_at": listing.created_at,
+            "updated_at": listing.updated_at,
+        }
+        for listing in listings
+    ]
 
 
 @router.post(

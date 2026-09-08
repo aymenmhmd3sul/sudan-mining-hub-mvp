@@ -489,6 +489,33 @@ function bindAdminListingReview() {
                     <h3>${escapeHtml(listing.title)}</h3>
 
                     <p>
+                        <strong>رقم الإعلان:</strong>
+                        ${escapeHtml(String(listing.id))}
+                    </p>
+
+                    <p>
+                        <strong>المالك:</strong>
+                        ${escapeHtml(listing.owner_name || listing.owner_email)}
+                    </p>
+
+                    <p>
+                        <strong>الهاتف:</strong>
+                        ${
+                            listing.owner_phone
+                                ? `<a href="tel:${escapeHtml(listing.owner_phone)}">${escapeHtml(listing.owner_phone)}</a>`
+                                : "غير مسجل"
+                        }
+                    </p>
+
+                    <p>
+                        <strong>البريد الإلكتروني:</strong>
+                        <a href="mailto:${escapeHtml(listing.owner_email)}">
+                            ${escapeHtml(listing.owner_email)}
+                        </a>
+                    </p>
+
+                    <p>
+                        <strong>الوصف:</strong>
                         ${escapeHtml(listing.description || "لا يوجد وصف.")}
                     </p>
 
