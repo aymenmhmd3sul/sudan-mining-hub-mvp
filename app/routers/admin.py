@@ -4,6 +4,9 @@ from fastapi.templating import Jinja2Templates
 
 from app.models.user import UserModel
 from app.models.commission import Commission
+from app.models.deal import Deal
+from app.models.negotiation import NegotiationRoom, NegotiationMessage
+from app.models.offer import Offer
 from app.routers.auth import require_role
 from app.db.session import get_db
 from app.schemas.listing import ListingResponse, AdminListingReviewResponse
@@ -90,6 +93,198 @@ def approve_listing(
 
         raise HTTPException(status_code=409, detail=detail)
 
+
+
+@router.get("/negotiations")
+def admin_negotiations(
+    request: Request,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    rooms = (
+        db.query(NegotiationRoom)
+        .order_by(
+            NegotiationRoom.updated_at.desc(),
+            NegotiationRoom.id.desc(),
+        )
+        .all()
+    )
+
+    room_rows = []
+
+    for room in rooms:
+        request_obj = room.request
+        listing = request_obj.listing if request_obj is not None else None
+
+        latest_message = (
+            db.query(NegotiationMessage)
+            .filter(NegotiationMessage.room_id == room.id)
+            .order_by(
+                NegotiationMessage.created_at.desc(),
+                NegotiationMessage.id.desc(),
+            )
+            .first()
+        )
+
+        room_rows.append(
+            {
+                "room": room,
+                "request_obj": request_obj,
+                "listing": listing,
+                "participants_count": len(room.participants),
+                "messages_count": len(room.messages),
+                "latest_message": latest_message,
+            }
+        )
+
+    context = template_context(request)
+    context.update(
+        {
+            "title": "غرف التفاوض",
+            "current_user": user,
+            "rooms": room_rows,
+        }
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/negotiations.html",
+        context=context,
+    )
+
+
+@router.get("/negotiations/{room_id}")
+def admin_negotiation_report(
+    room_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    room = (
+        db.query(NegotiationRoom)
+        .filter(NegotiationRoom.id == room_id)
+        .first()
+    )
+
+    if room is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Negotiation room not found",
+        )
+
+    request_obj = room.request
+    listing = request_obj.listing if request_obj is not None else None
+
+    messages = (
+        db.query(NegotiationMessage)
+        .filter(NegotiationMessage.room_id == room.id)
+        .order_by(
+            NegotiationMessage.created_at.asc(),
+            NegotiationMessage.id.asc(),
+        )
+        .all()
+    )
+
+    offers = (
+        db.query(Offer)
+        .filter(Offer.request_id == request_obj.id)
+        .order_by(
+            Offer.created_at.asc(),
+            Offer.id.asc(),
+        )
+        .all()
+    ) if request_obj is not None else []
+
+    context = template_context(request)
+    context.update(
+        {
+            "title": f"تقرير التفاوض #{room.id}",
+            "current_user": user,
+            "room": room,
+            "request_obj": request_obj,
+            "listing": listing,
+            "messages": messages,
+            "offers": offers,
+            "participants": room.participants,
+        }
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/negotiation_report.html",
+        context=context,
+    )
+
+
+@router.get(
+    "/deals",
+)
+def admin_deals(
+    request: Request,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    deals = (
+        db.query(Deal)
+        .order_by(Deal.created_at.desc(), Deal.id.desc())
+        .all()
+    )
+
+    deal_rows = []
+
+    for deal in deals:
+        buyer = db.query(UserModel).filter(UserModel.id == deal.buyer_id).first()
+        merchant = db.query(UserModel).filter(UserModel.id == deal.merchant_id).first()
+        commission = (
+            db.query(Commission)
+            .filter(Commission.deal_id == deal.id)
+            .first()
+        )
+
+        request_obj = deal.request
+        listing = deal.listing
+
+        location_parts = []
+
+        if request_obj is not None and request_obj.target_location:
+            location_parts.append(str(request_obj.target_location))
+
+        if listing is not None:
+            for listing_location in getattr(listing, "locations", []) or []:
+                for value in (
+                    getattr(listing_location, "address", None),
+                    getattr(listing_location, "locality", None),
+                    getattr(listing_location, "state_province", None),
+                ):
+                    if value:
+                        location_parts.append(str(value))
+
+        location = " — ".join(dict.fromkeys(location_parts)) or "-"
+
+        deal_rows.append(
+            {
+                "deal": deal,
+                "buyer": buyer,
+                "merchant": merchant,
+                "commission": commission,
+                "location": location,
+            }
+        )
+
+    context = template_context(request)
+    context.update(
+        {
+            "title": "الصفقات والعمولات",
+            "current_user": user,
+            "deals": deal_rows,
+        }
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/deals.html",
+        context=context,
+    )
 
 
 @router.get(

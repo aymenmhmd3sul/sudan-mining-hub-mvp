@@ -13,6 +13,7 @@ from app.models.negotiation import (
     NegotiationStatus,
 )
 from app.models.offer import Offer
+from app.models.deal import Deal
 from app.models.user import UserModel
 from app.routers.auth import get_current_user, require_role
 from sqlalchemy.orm import Session
@@ -98,6 +99,46 @@ def merchant_dashboard(
     )
 
 
+@router.get("/buyer")
+def buyer_dashboard(
+    request: Request,
+    user=Depends(require_role("BUYER")),
+):
+    context = template_context(request)
+    context.update(
+        {
+            "title": context["t"]("dashboard.buyer_label"),
+            "current_user": user,
+            "role": "BUYER",
+            "pending_offers_count": 0,
+        }
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard/dashboard.html",
+        context=context,
+    )
+
+
+@router.get("/merchant/listings/new")
+def merchant_listing_create_page(
+    request: Request,
+    user=Depends(require_role("MERCHANT")),
+):
+    context = template_context(request)
+    context.update({
+        "title": "إضافة سلعة",
+        "current_user": user,
+        "role": "MERCHANT",
+    })
+    return templates.TemplateResponse(
+        request=request,
+        name="marketplace/listing_create.html",
+        context=context,
+    )
+
+
 @router.get("/marketplace/listing/{listing_id}")
 def marketplace_listing_detail(
     listing_id: int,
@@ -166,6 +207,34 @@ def start_listing_negotiation(
             "existing": True,
         }
 
+    listing_location = next(
+        (
+            location
+            for location in listing.locations
+            if any(
+                value
+                for value in (
+                    location.address,
+                    location.locality,
+                    location.state_province,
+                )
+            )
+        ),
+        None,
+    )
+
+    location_parts = []
+    if listing_location is not None:
+        for value in (
+            listing_location.address,
+            listing_location.locality,
+            listing_location.state_province,
+        ):
+            if value:
+                location_parts.append(str(value))
+
+    target_location = " — ".join(dict.fromkeys(location_parts)) or None
+
     request = BuyerRequest(
         buyer_id=user.id,
         listing_id=listing.id,
@@ -173,6 +242,7 @@ def start_listing_negotiation(
         description=listing.description,
         status=RequestStatus.OPEN,
         currency=listing.currency,
+        target_location=target_location,
     )
     db.add(request)
     db.flush()
@@ -406,6 +476,38 @@ def negotiation_page(
         name="negotiation/negotiation.html",
         context=context,
     )
+
+
+@router.post("/api/v1/negotiation/offers/{offer_id}/accept")
+def accept_negotiation_offer(
+    offer_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("BUYER")),
+):
+    try:
+        room = NegotiationService.accept_offer(
+            db,
+            offer_id=offer_id,
+            buyer_id=user.id,
+        )
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    deal = (
+        db.query(Deal)
+        .filter(Deal.offer_id == offer_id)
+        .first()
+    )
+
+    return {
+        "offer_id": offer_id,
+        "room_id": room.id,
+        "room_status": room.status,
+        "deal_id": deal.id if deal is not None else None,
+        "deal_status": deal.status if deal is not None else None,
+    }
 
 
 @router.post("/api/v1/negotiation/{room_id}/messages")

@@ -1,0 +1,126 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="gateway">
+
+    <section class="gateway-hero">
+        <div class="hero-content">
+            <span class="eyebrow">ADMIN CONTROL</span>
+
+            <h1>الصفقات والعمولات</h1>
+
+            <p>
+                متابعة الصفقات الناتجة عن قبول العروض، بيانات الأطراف،
+                الاتصال، الموقع، وحالة العمولة.
+            </p>
+
+            <div class="hero-actions">
+                <a class="btn btn-secondary" href="/admin/">
+                    العودة إلى لوحة المشرف
+                </a>
+
+                <a class="btn btn-primary" href="/admin/negotiations">
+                    غرف التفاوض
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="marketplace-browser">
+        <div class="marketplace-listing-detail-section">
+
+            {% if deals %}
+
+                {% for row in deals %}
+
+                <article class="marketplace-listing-detail-item">
+
+                    <h2>الصفقة #{{ row.deal.id }}</h2>
+
+                    <p>
+                        <strong>حالة الصفقة:</strong>
+                        {{ row.deal.status.value }}
+                    </p>
+
+                    <p>
+                        <strong>المبلغ النهائي:</strong>
+                        {{ row.deal.final_amount }}
+                        {{ row.deal.currency }}
+                    </p>
+
+                    <p>
+                        <strong>الموقع / العنوان:</strong>
+                        {{ row.location }}
+                    </p>
+
+                    <hr>
+
+                    <p>
+                        <strong>المشتري:</strong>
+                        {% if row.buyer %}
+                            {{ row.buyer.full_name or row.buyer.email }}
+                            — {{ row.buyer.email }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+
+                    <p>
+                        <strong>التاجر:</strong>
+                        {% if row.merchant %}
+                            {{ row.merchant.full_name or row.merchant.email }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+
+                    <p>
+                        <strong>اتصال التاجر:</strong>
+                        {% if row.merchant %}
+                            {{ row.merchant.phone_number or "-" }}
+                            — {{ row.merchant.email }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+
+                    <p>
+                        <strong>العمولة:</strong>
+                        {% if row.commission %}
+                            {{ row.commission.final_amount or row.commission.platform_amount or "-" }}
+                            {{ row.commission.currency or "" }}
+                            — {{ row.commission.status.value }}
+                        {% else %}
+                            لم تُنشأ بعد
+                        {% endif %}
+                    </p>
+
+                    {% if row.commission and row.commission.status.value == "DUE" %}
+                    <form
+                        method="post"
+                        action="/admin/commissions/{{ row.commission.id }}/settle"
+                    >
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            تسوية العمولة
+                        </button>
+                    </form>
+                    {% endif %}
+
+                </article>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p>لا توجد صفقات حتى الآن.</p>
+
+            {% endif %}
+
+        </div>
+    </section>
+
+</main>
+{% endblock %}
