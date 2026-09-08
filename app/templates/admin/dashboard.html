@@ -2,6 +2,29 @@
 
 {% block content %}
 <main class="gateway">
+  <header class="gateway-header">
+    <div class="brand">
+      <div class="brand-mark">SMH</div>
+
+      <div class="brand-copy">
+        <strong>{{ t("app.name") }}</strong>
+        <span data-i18n="gateway.tagline">
+          {{ t("gateway.tagline") }}
+        </span>
+      </div>
+    </div>
+
+    <button
+      id="languageToggle"
+      class="language-toggle"
+      type="button"
+      aria-label="Change language"
+    >
+      <span id="languageLabel">
+        {% if lang == "ar" %}EN{% else %}العربية{% endif %}
+      </span>
+    </button>
+  </header>
     <section class="gateway-hero">
         <div class="hero-content">
             <span class="eyebrow">ADMIN CONTROL</span>

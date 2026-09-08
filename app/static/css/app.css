@@ -1661,3 +1661,265 @@ h1 {
 
 /* Native hidden attribute must remain hidden */
 [hidden] { display: none !important; }
+
+
+/* ADMIN VISUAL IDENTITY UNIFICATION - 20260908 */
+
+.admin-negotiations,
+.admin-report {
+    width: min(1100px, 100%);
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 24px 18px 48px;
+}
+
+.admin-negotiations-card,
+.admin-report-card {
+    position: relative;
+    margin-bottom: 18px;
+    padding: 22px;
+    border: 1px solid var(--gold-line);
+    border-radius: var(--radius-lg);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(214,168,79,.07), transparent 32%),
+        linear-gradient(145deg, rgba(16,26,38,.96), rgba(12,19,29,.98));
+    box-shadow:
+        0 18px 45px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.035);
+    color: var(--text);
+}
+
+.admin-negotiations-card h1,
+.admin-negotiations-card h2,
+.admin-report-card h1,
+.admin-report-card h2 {
+    color: var(--gold-light);
+    text-shadow: 0 0 22px rgba(214,168,79,.14);
+}
+
+.admin-negotiations-card p,
+.admin-report-card p {
+    color: var(--muted);
+}
+
+.admin-negotiations-meta,
+.admin-report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin: 14px 0 18px;
+}
+
+.admin-negotiations-meta span,
+.admin-report-grid > div {
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,.025);
+}
+
+.admin-report-label,
+.admin-message-meta {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.admin-report-value,
+.admin-message-body {
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.admin-report-value {
+    font-weight: 650;
+}
+
+.admin-negotiations-actions,
+.admin-report-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 10px 0 18px;
+}
+
+.admin-message {
+    padding: 15px 0;
+    border-top: 1px solid var(--line);
+}
+
+.admin-message:first-child {
+    border-top: 0;
+}
+
+.admin-message-body {
+    white-space: pre-wrap;
+    line-height: 1.75;
+    margin-top: 7px;
+}
+
+@media (max-width: 640px) {
+    .admin-negotiations,
+    .admin-report {
+        padding: 16px 12px 36px;
+    }
+
+    .admin-negotiations-card,
+    .admin-report-card {
+        padding: 17px;
+        border-radius: var(--radius-md);
+    }
+}
+
+@media print {
+    .admin-report-actions {
+        display: none !important;
+    }
+
+    .admin-report {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+    }
+
+    .admin-report-card {
+        background: #fff !important;
+        color: #111 !important;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        break-inside: avoid;
+    }
+
+    .admin-report-card h1,
+    .admin-report-card h2,
+    .admin-report-card p,
+    .admin-report-card div,
+    .admin-report-card span,
+    .admin-report-card strong,
+    .admin-report-card .admin-report-value,
+    .admin-report-card .admin-message-body {
+        color: #111 !important;
+        text-shadow: none;
+    }
+
+    .admin-report-label,
+    .admin-message-meta {
+        color: #555 !important;
+    }
+
+    body {
+        background: #fff !important;
+    }
+}
+
+/* ADMIN DASHBOARD VISUAL IDENTITY - 20260908 */
+
+.gateway > .marketplace-browser {
+    position: relative;
+    overflow: hidden;
+    margin-top: 20px;
+    padding: 0;
+    border: 1px solid var(--gold-line);
+    border-radius: var(--radius-lg);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(214,168,79,.075), transparent 30%),
+        radial-gradient(circle at 0% 100%, rgba(72,122,180,.055), transparent 34%),
+        linear-gradient(145deg, rgba(16,26,38,.97), rgba(8,13,20,.98));
+    box-shadow:
+        0 18px 48px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.gateway > .marketplace-browser::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(120deg, transparent 0 55%, rgba(214,168,79,.035) 70%, transparent 88%);
+}
+
+.gateway > .marketplace-browser .marketplace-listing-detail-section {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 24px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.gateway > .marketplace-browser .marketplace-listing-detail-section h2 {
+    margin: 0 0 8px;
+    color: var(--gold-light);
+    text-shadow: 0 0 22px rgba(214,168,79,.16);
+}
+
+.gateway > .marketplace-browser .marketplace-listing-detail-section > p {
+    color: var(--muted);
+    line-height: 1.75;
+}
+
+.gateway > .marketplace-browser .hero-actions {
+    margin-top: 18px;
+}
+
+/* Pending listings area */
+.gateway > .marketplace-browser #adminPendingListingsStatus {
+    margin-top: 18px;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.025);
+    color: var(--muted);
+}
+
+.gateway > .marketplace-browser #adminPendingListings {
+    margin-top: 14px;
+}
+
+.gateway > .marketplace-browser #adminPendingListings .marketplace-card,
+.gateway > .marketplace-browser #adminPendingListings article,
+.gateway > .marketplace-browser #adminPendingListings .listing-card {
+    border-color: var(--gold-line);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(214,168,79,.065), transparent 36%),
+        linear-gradient(145deg, rgba(20,33,49,.96), rgba(12,19,29,.98));
+    box-shadow:
+        0 12px 32px rgba(0,0,0,.24),
+        inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.gateway > .marketplace-browser #adminPendingListings .marketplace-card:hover,
+.gateway > .marketplace-browser #adminPendingListings article:hover,
+.gateway > .marketplace-browser #adminPendingListings .listing-card:hover {
+    border-color: rgba(242,208,131,.48);
+    transform: translateY(-2px);
+}
+
+/* Common visual metadata / badges inside admin listing cards */
+.gateway > .marketplace-browser #adminPendingListings [class*="badge"],
+.gateway > .marketplace-browser #adminPendingListings [class*="status"],
+.gateway > .marketplace-browser #adminPendingListings [class*="type"] {
+    border-radius: 999px;
+    border: 1px solid var(--gold-line);
+    background: var(--gold-soft);
+    color: var(--gold-light);
+}
+
+.gateway > .marketplace-browser #adminPendingListings [class*="price"] {
+    color: var(--gold-light);
+    font-weight: 750;
+    text-shadow: 0 0 16px rgba(214,168,79,.12);
+}
+
+@media (max-width: 640px) {
+    .gateway > .marketplace-browser {
+        margin-top: 14px;
+        border-radius: var(--radius-md);
+    }
+
+    .gateway > .marketplace-browser .marketplace-listing-detail-section {
+        padding: 18px;
+    }
+}
