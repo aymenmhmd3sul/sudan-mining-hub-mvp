@@ -1,0 +1,132 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<style>
+.admin-negotiations {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+.admin-negotiations-card {
+    border: 1px solid #d8dee8;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    background: #fff;
+    color: #1f2937;
+}
+
+.admin-negotiations-card h1,
+.admin-negotiations-card h2,
+.admin-negotiations-card p,
+.admin-negotiations-card span,
+.admin-negotiations-card strong {
+    color: #1f2937;
+}
+
+.admin-negotiations-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    margin: 10px 0 16px;
+    font-size: 14px;
+}
+
+.admin-negotiations-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+</style>
+
+<main class="admin-negotiations">
+
+    <section class="admin-negotiations-card">
+        <h1>غرف التفاوض</h1>
+        <p>
+            سجل غرف التفاوض المتاح للمراجعة الإدارية وحل النزاعات.
+        </p>
+
+        <div class="admin-negotiations-actions">
+            <a class="btn btn-secondary" href="/admin">
+                العودة إلى لوحة الإدارة
+            </a>
+        </div>
+    </section>
+
+    {% for row in rooms %}
+    <section class="admin-negotiations-card">
+
+        <h2>
+            غرفة التفاوض #{{ row.room.id }}
+        </h2>
+
+        <div class="admin-negotiations-meta">
+            <span>
+                الحالة:
+                {{ row.room.status.value if row.room.status.value is defined else row.room.status }}
+            </span>
+
+            <span>
+                المشاركون: {{ row.participants_count }}
+            </span>
+
+            <span>
+                الرسائل: {{ row.messages_count }}
+            </span>
+
+            {% if row.request_obj %}
+            <span>
+                الطلب #{{ row.request_obj.id }}
+            </span>
+            {% endif %}
+
+            {% if row.listing %}
+            <span>
+                الإعلان #{{ row.listing.id }}
+            </span>
+            {% endif %}
+        </div>
+
+        {% if row.request_obj %}
+        <p>
+            <strong>عنوان الطلب:</strong>
+            {{ row.request_obj.title }}
+        </p>
+        {% endif %}
+
+        {% if row.listing %}
+        <p>
+            <strong>الإعلان:</strong>
+            {{ row.listing.title }}
+        </p>
+        {% endif %}
+
+        {% if row.latest_message %}
+        <p>
+            <strong>آخر رسالة:</strong>
+            {{ row.latest_message.created_at }}
+            —
+            {{ row.latest_message.sender.full_name or row.latest_message.sender.email }}
+        </p>
+        {% endif %}
+
+        <div class="admin-negotiations-actions">
+            <a class="btn btn-primary"
+               href="/admin/negotiations/{{ row.room.id }}">
+                فتح التقرير الكامل
+            </a>
+        </div>
+
+    </section>
+    {% else %}
+
+    <section class="admin-negotiations-card">
+        <p>لا توجد غرف تفاوض حاليًا.</p>
+    </section>
+
+    {% endfor %}
+
+</main>
+{% endblock %}
