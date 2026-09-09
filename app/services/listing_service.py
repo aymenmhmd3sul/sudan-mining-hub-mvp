@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.models.listing import Listing, ListingStatus
+from app.models.listing_location import ListingLocation
+from app.models.listing_spec import ListingSpec
 
 
 class ListingService:
@@ -81,8 +83,35 @@ class ListingService:
 
     @staticmethod
     def create(db: Session, **data) -> Listing:
+        state_province = data.pop("state_province", None)
+        locality = data.pop("locality", None)
+        address = data.pop("address", None)
+        specs = data.pop("specs", None)
+
         listing = Listing(**data)
         db.add(listing)
+        db.flush()
+
+        if any((state_province, locality, address)):
+            db.add(
+                ListingLocation(
+                    listing_id=listing.id,
+                    country="SD",
+                    state_province=state_province,
+                    locality=locality,
+                    address=address,
+                )
+            )
+
+        if specs and specs.strip():
+            db.add(
+                ListingSpec(
+                    listing_id=listing.id,
+                    spec_key="details",
+                    spec_value=specs.strip(),
+                )
+            )
+
         db.commit()
         db.refresh(listing)
         return listing

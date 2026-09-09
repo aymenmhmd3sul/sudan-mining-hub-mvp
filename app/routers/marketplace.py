@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from pathlib import Path
+import uuid
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.listing import ListingStatus, ListingType
+from app.models.listing import Listing, ListingStatus, ListingType
 from app.models.listing_category import ListingCategory
+from app.models.listing_media import ListingMedia, MediaType
 from app.models.user import UserModel
 from app.routers.auth import require_role
 from app.schemas.listing import ListingCreate, ListingResponse
@@ -44,6 +47,83 @@ def list_categories(
         .all()
     )
 
+
+
+
+@router.post("/{listing_id}/images")
+async def upload_listing_image(
+    listing_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(require_role("MERCHANT", "ADMIN")),
+):
+    listing = (
+        db.query(Listing)
+        .filter(Listing.id == listing_id)
+        .first()
+    )
+
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    if user.role != "ADMIN" and listing.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    allowed_types = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/webp": ".webp",
+    }
+
+    suffix = allowed_types.get(file.content_type or "")
+    if suffix is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Only JPG, PNG, and WEBP images are allowed",
+        )
+
+    data = await file.read(5 * 1024 * 1024 + 1)
+
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail="Image must not exceed 5 MB",
+        )
+
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty image")
+
+    upload_dir = Path("app/static/uploads/listings")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = f"{listing_id}-{uuid.uuid4().hex}{suffix}"
+    target = upload_dir / filename
+    target.write_bytes(data)
+
+    next_order = (
+        db.query(ListingMedia)
+        .filter(ListingMedia.listing_id == listing_id)
+        .count()
+    )
+
+    media = ListingMedia(
+        listing_id=listing_id,
+        media_type=MediaType.IMAGE,
+        url=f"/uploads/listings/{filename}",
+        sort_order=next_order,
+    )
+
+    db.add(media)
+    db.commit()
+    db.refresh(media)
+
+    return {
+        "id": media.id,
+        "listing_id": listing_id,
+        "media_type": media.media_type,
+        "url": media.url,
+        "sort_order": media.sort_order,
+    }
 
 @router.get("/{listing_id}", response_model=ListingResponse)
 def get_listing(

@@ -13,6 +13,10 @@ class ListingCreate(BaseModel):
     price: float | None = Field(default=None, ge=0)
     currency: str = Field(default="USD", min_length=3, max_length=3)
     is_negotiable: bool = True
+    state_province: str | None = None
+    locality: str | None = None
+    address: str | None = None
+    specs: str | None = None
 
 
 class ListingResponse(BaseModel):

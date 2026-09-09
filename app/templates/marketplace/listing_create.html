@@ -1,104 +1,265 @@
 {% extends "base/base.html" %}
 
 {% block content %}
-<main class="marketplace-page">
-    <section class="marketplace-hero">
+<main class="marketplace-page listing-create-page" dir="rtl">
+
+    <section class="marketplace-hero listing-create-hero">
         <div class="marketplace-hero-content">
             <span class="marketplace-eyebrow">SMH • MERCHANT</span>
 
             <h1>إضافة سلعة</h1>
 
             <p>
-                أنشئ إعلان السلعة ليتم مراجعته من الإدارة قبل ظهوره في السوق.
+                أضف تفاصيل السلعة والصور ليتم إرسال الإعلان إلى المشرف
+                للمراجعة قبل ظهوره في السوق.
             </p>
 
             <div class="marketplace-hero-actions">
                 <a class="btn btn-secondary" href="/marketplace">
-                    العودة إلى السوق
+                    ← العودة إلى السوق
                 </a>
             </div>
         </div>
     </section>
 
-    <section class="marketplace-browser">
+    <section class="marketplace-browser listing-create-shell">
+
         <form id="listingCreateForm" class="listing-create-form">
 
-            <div class="form-field">
-                <label for="listingTitle">اسم السلعة</label>
-                <input
-                    id="listingTitle"
-                    name="title"
-                    type="text"
-                    maxlength="255"
-                    required
-                    placeholder="مثال: ذهب خام"
-                >
+            <div class="listing-form-card">
+                <div class="listing-form-card-header">
+                    <span class="marketplace-eyebrow">01 • البيانات الأساسية</span>
+                    <h2>بيانات السلعة</h2>
+                </div>
+
+                <div class="listing-form-grid">
+
+                    <div class="form-field form-field-full">
+                        <label for="listingTitle">اسم السلعة</label>
+                        <input
+                            id="listingTitle"
+                            name="title"
+                            type="text"
+                            maxlength="255"
+                            required
+                            placeholder="مثال: ذهب خام"
+                        >
+                    </div>
+
+                    <div class="form-field">
+                        <label for="listingCategory">الصنف</label>
+                        <select id="listingCategory" name="category_id" required>
+                            <option value="">اختر الصنف</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="listingType">نوع العرض</label>
+                        <select id="listingType" name="listing_type">
+                            <option value="ASSET">سلعة / أصل</option>
+                            <option value="EQUIPMENT">معدات</option>
+                            <option value="SERVICE">خدمة</option>
+                            <option value="OPPORTUNITY">فرصة</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field form-field-full">
+                        <label for="listingDescription">وصف السلعة</label>
+                        <textarea
+                            id="listingDescription"
+                            name="description"
+                            rows="6"
+                            maxlength="5000"
+                            placeholder="اكتب وصفًا واضحًا للسلعة ومعلوماتها المهمة..."
+                        ></textarea>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="form-field">
-                <label for="listingCategory">التصنيف</label>
-                <select id="listingCategory" name="category_id" required>
-                    <option value="">اختر التصنيف</option>
-                </select>
+
+            <div class="listing-form-card">
+
+                <div class="listing-form-card-header">
+                    <span class="marketplace-eyebrow">02 • السعر</span>
+                    <h2>السعر وشروط البيع</h2>
+                </div>
+
+                <div class="listing-form-grid">
+
+                    <div class="form-field">
+                        <label for="listingPrice">السعر</label>
+                        <input
+                            id="listingPrice"
+                            name="price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            inputmode="decimal"
+                            placeholder="أدخل السعر"
+                        >
+                    </div>
+
+                    <div class="form-field">
+                        <label for="listingCurrency">العملة</label>
+                        <select id="listingCurrency" name="currency">
+                            <option value="USD">USD — دولار أمريكي</option>
+                            <option value="SDG">SDG — جنيه سوداني</option>
+                        </select>
+                    </div>
+
+                    <label class="listing-checkbox">
+                        <input
+                            id="listingNegotiable"
+                            name="is_negotiable"
+                            type="checkbox"
+                            checked
+                        >
+                        <span>
+                            <strong>السعر قابل للتفاوض</strong>
+                            <small>يمكن للمشتري تقديم عرض مختلف.</small>
+                        </span>
+                    </label>
+
+                </div>
             </div>
 
-            <div class="form-field">
-                <label for="listingType">نوع العرض</label>
-                <select id="listingType" name="listing_type">
-                    <option value="ASSET">سلعة / أصل</option>
-                    <option value="EQUIPMENT">معدات</option>
-                    <option value="SERVICE">خدمة</option>
-                    <option value="OPPORTUNITY">فرصة</option>
-                </select>
+
+            <div class="listing-form-card">
+
+                <div class="listing-form-card-header">
+                    <span class="marketplace-eyebrow">03 • الموقع</span>
+                    <h2>موقع السلعة</h2>
+                </div>
+
+                <div class="listing-form-grid">
+
+                    <div class="form-field">
+                        <label for="listingState">الولاية</label>
+                        <input
+                            id="listingState"
+                            name="state_province"
+                            type="text"
+                            maxlength="120"
+                            placeholder="مثال: نهر النيل"
+                        >
+                    </div>
+
+                    <div class="form-field">
+                        <label for="listingLocality">المحلية</label>
+                        <input
+                            id="listingLocality"
+                            name="locality"
+                            type="text"
+                            maxlength="120"
+                            placeholder="مثال: أبو حمد"
+                        >
+                    </div>
+
+                    <div class="form-field form-field-full">
+                        <label for="listingAddress">العنوان / الموقع التفصيلي</label>
+                        <input
+                            id="listingAddress"
+                            name="address"
+                            type="text"
+                            maxlength="500"
+                            placeholder="أدخل العنوان أو وصف الموقع بوضوح"
+                        >
+                    </div>
+
+                </div>
             </div>
 
-            <div class="form-field">
-                <label for="listingDescription">الوصف</label>
-                <textarea
-                    id="listingDescription"
-                    name="description"
-                    rows="5"
-                    placeholder="اكتب وصفًا واضحًا للسلعة..."
-                ></textarea>
+
+            <div class="listing-form-card">
+
+                <div class="listing-form-card-header">
+                    <span class="marketplace-eyebrow">04 • المواصفات</span>
+                    <h2>مواصفات إضافية</h2>
+                </div>
+
+                <div class="listing-form-grid">
+
+                    <div class="form-field form-field-full">
+                        <label for="listingSpecs">المواصفات</label>
+                        <textarea
+                            id="listingSpecs"
+                            name="specific_specs"
+                            rows="5"
+                            maxlength="5000"
+                            placeholder="أدخل الوزن، الجودة، القدرة، الموديل، الحالة أو أي مواصفات مهمة..."
+                        ></textarea>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="form-field">
-                <label for="listingPrice">السعر</label>
-                <input
-                    id="listingPrice"
-                    name="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="اختياري"
-                >
+
+            <div class="listing-form-card">
+
+                <div class="listing-form-card-header">
+                    <span class="marketplace-eyebrow">05 • الصور</span>
+                    <h2>صور السلعة</h2>
+                    <p>أضف صورًا واضحة للسلعة — الحد الأقصى 5MB للصورة.</p>
+                </div>
+
+                <div class="listing-image-upload">
+
+                    <label class="listing-upload-zone" for="listingImages">
+                        <span class="listing-upload-icon">＋</span>
+                        <strong>اختيار صور السلعة</strong>
+                        <small>JPG أو PNG أو WEBP</small>
+                    </label>
+
+                    <input
+                        id="listingImages"
+                        name="images"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        multiple
+                        hidden
+                    >
+
+                    <div
+                        id="listingImagePreview"
+                        class="listing-image-preview"
+                        aria-live="polite"
+                    ></div>
+
+                </div>
             </div>
 
-            <div class="form-field">
-                <label for="listingCurrency">العملة</label>
-                <select id="listingCurrency" name="currency">
-                    <option value="USD">USD</option>
-                    <option value="SDG">SDG</option>
-                </select>
+
+            <div class="listing-form-footer">
+
+                <div
+                    id="listingCreateStatus"
+                    class="marketplace-status"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+                <div class="listing-form-actions">
+
+                    <a class="btn btn-secondary" href="/marketplace">
+                        إلغاء والعودة إلى السوق
+                    </a>
+
+                    <button class="btn btn-primary" type="submit">
+                        إضافة السلعة للمراجعة
+                    </button>
+
+                </div>
+
+                <p class="listing-draft-note">
+                    سيتم حفظ الإعلان كـ <strong>DRAFT</strong> وإرساله للمشرف
+                    للمراجعة قبل نشره في السوق.
+                </p>
+
             </div>
-
-            <label class="form-checkbox">
-                <input
-                    id="listingNegotiable"
-                    name="is_negotiable"
-                    type="checkbox"
-                    checked
-                >
-                <span>السعر قابل للتفاوض</span>
-            </label>
-
-            <div id="listingCreateStatus" class="marketplace-status" role="status"></div>
-
-            <button class="btn btn-primary" type="submit">
-                إنشاء الإعلان
-            </button>
 
         </form>
+
     </section>
 </main>
 {% endblock %}
