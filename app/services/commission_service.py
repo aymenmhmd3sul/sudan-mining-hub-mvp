@@ -133,6 +133,31 @@ class CommissionService:
         return commission
 
     @staticmethod
+    def accept_by_merchant(
+        db: Session,
+        commission: Commission,
+        merchant_id: int,
+    ) -> Commission:
+        if commission.merchant_id != merchant_id:
+            raise PermissionError(
+                "Only the merchant can accept this commission"
+            )
+
+        if commission.status != CommissionStatus.CALCULATED:
+            raise ValueError(
+                "Only CALCULATED commissions can be accepted by the merchant"
+            )
+
+        if commission.merchant_accepted:
+            raise ValueError(
+                "Commission has already been accepted by the merchant"
+            )
+
+        commission.merchant_accepted = True
+        db.flush()
+        return commission
+
+    @staticmethod
     def mark_due(
         db: Session,
         commission: Commission,
@@ -140,6 +165,11 @@ class CommissionService:
         if commission.status != CommissionStatus.CALCULATED:
             raise ValueError(
                 "Only CALCULATED commissions can become DUE"
+            )
+
+        if not commission.merchant_accepted:
+            raise ValueError(
+                "Merchant must accept the commission before it becomes DUE"
             )
 
         commission.status = CommissionStatus.DUE

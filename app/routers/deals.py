@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.deal import Deal
 from app.services.deal_service import DealService
+from app.services.commission_service import CommissionService
 from app.models.user import UserModel
 from app.routers.auth import get_current_user, require_role
 
@@ -127,4 +128,34 @@ def cancel_deal(
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc))
     except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+
+@router.post("/{deal_id}/commission/accept")
+def accept_deal_commission(
+    deal_id: int,
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(require_role("MERCHANT")),
+):
+    deal = db.query(Deal).filter(Deal.id == deal_id).first()
+    if deal is None:
+        raise HTTPException(status_code=404, detail="Deal not found")
+
+    commission = CommissionService.get_for_deal(db, deal.id)
+    if commission is None:
+        raise HTTPException(status_code=404, detail="Commission not found")
+
+    try:
+        accepted = CommissionService.accept_by_merchant(
+            db,
+            commission,
+            user.id,
+        )
+        db.commit()
+        db.refresh(accepted)
+        return accepted
+    except PermissionError as exc:
+        db.rollback()
+        raise HTTPException(status_code=403, detail=str(exc))
+    except ValueError as exc:
+        db.rollback()
         raise HTTPException(status_code=409, detail=str(exc))
