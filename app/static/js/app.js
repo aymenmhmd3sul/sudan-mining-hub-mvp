@@ -648,70 +648,80 @@ function bindAdminListingReview() {
 
         listings.forEach(function (listing) {
             const card = document.createElement("article");
-            card.className = "marketplace-listing-detail-card";
+            card.className = "admin-listing-review-card";
+
+            const ownerName =
+                listing.owner_name || listing.owner_email || "غير مسجل";
+
+            const phoneHtml = listing.owner_phone
+                ? `<a href="tel:${escapeHtml(listing.owner_phone)}">${escapeHtml(listing.owner_phone)}</a>`
+                : "غير مسجل";
+
+            const emailHtml = listing.owner_email
+                ? `<a href="mailto:${escapeHtml(listing.owner_email)}">${escapeHtml(listing.owner_email)}</a>`
+                : "غير مسجل";
+
+            const priceHtml =
+                listing.price === null
+                    ? "غير محدد"
+                    : escapeHtml(
+                        String(listing.price) +
+                        " " +
+                        String(listing.currency || "")
+                    );
 
             card.innerHTML = `
-                <div class="marketplace-listing-detail-section">
-                    <h3>${escapeHtml(listing.title)}</h3>
+                <div class="admin-listing-review-header">
+                    <div>
+                        <span class="admin-listing-review-eyebrow">LISTING REVIEW</span>
+                        <h3>${escapeHtml(listing.title)}</h3>
+                    </div>
+                    <span class="admin-listing-review-id">
+                        #${escapeHtml(String(listing.id))}
+                    </span>
+                </div>
 
-                    <p>
-                        <strong>رقم الإعلان:</strong>
-                        ${escapeHtml(String(listing.id))}
-                    </p>
+                <div class="admin-listing-review-owner">
+                    <strong>المالك</strong>
+                    <span>${escapeHtml(ownerName)}</span>
+                </div>
 
-                    <p>
-                        <strong>المالك:</strong>
-                        ${escapeHtml(listing.owner_name || listing.owner_email)}
-                    </p>
+                <div class="admin-listing-review-contact">
+                    <div class="admin-listing-review-contact-item">
+                        <span>الهاتف</span>
+                        <span>${phoneHtml}</span>
+                    </div>
+                    <div class="admin-listing-review-contact-item">
+                        <span>البريد الإلكتروني</span>
+                        <span>${emailHtml}</span>
+                    </div>
+                </div>
 
-                    <p>
-                        <strong>الهاتف:</strong>
-                        ${
-                            listing.owner_phone
-                                ? `<a href="tel:${escapeHtml(listing.owner_phone)}">${escapeHtml(listing.owner_phone)}</a>`
-                                : "غير مسجل"
-                        }
-                    </p>
+                <div class="admin-listing-review-grid">
+                    <div>
+                        <span>التصنيف</span>
+                        <strong>${escapeHtml(String(listing.category_id))}</strong>
+                    </div>
+                    <div>
+                        <span>النوع</span>
+                        <strong>${escapeHtml(listing.listing_type)}</strong>
+                    </div>
+                    <div>
+                        <span>السعر</span>
+                        <strong>${priceHtml}</strong>
+                    </div>
+                    <div>
+                        <span>الحالة</span>
+                        <strong>${escapeHtml(listing.status)}</strong>
+                    </div>
+                </div>
 
-                    <p>
-                        <strong>البريد الإلكتروني:</strong>
-                        <a href="mailto:${escapeHtml(listing.owner_email)}">
-                            ${escapeHtml(listing.owner_email)}
-                        </a>
-                    </p>
+                <div class="admin-listing-review-description">
+                    <span>الوصف</span>
+                    <p>${escapeHtml(listing.description || "لا يوجد وصف.")}</p>
+                </div>
 
-                    <p>
-                        <strong>الوصف:</strong>
-                        ${escapeHtml(listing.description || "لا يوجد وصف.")}
-                    </p>
-
-                    <p>
-                        <strong>التصنيف:</strong>
-                        ${escapeHtml(String(listing.category_id))}
-                    </p>
-
-                    <p>
-                        <strong>النوع:</strong>
-                        ${escapeHtml(listing.listing_type)}
-                    </p>
-
-                    <p>
-                        <strong>السعر:</strong>
-                        ${listing.price === null
-                            ? "غير محدد"
-                            : escapeHtml(
-                                String(listing.price) +
-                                " " +
-                                String(listing.currency)
-                            )
-                        }
-                    </p>
-
-                    <p>
-                        <strong>الحالة:</strong>
-                        ${escapeHtml(listing.status)}
-                    </p>
-
+                <div class="admin-listing-review-actions">
                     <button
                         class="btn btn-primary admin-approve-listing"
                         type="button"
