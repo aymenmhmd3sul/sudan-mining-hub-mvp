@@ -1,11 +1,11 @@
 {% extends "base/base.html" %}
 
 {% block content %}
-<main class="gateway">
+<main class="admin-deals-page">
 
-    <section class="gateway-hero">
-        <div class="hero-content">
-            <span class="eyebrow">ADMIN CONTROL</span>
+    <section class="admin-deals-hero">
+        <div class="admin-deals-hero-content">
+            <span class="admin-deals-eyebrow">ADMIN CONTROL</span>
 
             <h1>الصفقات والعمولات</h1>
 
@@ -14,7 +14,7 @@
                 الاتصال، الموقع، وحالة العمولة.
             </p>
 
-            <div class="hero-actions">
+            <div class="admin-deals-actions">
                 <a class="btn btn-secondary" href="/admin/">
                     العودة إلى لوحة المشرف
                 </a>
@@ -26,100 +26,132 @@
         </div>
     </section>
 
-    <section class="marketplace-browser">
-        <div class="marketplace-listing-detail-section">
+    <section class="admin-deals-browser" aria-label="الصفقات والعمولات">
 
-            {% if deals %}
+        {% if deals %}
+
+            <div class="admin-deals-grid">
 
                 {% for row in deals %}
+                <article class="admin-deal-card">
 
-                <article class="marketplace-listing-detail-item">
+                    <div class="admin-deal-card-header">
+                        <div>
+                            <span class="admin-deal-eyebrow">DEAL</span>
+                            <h2>الصفقة #{{ row.deal.id }}</h2>
+                        </div>
 
-                    <h2>الصفقة #{{ row.deal.id }}</h2>
+                        <span class="admin-deal-status">
+                            {{ row.deal.status.value }}
+                        </span>
+                    </div>
 
-                    <p>
-                        <strong>حالة الصفقة:</strong>
-                        {{ row.deal.status.value }}
-                    </p>
+                    <div class="admin-deal-amount">
+                        <span>المبلغ النهائي</span>
+                        <strong>
+                            {{ row.deal.final_amount }}
+                            {{ row.deal.currency }}
+                        </strong>
+                    </div>
 
-                    <p>
-                        <strong>المبلغ النهائي:</strong>
-                        {{ row.deal.final_amount }}
-                        {{ row.deal.currency }}
-                    </p>
+                    <div class="admin-deal-info-grid">
 
-                    <p>
-                        <strong>الموقع / العنوان:</strong>
-                        {{ row.location }}
-                    </p>
+                        <div class="admin-deal-info">
+                            <span>الموقع / العنوان</span>
+                            <strong>{{ row.location }}</strong>
+                        </div>
 
-                    <hr>
+                        <div class="admin-deal-info">
+                            <span>المشتري</span>
+                            <strong>
+                                {% if row.buyer %}
+                                    {{ row.buyer.full_name or row.buyer.email }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
 
-                    <p>
-                        <strong>المشتري:</strong>
-                        {% if row.buyer %}
-                            {{ row.buyer.full_name or row.buyer.email }}
-                            — {{ row.buyer.email }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </p>
+                            {% if row.buyer %}
+                                <small>{{ row.buyer.email }}</small>
+                            {% endif %}
+                        </div>
 
-                    <p>
-                        <strong>التاجر:</strong>
-                        {% if row.merchant %}
-                            {{ row.merchant.full_name or row.merchant.email }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </p>
+                        <div class="admin-deal-info">
+                            <span>التاجر</span>
+                            <strong>
+                                {% if row.merchant %}
+                                    {{ row.merchant.full_name or row.merchant.email }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
 
-                    <p>
-                        <strong>اتصال التاجر:</strong>
-                        {% if row.merchant %}
-                            {{ row.merchant.phone_number or "-" }}
-                            — {{ row.merchant.email }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </p>
+                        <div class="admin-deal-info">
+                            <span>اتصال التاجر</span>
+                            <strong>
+                                {% if row.merchant %}
+                                    {{ row.merchant.phone_number or "-" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
 
-                    <p>
-                        <strong>العمولة:</strong>
-                        {% if row.commission %}
-                            {{ row.commission.final_amount or row.commission.platform_amount or "-" }}
-                            {{ row.commission.currency or "" }}
-                            — {{ row.commission.status.value }}
-                        {% else %}
-                            لم تُنشأ بعد
-                        {% endif %}
-                    </p>
+                            {% if row.merchant %}
+                                <small>{{ row.merchant.email }}</small>
+                            {% endif %}
+                        </div>
 
-                    {% if row.commission and row.commission.status.value == "DUE" %}
-                    <form
-                        method="post"
-                        action="/admin/commissions/{{ row.commission.id }}/settle"
-                    >
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
+                    </div>
+
+                    <div class="admin-deal-commission">
+                        <div>
+                            <span>العمولة</span>
+
+                            {% if row.commission %}
+                                <strong>
+                                    {{ row.commission.final_amount or row.commission.platform_amount or "-" }}
+                                    {{ row.commission.currency or "" }}
+                                </strong>
+
+                                <small>
+                                    {{ row.commission.status.value }}
+                                </small>
+                            {% else %}
+                                <strong>لم تُنشأ بعد</strong>
+                            {% endif %}
+                        </div>
+
+                        {% if row.commission and row.commission.status.value == "DUE" %}
+                        <form
+                            method="post"
+                            action="/admin/commissions/{{ row.commission.id }}/settle"
                         >
-                            تسوية العمولة
-                        </button>
-                    </form>
-                    {% endif %}
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                تسوية العمولة
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
 
                 </article>
-
                 {% endfor %}
 
-            {% else %}
+            </div>
 
-                <p>لا توجد صفقات حتى الآن.</p>
+        {% else %}
 
-            {% endif %}
+            <div class="admin-deals-empty">
+                <div class="admin-deals-empty-icon">◇</div>
+                <h2>لا توجد صفقات حتى الآن.</h2>
+                <p>ستظهر الصفقات هنا بعد قبول العروض وإنشاء الصفقات.</p>
+            </div>
 
-        </div>
+        {% endif %}
+
     </section>
 
 </main>
