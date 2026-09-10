@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.listing import Listing, ListingStatus
 from app.models.listing_location import ListingLocation
@@ -10,6 +10,7 @@ class ListingService:
     def get_by_id(db: Session, listing_id: int) -> Listing | None:
         return (
             db.query(Listing)
+            .options(selectinload(Listing.media))
             .filter(Listing.id == listing_id)
             .first()
         )
@@ -24,6 +25,7 @@ class ListingService:
     ) -> list[Listing]:
         query = (
             db.query(Listing)
+            .options(selectinload(Listing.media))
             .filter(Listing.status == ListingStatus.ACTIVE)
         )
 

@@ -160,7 +160,37 @@ function bindModuleCards() {
                 )
                 : "";
 
+        const images = Array.isArray(listing.images)
+            ? listing.images
+                .filter(function (image) {
+                    return image &&
+                        image.media_type === "IMAGE" &&
+                        image.url;
+                })
+                .sort(function (a, b) {
+                    return (a.sort_order || 0) - (b.sort_order || 0);
+                })
+            : [];
+
+        const imageMarkup = images.length
+            ? `
+                <div class="marketplace-card-media">
+                    <img
+                        src="${escapeHtml(images[0].url)}"
+                        alt="${escapeHtml(listing.title)}"
+                        loading="lazy"
+                    >
+                </div>
+            `
+            : `
+                <div class="marketplace-card-media marketplace-card-media-empty" aria-hidden="true">
+                    <span>SMH</span>
+                </div>
+            `;
+
         article.innerHTML = `
+            ${imageMarkup}
+
             <div class="marketplace-card-top">
                 <span class="marketplace-card-type">
                     ${escapeHtml(listingTypeLabel(listing.listing_type))}

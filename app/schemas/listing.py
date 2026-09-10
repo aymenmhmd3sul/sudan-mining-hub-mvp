@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.listing import ListingType
+from app.models.listing_media import MediaType
 
 
 class ListingCreate(BaseModel):
@@ -17,6 +18,15 @@ class ListingCreate(BaseModel):
     locality: str | None = None
     address: str | None = None
     specs: str | None = None
+
+
+class ListingMediaResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    media_type: MediaType
+    url: str
+    sort_order: int
 
 
 class ListingResponse(BaseModel):
@@ -35,6 +45,37 @@ class ListingResponse(BaseModel):
     version: int
     created_at: datetime
     updated_at: datetime
+    images: list[ListingMediaResponse] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def load_media_as_images(cls, value):
+        media = getattr(value, "media", None)
+        if media is not None:
+            image_media = [
+                item for item in media
+                if getattr(item, "media_type", None) == MediaType.IMAGE
+            ]
+            image_media.sort(
+                key=lambda item: getattr(item, "sort_order", 0)
+            )
+            return {
+                "id": value.id,
+                "owner_id": value.owner_id,
+                "category_id": value.category_id,
+                "title": value.title,
+                "description": value.description,
+                "listing_type": value.listing_type,
+                "price": value.price,
+                "currency": value.currency,
+                "is_negotiable": value.is_negotiable,
+                "status": value.status,
+                "version": value.version,
+                "created_at": value.created_at,
+                "updated_at": value.updated_at,
+                "images": image_media,
+            }
+        return value
 
 
 class AdminListingReviewResponse(BaseModel):

@@ -32,6 +32,24 @@
         aria-label="{{ listing.title }}"
     >
         <article class="marketplace-listing-detail-card">
+            {% set listing_images = listing.media
+                | selectattr("media_type", "equalto", "IMAGE")
+                | sort(attribute="sort_order")
+                | list %}
+            {% if listing_images %}
+            <div class="marketplace-listing-detail-media">
+                <img
+                    src="{{ listing_images[0].url }}"
+                    alt="{{ listing.title }}"
+                    loading="eager"
+                >
+            </div>
+            {% else %}
+            <div class="marketplace-listing-detail-media marketplace-listing-detail-media-empty" aria-hidden="true">
+                <span>SMH</span>
+            </div>
+            {% endif %}
+
             {% if listing.description %}
             <div class="marketplace-listing-detail-section">
                 <h2>{{ t("marketplace.description_label") }}</h2>
