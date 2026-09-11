@@ -1,0 +1,196 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="admin-deals-page">
+
+    <section class="admin-deals-hero">
+        <div class="admin-deals-hero-content">
+            <span class="admin-deals-eyebrow">ADMIN CONTROL</span>
+            <h1>اشتراكات المستخدمين</h1>
+            <p>
+                إدارة خطط الاشتراك وحالة الاشتراك للمستخدمين من لوحة المشرف.
+            </p>
+
+            <div class="admin-deals-actions">
+                <a class="btn btn-secondary" href="/admin/">
+                    العودة إلى لوحة المشرف
+                </a>
+                <a class="btn btn-primary" href="/admin/deals">
+                    الصفقات والعمولات
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-deals-browser" aria-label="اشتراكات المستخدمين">
+
+        {% if rows %}
+            <div class="admin-deals-grid">
+
+                {% for row in rows %}
+                    <article class="admin-deal-card">
+
+                        <div class="admin-deal-card-header">
+                            <div>
+                                <span class="admin-deal-eyebrow">USER</span>
+                                <h2>
+                                    {{ row.user.full_name or row.user.email }}
+                                </h2>
+                                <small>{{ row.user.email }}</small>
+                            </div>
+
+                            <span class="admin-deal-status">
+                                {% if row.subscription %}
+                                    {{ row.subscription.status.value }}
+                                {% else %}
+                                    لا يوجد اشتراك
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <div class="admin-deal-info-grid">
+
+                            <div class="admin-deal-info">
+                                <span>معرّف المستخدم</span>
+                                <strong>{{ row.user.id }}</strong>
+                            </div>
+
+                            <div class="admin-deal-info">
+                                <span>الخطة الحالية</span>
+                                <strong>
+                                    {% if row.subscription %}
+                                        {{ row.subscription.plan }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="admin-deal-info">
+                                <span>بداية الاشتراك</span>
+                                <strong>
+                                    {% if row.subscription and row.subscription.started_at %}
+                                        {{ row.subscription.started_at }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="admin-deal-info">
+                                <span>تاريخ الانتهاء</span>
+                                <strong>
+                                    {% if row.subscription and row.subscription.expires_at %}
+                                        {{ row.subscription.expires_at }}
+                                    {% else %}
+                                        بدون تاريخ انتهاء
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="admin-deal-info">
+                                <span>مرجع الدفع</span>
+                                <strong>
+                                    {% if row.subscription and row.subscription.payment_reference %}
+                                        {{ row.subscription.payment_reference }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="admin-deal-info">
+                                <span>مرجع التجديد</span>
+                                <strong>
+                                    {% if row.subscription and row.subscription.renewal_reference %}
+                                        {{ row.subscription.renewal_reference }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                        </div>
+
+                        <div class="admin-deal-commission">
+                            <div>
+                                <span>تفعيل / تجديد الاشتراك</span>
+                                <strong>إدارة الاشتراك</strong>
+                            </div>
+
+                            <form
+                                method="post"
+                                action="/admin/subscriptions/{{ row.user.id }}/activate"
+                            >
+                                <div class="admin-deal-info-grid">
+
+                                    <div class="admin-deal-info">
+                                        <label for="plan-{{ row.user.id }}">الخطة</label>
+                                        <input
+                                            id="plan-{{ row.user.id }}"
+                                            name="plan"
+                                            type="text"
+                                            value="{% if row.subscription %}{{ row.subscription.plan }}{% endif %}"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="admin-deal-info">
+                                        <label for="expires-{{ row.user.id }}">تاريخ الانتهاء</label>
+                                        <input
+                                            id="expires-{{ row.user.id }}"
+                                            name="expires_at"
+                                            type="datetime-local"
+                                        >
+                                    </div>
+
+                                    <div class="admin-deal-info">
+                                        <label for="payment-{{ row.user.id }}">مرجع الدفع</label>
+                                        <input
+                                            id="payment-{{ row.user.id }}"
+                                            name="payment_reference"
+                                            type="text"
+                                        >
+                                    </div>
+
+                                    <div class="admin-deal-info">
+                                        <label for="renewal-{{ row.user.id }}">مرجع التجديد</label>
+                                        <input
+                                            id="renewal-{{ row.user.id }}"
+                                            name="renewal_reference"
+                                            type="text"
+                                        >
+                                    </div>
+
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                >
+                                    تفعيل / تجديد الاشتراك
+                                </button>
+                            </form>
+                        </div>
+
+                    </article>
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="admin-deals-empty">
+                <div class="admin-deals-empty-icon">◇</div>
+                <h2>لا يوجد مستخدمون.</h2>
+                <p>
+                    لا توجد حسابات مستخدمين لعرض اشتراكاتها حاليًا.
+                </p>
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</main>
+{% endblock %}

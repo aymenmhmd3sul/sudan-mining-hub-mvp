@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Form
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from fastapi.templating import Jinja2Templates
 
 from app.models.user import UserModel
+from app.models.subscription import Subscription
 from app.models.commission import Commission
 from app.models.deal import Deal
 from app.models.negotiation import NegotiationRoom, NegotiationMessage
@@ -17,6 +21,7 @@ from app.schemas.commission_settings import (
 from app.services.listing_service import ListingService
 from app.services.commission_settings_service import CommissionSettingsService
 from app.services.commission_service import CommissionService
+from app.services.subscription_service import SubscriptionService
 from app.translations.templates import template_context
 
 router = APIRouter(
@@ -359,3 +364,84 @@ def settle_commission(
             detail=str(exc),
         )
 
+
+
+@router.get("/subscriptions")
+def admin_subscriptions(
+    request: Request,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    users = (
+        db.query(UserModel)
+        .order_by(UserModel.full_name.asc(), UserModel.email.asc())
+        .all()
+    )
+
+    rows = []
+    for target_user in users:
+        subscription = (
+            db.query(Subscription)
+            .filter(Subscription.user_id == target_user.id)
+            .order_by(Subscription.created_at.desc(), Subscription.id.desc())
+            .first()
+        )
+        if subscription is not None:
+            SubscriptionService.expire_if_needed(db, subscription)
+        rows.append({"user": target_user, "subscription": subscription})
+
+    context = template_context(request)
+    context.update({
+        "title": "الاشتراكات",
+        "current_user": user,
+        "rows": rows,
+    })
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/subscriptions.html",
+        context=context,
+    )
+
+
+@router.post("/subscriptions/{user_id}/activate")
+def activate_user_subscription(
+    user_id: int,
+    plan: str = Form(...),
+    expires_at: str | None = Form(None),
+    payment_reference: str | None = Form(None),
+    renewal_reference: str | None = Form(None),
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    target_user = (
+        db.query(UserModel)
+        .filter(UserModel.id == user_id)
+        .first()
+    )
+    if target_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    parsed_expires_at = None
+    if expires_at and expires_at.strip():
+        try:
+            parsed_expires_at = datetime.fromisoformat(expires_at.strip())
+            if parsed_expires_at.tzinfo is None:
+                parsed_expires_at = parsed_expires_at.replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid expiration date")
+
+    try:
+        SubscriptionService.activate(
+            db,
+            user_id=target_user.id,
+            plan=plan,
+            expires_at=parsed_expires_at,
+            payment_reference=payment_reference or None,
+            renewal_reference=renewal_reference or None,
+        )
+        db.commit()
+    except (ValueError, PermissionError) as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return RedirectResponse(url="/admin/subscriptions", status_code=303)

@@ -51,3 +51,5 @@ class UserModel(Base):
         back_populates="sender",
         foreign_keys="NegotiationMessage.sender_id",
     )
+
+    subscriptions = relationship("Subscription", back_populates="user")
