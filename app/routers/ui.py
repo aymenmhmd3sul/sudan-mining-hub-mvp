@@ -102,15 +102,25 @@ def merchant_dashboard(
 @router.get("/buyer")
 def buyer_dashboard(
     request: Request,
+    db: Session = Depends(get_db),
     user=Depends(require_role("BUYER")),
 ):
+    pending_offers_count = (
+        db.query(Offer)
+        .join(BuyerRequest, Offer.request_id == BuyerRequest.id)
+        .filter(
+            BuyerRequest.buyer_id == user.id,
+            Offer.status == "SUBMITTED",
+        )
+        .count()
+    )
     context = template_context(request)
     context.update(
         {
             "title": context["t"]("dashboard.buyer_label"),
             "current_user": user,
             "role": "BUYER",
-            "pending_offers_count": 0,
+            "pending_offers_count": pending_offers_count,
         }
     )
 
