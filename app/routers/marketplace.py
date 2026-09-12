@@ -8,7 +8,7 @@ from app.models.listing import Listing, ListingStatus, ListingType
 from app.models.listing_category import ListingCategory
 from app.models.listing_media import ListingMedia, MediaType
 from app.models.user import UserModel
-from app.routers.auth import require_role
+from app.routers.auth import require_role, require_active_subscription
 from app.schemas.listing import ListingCreate, ListingResponse
 from app.services.listing_service import ListingService
 
@@ -56,6 +56,7 @@ async def upload_listing_image(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     user: UserModel = Depends(require_role("MERCHANT", "ADMIN")),
+    _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     listing = (
         db.query(Listing)
@@ -143,6 +144,7 @@ def create_listing(
     payload: ListingCreate,
     db: Session = Depends(get_db),
     user: UserModel = Depends(require_role("MERCHANT", "ADMIN")),
+    _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     data = payload.model_dump()
     data["owner_id"] = user.id

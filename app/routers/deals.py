@@ -6,7 +6,7 @@ from app.models.deal import Deal
 from app.services.deal_service import DealService
 from app.services.commission_service import CommissionService
 from app.models.user import UserModel
-from app.routers.auth import get_current_user, require_role
+from app.routers.auth import get_current_user, require_role, require_active_subscription
 
 router = APIRouter(prefix="/deals", tags=["Deals"])
 
@@ -39,6 +39,7 @@ def approve_deal(
     deal_id: int,
     db: Session = Depends(get_db),
     user: UserModel = Depends(require_role("BUYER")),
+        _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
 
@@ -62,6 +63,7 @@ def deliver_deal(
     deal_id: int,
     db: Session = Depends(get_db),
     user: UserModel = Depends(require_role("MERCHANT")),
+        _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
 
@@ -85,6 +87,7 @@ def receive_deal(
     deal_id: int,
     db: Session = Depends(get_db),
     user: UserModel = Depends(require_role("BUYER")),
+        _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
 
@@ -108,6 +111,7 @@ def cancel_deal(
     deal_id: int,
     db: Session = Depends(get_db),
     user: UserModel = Depends(get_current_user),
+    _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
 
@@ -135,6 +139,7 @@ def accept_deal_commission(
     deal_id: int,
     db: Session = Depends(get_db),
     user: UserModel = Depends(require_role("MERCHANT")),
+        _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
     if deal is None:

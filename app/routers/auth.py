@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import UserModel, UserRole
 from app.schemas.user import UserCreate, UserOut, UserLogin, Token
+from app.services.subscription_service import SubscriptionService
 from app.core.security import (
     get_password_hash,
     verify_password,
@@ -131,6 +132,20 @@ def get_current_user(
             detail="User not found",
         )
 
+    return user
+
+
+def require_active_subscription(
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
+):
+    if user.role == UserRole.ADMIN:
+        return user
+    if not SubscriptionService.is_active(db, user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Active subscription required",
+        )
     return user
 
 

@@ -15,7 +15,7 @@ from app.models.negotiation import (
 from app.models.offer import Offer
 from app.models.deal import Deal
 from app.models.user import UserModel
-from app.routers.auth import get_current_user, require_role
+from app.routers.auth import get_current_user, require_role, require_active_subscription
 from sqlalchemy.orm import Session
 from fastapi.templating import Jinja2Templates
 
@@ -165,6 +165,7 @@ def start_listing_negotiation(
     listing_id: int,
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
+    _subscription_user=Depends(require_active_subscription),
 ):
     listing = ListingService.get_by_id(db, listing_id)
 
@@ -483,6 +484,7 @@ def accept_negotiation_offer(
     offer_id: int,
     db: Session = Depends(get_db),
     user=Depends(require_role("BUYER")),
+    _subscription_user=Depends(require_active_subscription),
 ):
     try:
         room = NegotiationService.accept_offer(
@@ -516,6 +518,7 @@ def send_negotiation_message(
     body: str,
     db: Session = Depends(get_db),
     user=Depends(require_role("BUYER", "MERCHANT")),
+    _subscription_user=Depends(require_active_subscription),
 ):
     room = NegotiationService.get_room(db, room_id)
 

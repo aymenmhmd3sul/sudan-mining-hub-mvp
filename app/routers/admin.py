@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from fastapi.templating import Jinja2Templates
 
-from app.models.user import UserModel
+from app.models.user import UserModel, UserRole
 from app.models.subscription import Subscription
 from app.models.commission import Commission
 from app.models.deal import Deal
@@ -374,6 +374,7 @@ def admin_subscriptions(
 ):
     users = (
         db.query(UserModel)
+        .filter(UserModel.role != UserRole.ADMIN)
         .order_by(UserModel.full_name.asc(), UserModel.email.asc())
         .all()
     )
@@ -420,6 +421,12 @@ def activate_user_subscription(
     )
     if target_user is None:
         raise HTTPException(status_code=404, detail="User not found")
+
+    if target_user.role == UserRole.ADMIN:
+        raise HTTPException(
+            status_code=400,
+            detail="ADMIN users cannot have subscriptions",
+        )
 
     parsed_expires_at = None
     if expires_at and expires_at.strip():

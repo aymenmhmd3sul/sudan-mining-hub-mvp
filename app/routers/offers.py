@@ -8,7 +8,7 @@ from app.db.session import get_db
 from app.models.offer import OfferStatus
 from app.models.negotiation import NegotiationParticipant, NegotiationRoom, NegotiationStatus
 from app.models.user import UserModel
-from app.routers.auth import require_role
+from app.routers.auth import require_role, require_active_subscription
 from app.services.offer_service import OfferService
 
 
@@ -35,6 +35,7 @@ def create_offer(
     payload: OfferCreatePayload,
     db: Session = Depends(get_db),
     user: UserModel = Depends(require_role("MERCHANT", "ADMIN")),
+    _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     try:
         offer = OfferService.create(
