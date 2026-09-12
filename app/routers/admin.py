@@ -22,6 +22,7 @@ from app.services.listing_service import ListingService
 from app.services.commission_settings_service import CommissionSettingsService
 from app.services.commission_service import CommissionService
 from app.services.subscription_service import SubscriptionService
+from app.services.deal_service import DealService
 from app.translations.templates import template_context
 
 router = APIRouter(
@@ -221,6 +222,35 @@ def admin_negotiation_report(
     )
 
 
+@router.post(
+    "/deals/{deal_id}/assign-agent",
+)
+def admin_assign_agent(
+    deal_id: int,
+    agent_id: int = Form(...),
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    deal = db.query(Deal).filter(Deal.id == deal_id).first()
+
+    if deal is None:
+        raise HTTPException(status_code=404, detail="Deal not found")
+
+    try:
+        DealService.assign_agent(
+            db=db,
+            deal=deal,
+            agent_id=agent_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+
+    return RedirectResponse(
+        url="/admin/deals",
+        status_code=303,
+    )
+
+
 @router.get(
     "/deals",
 )
@@ -277,11 +307,19 @@ def admin_deals(
         )
 
     context = template_context(request)
+    agents = (
+        db.query(UserModel)
+        .filter(UserModel.role == UserRole.AGENT)
+        .order_by(UserModel.full_name.asc(), UserModel.id.asc())
+        .all()
+    )
+
     context.update(
         {
             "title": "الصفقات والعمولات",
             "current_user": user,
             "deals": deal_rows,
+            "agents": agents,
         }
     )
 

@@ -104,6 +104,38 @@
 
                     </div>
 
+                    <div class="admin-deal-agent">
+                        <div>
+                            <span>الوكيل</span>
+                            {% if row.deal.agent %}
+                                <strong>{{ row.deal.agent.full_name or row.deal.agent.email }}</strong>
+                                <small>{{ row.deal.agent.email }}</small>
+                            {% else %}
+                                <strong>غير مسند</strong>
+                            {% endif %}
+                        </div>
+
+                        {% if row.deal.status.value not in ["COMPLETED", "CANCELLED"] %}
+                            <form method="post" action="/admin/deals/{{ row.deal.id }}/assign-agent">
+                                <select name="agent_id" required>
+                                    <option value="">اختر وكيلًا</option>
+                                    {% for agent in agents %}
+                                        <option value="{{ agent.id }}" {% if row.deal.agent_id == agent.id %}selected{% endif %}>
+                                            {{ agent.full_name or agent.email }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary">
+                                    {% if row.deal.agent_id %}
+                                        تحديث الوكيل
+                                    {% else %}
+                                        إسناد الوكيل
+                                    {% endif %}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+
                     <div class="admin-deal-commission">
                         <div>
                             <span>العمولة</span>
