@@ -3,6 +3,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.models.deal import Deal, DealStatus
+from app.models.user import UserModel, UserRole
 from app.models.deal_item import DealItem
 from app.models.offer_item import OfferItem
 from app.models.request_item import RequestItem
@@ -86,6 +87,33 @@ class DealService:
         return deal
 
     @staticmethod
+    def assign_agent(
+        db: Session,
+        deal: Deal,
+        agent_id: int,
+    ) -> Deal:
+        agent = (
+            db.query(UserModel)
+            .filter(UserModel.id == agent_id)
+            .first()
+        )
+        if agent is None:
+            raise ValueError("Agent not found")
+
+        if agent.role != UserRole.AGENT:
+            raise ValueError("Selected user is not an agent")
+
+        if deal.status in (
+            DealStatus.COMPLETED,
+            DealStatus.CANCELLED,
+        ):
+            raise ValueError("Cannot assign agent to a closed deal")
+
+        deal.agent_id = agent.id
+        db.commit()
+        db.refresh(deal)
+        return deal
+
     @staticmethod
     def approve_by_buyer(
         db: Session,
