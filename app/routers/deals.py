@@ -12,6 +12,14 @@ from app.routers.auth import get_current_user, require_role, require_active_subs
 router = APIRouter(prefix="/deals", tags=["Deals"])
 
 
+@router.get("/agent/my")
+def get_agent_deals(
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(require_role("AGENT")),
+):
+    return DealService.get_for_agent(db, user.id)
+
+
 @router.get("/{deal_id}")
 def get_deal(
     deal_id: int,
@@ -119,9 +127,15 @@ def approve_deal(
 def deliver_deal(
     deal_id: int,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("MERCHANT")),
-        _subscription_user: UserModel = Depends(require_active_subscription),
+    user: UserModel = Depends(get_current_user),
+    _subscription_user: UserModel = Depends(require_active_subscription),
 ):
+    if user.role not in (UserRole.MERCHANT, UserRole.AGENT):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the merchant or assigned agent can mark the deal as delivered",
+        )
+
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
 
     if deal is None:

@@ -24,6 +24,18 @@ class DealService:
         )
 
     @staticmethod
+    def get_for_agent(
+        db: Session,
+        agent_id: int,
+    ) -> list[Deal]:
+        return (
+            db.query(Deal)
+            .filter(Deal.agent_id == agent_id)
+            .order_by(Deal.id.desc())
+            .all()
+        )
+
+    @staticmethod
     def create(
         db: Session,
         *,
@@ -185,10 +197,12 @@ class DealService:
     def mark_delivered(
         db: Session,
         deal: Deal,
-        merchant_id: int,
+        actor_id: int,
     ) -> Deal:
-        if deal.merchant_id != merchant_id:
-            raise PermissionError("Only the merchant can mark the deal as delivered")
+        if actor_id not in (deal.merchant_id, deal.agent_id):
+            raise PermissionError(
+                "Only the merchant or assigned agent can mark the deal as delivered"
+            )
 
         if deal.status != DealStatus.CONFIRMED:
             raise ValueError("Only CONFIRMED deals can be marked as delivered")
