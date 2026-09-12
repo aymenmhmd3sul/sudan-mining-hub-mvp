@@ -6,7 +6,7 @@ from app.models.deal import Deal
 from app.services.deal_service import DealService
 from app.services.deal_access_service import DealAccessService
 from app.services.commission_service import CommissionService
-from app.models.user import UserModel
+from app.models.user import UserModel, UserRole
 from app.routers.auth import get_current_user, require_role, require_active_subscription
 
 router = APIRouter(prefix="/deals", tags=["Deals"])
