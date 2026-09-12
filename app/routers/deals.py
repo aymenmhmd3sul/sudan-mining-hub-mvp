@@ -34,10 +34,10 @@ def get_deal(
             detail="Deal not found",
         )
 
-    if user.id not in (deal.buyer_id, deal.merchant_id):
+    if not DealAccessService.can_view_deal(user, deal):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this deal",
+            detail="You are not authorized to view this deal",
         )
 
     return deal

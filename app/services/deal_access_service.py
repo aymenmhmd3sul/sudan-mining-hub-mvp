@@ -12,6 +12,17 @@ class DealAccessService:
     }
 
     @staticmethod
+    def can_view_deal(user: UserModel, deal: Deal) -> bool:
+        if user.role == UserRole.ADMIN:
+            return True
+
+        return user.id in {
+            deal.buyer_id,
+            deal.merchant_id,
+            deal.agent_id,
+        }
+
+    @staticmethod
     def can_view_contacts(user: UserModel, deal: Deal) -> bool:
         if user.role == UserRole.ADMIN:
             return True
