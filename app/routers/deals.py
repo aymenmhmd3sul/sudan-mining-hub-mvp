@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.deal import Deal
 from app.services.deal_service import DealService
+from app.services.deal_access_service import DealAccessService
 from app.services.commission_service import CommissionService
 from app.models.user import UserModel
 from app.routers.auth import get_current_user, require_role, require_active_subscription
@@ -32,6 +33,62 @@ def get_deal(
         )
 
     return deal
+
+
+@router.get("/{deal_id}/contacts")
+def get_deal_contacts(
+    deal_id: int,
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
+):
+    deal = db.query(Deal).filter(Deal.id == deal_id).first()
+
+    if deal is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Deal not found",
+        )
+
+    try:
+        DealAccessService.require_contact_access(user, deal)
+    except PermissionError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Deal contact access denied",
+        )
+
+    def serialize_user(party):
+        if party is None:
+            return None
+
+        return {
+            "id": party.id,
+            "full_name": party.full_name,
+            "email": party.email,
+            "phone_number": party.phone_number,
+        }
+
+    locations = []
+    if deal.listing is not None:
+        for location in deal.listing.locations:
+            locations.append(
+                {
+                    "country": location.country,
+                    "state_province": location.state_province,
+                    "locality": location.locality,
+                    "address": location.address,
+                    "latitude": location.latitude,
+                    "longitude": location.longitude,
+                }
+            )
+
+    return {
+        "deal_id": deal.id,
+        "buyer": serialize_user(deal.buyer),
+        "merchant": serialize_user(deal.merchant),
+        "agent": serialize_user(deal.agent),
+        "locations": locations,
+    }
 
 
 @router.post("/{deal_id}/approve")
