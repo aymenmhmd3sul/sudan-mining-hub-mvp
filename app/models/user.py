@@ -1,14 +1,18 @@
 import enum
+
 from sqlalchemy import Column, Integer, String, Boolean, Enum as SQLEnum, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from app.db.session import Base
+
 
 class UserRole(str, enum.Enum):
     ADMIN = "ADMIN"
     MERCHANT = "MERCHANT"
     BUYER = "BUYER"
     AGENT = "AGENT"
+
 
 class UserModel(Base):
     __tablename__ = "users"
@@ -20,6 +24,11 @@ class UserModel(Base):
     phone_number = Column(String, nullable=True)
     role = Column(SQLEnum(UserRole), default=UserRole.BUYER, nullable=False)
     is_approved = Column(Boolean, default=False)
+
+    email_verified = Column(Boolean, nullable=False, default=False)
+    email_verification_token_hash = Column(String, nullable=True)
+    email_verification_expires_at = Column(DateTime(timezone=True), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     buyer_requests = relationship(
@@ -52,4 +61,7 @@ class UserModel(Base):
         foreign_keys="NegotiationMessage.sender_id",
     )
 
-    subscriptions = relationship("Subscription", back_populates="user")
+    subscriptions = relationship(
+        "Subscription",
+        back_populates="user",
+    )

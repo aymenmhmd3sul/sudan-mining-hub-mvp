@@ -28,6 +28,7 @@ class UserOut(BaseModel):
     phone_number: Optional[str] = None
     role: UserRole
     is_approved: bool
+    email_verified: bool
     created_at: datetime
 
     class Config:
@@ -39,11 +40,6 @@ class UserLogin(BaseModel):
     password: str
 
 
-class PasswordChange(BaseModel):
-    current_password: str = Field(min_length=1)
-    new_password: str = Field(min_length=8)
-
-
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -52,3 +48,8 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
     role: Optional[str] = None
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=8)
