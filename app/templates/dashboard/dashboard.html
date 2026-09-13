@@ -34,6 +34,8 @@
                 <span>
                     {% if role == "MERCHANT" %}
                         {{ t("dashboard.merchant_label") }}
+                    {% elif role == "AGENT" %}
+                        {{ t("auth.role_agent") }}
                     {% else %}
                         {{ t("dashboard.buyer_label") }}
                     {% endif %}
@@ -47,6 +49,8 @@
             <p>
                 {% if role == "MERCHANT" %}
                     {{ t("dashboard.merchant_description") }}
+                    {% elif role == "AGENT" %}
+                        {{ t("modules.services.description") }}
                 {% else %}
                     {{ t("dashboard.buyer_description") }}
                 {% endif %}
@@ -85,6 +89,8 @@
                 <strong>
                     {% if role == "MERCHANT" %}
                         {{ t("modules.requests.title") }}
+                                         {% elif role == "AGENT" %}
+                                                       {{ t("modules.requests.title") }}
                     {% else %}
                         {{ t("dashboard.my_requests_title") }}
                     {% endif %}
@@ -122,6 +128,8 @@
         </a>
         {% endif %}
 
+        {% if role != "AGENT" %}
+
         <a class="module-card" href="/negotiation">
             <span class="module-top">
                 <span class="module-icon">
@@ -135,10 +143,14 @@
             </span>
         </a>
 
-        {% if role == "BUYER" %}
+        {% endif %}
+
+        {% if role in ("BUYER", "AGENT") %}
         <a class="module-card" href="/services">
             <span class="module-top">
-                <span class="module-icon">04</span>
+                <span class="module-icon">
+                    {% if role == "AGENT" %}03{% else %}04{% endif %}
+                </span>
                 <span class="module-arrow">↗</span>
             </span>
             <span class="module-content">

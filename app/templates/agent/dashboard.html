@@ -1,0 +1,188 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="gateway dashboard-page">
+
+    <header class="gateway-header">
+        <div class="brand">
+            <div class="brand-mark">SMH</div>
+            <div class="brand-copy">
+                <strong>{{ t("app.name") }}</strong>
+                <span>{{ t("gateway.tagline") }}</span>
+            </div>
+        </div>
+
+        <button
+            id="languageToggle"
+            class="language-toggle"
+            type="button"
+            aria-label="Change language"
+        >
+            <span id="languageLabel">
+                {% if lang == "ar" %}EN{% else %}العربية{% endif %}
+            </span>
+        </button>
+    </header>
+
+    <section class="gateway-hero dashboard-hero">
+        <div class="hero-orbit hero-orbit-one"></div>
+        <div class="hero-orbit hero-orbit-two"></div>
+
+        <div class="hero-content">
+            <div class="hero-kicker">
+                <span class="hero-dot"></span>
+                <span>{{ t("auth.role_agent") }}</span>
+            </div>
+
+            <h1>
+                {{ t("common.welcome") }}، {{ current_user.full_name }}
+            </h1>
+
+            <p>
+                {% if lang == "ar" %}
+                    مساحة عمل موحدة لمتابعة العمليات المسندة إليك داخل المنصة.
+                {% else %}
+                    A unified workspace for operations assigned to you on the platform.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="hero-emblem" aria-hidden="true">
+            <div class="emblem-ring emblem-ring-outer"></div>
+            <div class="emblem-ring emblem-ring-inner"></div>
+            <div class="emblem-core">
+                <span>Au</span>
+                <small>SMH</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="gateway-modules dashboard-modules">
+
+        <div class="module-card module-card-main">
+            <span class="module-top">
+                <span class="module-icon">01</span>
+            </span>
+            <span class="module-content">
+                <strong>
+                    {% if lang == "ar" %}العمليات المسندة{% else %}Assigned Operations{% endif %}
+                </strong>
+                <span>
+                    {% if lang == "ar" %}
+                        إجمالي العمليات المرتبطة بحسابك.
+                    {% else %}
+                        Total operations assigned to your account.
+                    {% endif %}
+                </span>
+                <strong>{{ agent_deal_count }}</strong>
+            </span>
+        </div>
+
+        <div class="module-card">
+            <span class="module-top">
+                <span class="module-icon">02</span>
+            </span>
+            <span class="module-content">
+                <strong>
+                    {% if lang == "ar" %}قيد التنفيذ{% else %}In Progress{% endif %}
+                </strong>
+                <span>
+                    {% if lang == "ar" %}
+                        عمليات مؤكدة أو قيد التسليم.
+                    {% else %}
+                        Confirmed or delivery-stage operations.
+                    {% endif %}
+                </span>
+                <strong>
+                    {{ agent_status_counts["CONFIRMED"] + agent_status_counts["DELIVERED"] }}
+                </strong>
+            </span>
+        </div>
+
+        <div class="module-card">
+            <span class="module-top">
+                <span class="module-icon">03</span>
+            </span>
+            <span class="module-content">
+                <strong>
+                    {% if lang == "ar" %}مكتملة{% else %}Completed{% endif %}
+                </strong>
+                <span>
+                    {% if lang == "ar" %}
+                        عمليات مكتملة ومسجلة داخل المنصة.
+                    {% else %}
+                        Completed operations recorded on the platform.
+                    {% endif %}
+                </span>
+                <strong>{{ agent_status_counts["COMPLETED"] }}</strong>
+            </span>
+        </div>
+
+    </section>
+
+    <section class="gateway-modules dashboard-modules">
+
+        {% if agent_deals %}
+
+            {% for deal in agent_deals %}
+            <div class="module-card">
+                <span class="module-top">
+                    <span class="module-icon">D{{ deal.id }}</span>
+                </span>
+
+                <span class="module-content">
+                    <strong>
+                        {% if lang == "ar" %}عملية رقم{% else %}Deal{% endif %}
+                        #{{ deal.id }}
+                    </strong>
+
+                    <span>
+                        {% if lang == "ar" %}الحالة{% else %}Status{% endif %}:
+                        {{ deal.status.value if deal.status.value is defined else deal.status }}
+                    </span>
+
+                    <span>
+                        {% if lang == "ar" %}القيمة{% else %}Amount{% endif %}:
+                        {{ deal.final_amount }} {{ deal.currency }}
+                    </span>
+
+                    <span>
+                        {% if lang == "ar" %}رقم الطلب{% else %}Request{% endif %}:
+                        {{ deal.request_id }}
+                    </span>
+                </span>
+            </div>
+            {% endfor %}
+
+        {% else %}
+
+            <div class="module-card module-card-main">
+                <span class="module-top">
+                    <span class="module-icon">—</span>
+                </span>
+
+                <span class="module-content">
+                    <strong>
+                        {% if lang == "ar" %}
+                            لا توجد عمليات مسندة حاليًا
+                        {% else %}
+                            No Assigned Operations Yet
+                        {% endif %}
+                    </strong>
+
+                    <span>
+                        {% if lang == "ar" %}
+                            ستظهر هنا العمليات التي يتم إسنادها إلى حسابك.
+                        {% else %}
+                            Operations assigned to your account will appear here.
+                        {% endif %}
+                    </span>
+                </span>
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</main>
+{% endblock %}

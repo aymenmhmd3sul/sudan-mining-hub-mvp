@@ -131,6 +131,52 @@ def buyer_dashboard(
     )
 
 
+@router.get("/agent")
+def agent_dashboard(
+    request: Request,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("AGENT")),
+):
+    from app.services.deal_service import DealService
+
+    agent_deals = DealService.get_for_agent(db, user.id)
+
+    status_counts = {
+        "PENDING_BUYER_APPROVAL": 0,
+        "CONFIRMED": 0,
+        "DELIVERED": 0,
+        "COMPLETED": 0,
+        "CANCELLED": 0,
+    }
+
+    for deal in agent_deals:
+        status_value = (
+            deal.status.value
+            if hasattr(deal.status, "value")
+            else str(deal.status)
+        )
+        if status_value in status_counts:
+            status_counts[status_value] += 1
+
+    context = template_context(request)
+    context.update(
+        {
+            "title": context["t"]("auth.role_agent"),
+            "current_user": user,
+            "role": "AGENT",
+            "agent_deals": agent_deals,
+            "agent_deal_count": len(agent_deals),
+            "agent_status_counts": status_counts,
+        }
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="agent/dashboard.html",
+        context=context,
+    )
+
+
 @router.get("/merchant/listings/new")
 def merchant_listing_create_page(
     request: Request,
