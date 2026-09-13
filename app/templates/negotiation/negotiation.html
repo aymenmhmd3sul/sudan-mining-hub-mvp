@@ -17,6 +17,7 @@
     </strong>
 </div>
 
+            {% if current_user and room %}
             <div class="marketplace-listing-detail-section negotiation-inbox">
                 <h2>{{ t("negotiation.messages") }}</h2>
 
@@ -70,7 +71,10 @@
         </div>
     </section>
 
-    <section class="marketplace-browser marketplace-listing-detail">
+    {% endif %}
+
+            {% if current_user and room %}
+            <section class="marketplace-browser marketplace-listing-detail">
         <article class="marketplace-listing-detail-card">
 
             {% if listing %}
@@ -169,6 +173,9 @@
 
         </article>
     </section>
+            </section>
+            {% endif %}
+
 </main>
 
 <script>
