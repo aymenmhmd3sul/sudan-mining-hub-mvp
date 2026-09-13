@@ -230,6 +230,32 @@ def require_active_subscription(
     return user
 
 
+
+def get_optional_current_user(
+    access_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+):
+    if not access_token:
+        return None
+
+    if access_token.startswith("Bearer "):
+        access_token = access_token[7:]
+
+    try:
+        payload = decode_access_token(access_token)
+    except ValueError:
+        return None
+
+    email = payload.get("sub")
+    if not email:
+        return None
+
+    return (
+        db.query(UserModel)
+        .filter(UserModel.email == email)
+        .first()
+    )
+
 def require_role(*allowed_roles):
     def role_guard(
         user: UserModel = Depends(get_current_user),
