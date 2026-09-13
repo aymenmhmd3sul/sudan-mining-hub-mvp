@@ -130,5 +130,8 @@
   "gateway.info.negotiation.title": "Negotiation and room record",
   "gateway.info.negotiation.description": "Negotiations take place in a dedicated room for the parties. The platform keeps the messages and offers exchanged in the room as a record that can be reviewed and printed.",
   "gateway.info.disclaimer.title": "Disclaimer for platform users",
-  "gateway.info.disclaimer.description": "The platform is a technical intermediary for connecting users, negotiation, and exchanging offers. It is not a party to any contract or transaction between users. Each agreement, obligation, and dispute remains between its parties. The platform keeps the negotiation room, messages, and offers as a record that may be reviewed and printed. The platform does not adjudicate disputes. Any dispute shall be interpreted under the applicable Sudanese law in force at the relevant time."
+  "gateway.info.disclaimer.description": "The platform is a technical intermediary for connecting users, negotiation, and exchanging offers. It is not a party to any contract or transaction between users. Each agreement, obligation, and dispute remains between its parties. The platform keeps the negotiation room, messages, and offers as a record that may be reviewed and printed. The platform does not adjudicate disputes. Any dispute shall be interpreted under the applicable Sudanese law in force at the relevant time.",
+  "gateway.info.card.title": "Platform usage guidelines",
+  "gateway.info.card.description": "How to use the platform, commercial terms, negotiation, and scope of responsibility.",
+  "gateway.info.card.action": "View guidelines"
 }
