@@ -194,7 +194,65 @@
   </section>
 
 
-  <section
+
+<section
+  id="gatewayInformation"
+  class="gateway-information"
+  aria-labelledby="gatewayInformationTitle"
+>
+  <div class="gateway-information-header">
+    <div class="hero-kicker">
+      <span class="hero-dot"></span>
+      <span data-i18n="gateway.info.eyebrow">{{ t("gateway.info.eyebrow") }}</span>
+    </div>
+    <h2 id="gatewayInformationTitle" data-i18n="gateway.info.title">
+      {{ t("gateway.info.title") }}
+    </h2>
+    <p data-i18n="gateway.info.description">
+      {{ t("gateway.info.description") }}
+    </p>
+  </div>
+
+  <div class="gateway-information-grid">
+    <article class="info-card">
+      <div class="info-card-index">01</div>
+      <h3 data-i18n="gateway.info.use.title">{{ t("gateway.info.use.title") }}</h3>
+      <p data-i18n="gateway.info.use.description">{{ t("gateway.info.use.description") }}</p>
+    </article>
+
+    <article class="info-card">
+      <div class="info-card-index">02</div>
+      <h3 data-i18n="gateway.info.listing.title">{{ t("gateway.info.listing.title") }}</h3>
+      <p data-i18n="gateway.info.listing.description">{{ t("gateway.info.listing.description") }}</p>
+    </article>
+
+    <article class="info-card">
+      <div class="info-card-index">03</div>
+      <h3 data-i18n="gateway.info.subscription.title">{{ t("gateway.info.subscription.title") }}</h3>
+      <p data-i18n="gateway.info.subscription.description">{{ t("gateway.info.subscription.description") }}</p>
+    </article>
+
+    <article class="info-card">
+      <div class="info-card-index">04</div>
+      <h3 data-i18n="gateway.info.commission.title">{{ t("gateway.info.commission.title") }}</h3>
+      <p data-i18n="gateway.info.commission.description">{{ t("gateway.info.commission.description") }}</p>
+    </article>
+
+    <article class="info-card">
+      <div class="info-card-index">05</div>
+      <h3 data-i18n="gateway.info.negotiation.title">{{ t("gateway.info.negotiation.title") }}</h3>
+      <p data-i18n="gateway.info.negotiation.description">{{ t("gateway.info.negotiation.description") }}</p>
+    </article>
+
+    <article class="info-card info-card-disclaimer">
+      <div class="info-card-index">06</div>
+      <h3 data-i18n="gateway.info.disclaimer.title">{{ t("gateway.info.disclaimer.title") }}</h3>
+      <p data-i18n="gateway.info.disclaimer.description">{{ t("gateway.info.disclaimer.description") }}</p>
+    </article>
+  </div>
+</section>
+
+<section
     id="gatewayStatus"
     class="gateway-status"
     aria-live="polite"

@@ -115,5 +115,20 @@
   "dashboard.buyer_description": "Track your requests, explore the marketplace, and continue negotiations from one workspace.",
   "dashboard.offers_title": "Offers Needing Review",
   "dashboard.offers_description": "New offers linked to buyer requests that need your review.",
-  "dashboard.my_requests_title": "My Requests"
+  "dashboard.my_requests_title": "My Requests",
+  "gateway.info.eyebrow": "Important information before you start",
+  "gateway.info.title": "Know the platform before you begin",
+  "gateway.info.description": "A concise guide to using the platform, commercial terms, negotiation records, and the platform's scope of responsibility.",
+  "gateway.info.use.title": "How to use the platform",
+  "gateway.info.use.description": "Create an account, explore listings and requests, connect with the relevant parties, then use the negotiation room to exchange offers and reach an agreement directly between the parties.",
+  "gateway.info.listing.title": "Listing value",
+  "gateway.info.listing.description": "The listing value is determined according to the listing type and the platform's current commercial policy, and is shown to the user before the transaction is completed.",
+  "gateway.info.subscription.title": "Subscription value",
+  "gateway.info.subscription.description": "The subscription value is determined according to the plan in effect at the time of subscription and is shown to the user before activation.",
+  "gateway.info.commission.title": "Commission",
+  "gateway.info.commission.description": "The commission is determined according to the agreement and is shown in the transaction details before completion.",
+  "gateway.info.negotiation.title": "Negotiation and room record",
+  "gateway.info.negotiation.description": "Negotiations take place in a dedicated room for the parties. The platform keeps the messages and offers exchanged in the room as a record that can be reviewed and printed.",
+  "gateway.info.disclaimer.title": "Disclaimer for platform users",
+  "gateway.info.disclaimer.description": "The platform is a technical intermediary for connecting users, negotiation, and exchanging offers. It is not a party to any contract or transaction between users. Each agreement, obligation, and dispute remains between its parties. The platform keeps the negotiation room, messages, and offers as a record that may be reviewed and printed. The platform does not adjudicate disputes. Any dispute shall be interpreted under the applicable Sudanese law in force at the relevant time."
 }
