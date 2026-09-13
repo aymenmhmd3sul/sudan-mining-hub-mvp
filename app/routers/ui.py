@@ -87,6 +87,7 @@ def merchant_dashboard(
         {
             "title": context["t"]("dashboard.merchant_label"),
             "current_user": user,
+        "active_rooms_count": active_rooms_count,
             "role": "MERCHANT",
             "pending_offers_count": pending_offers_count,
         }
@@ -183,6 +184,12 @@ def merchant_listing_create_page(
     user=Depends(require_role("MERCHANT")),
 ):
     context = template_context(request)
+    active_rooms_count = (
+        db.query(NegotiationRoom)
+        .filter(NegotiationRoom.status == NegotiationStatus.OPEN)
+        .count()
+    )
+
     context.update({
         "title": "إضافة سلعة",
         "current_user": user,

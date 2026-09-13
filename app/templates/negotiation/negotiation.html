@@ -8,6 +8,14 @@
                 {{ t("pages.negotiation.eyebrow") }}
             </span>
             <h1>{{ t("pages.negotiation.title") }}</h1>
+<div class="negotiation-active-rooms" aria-label="Active negotiation rooms">
+    <span class="negotiation-active-rooms-label">
+        الغرف النشطة
+    </span>
+    <strong class="negotiation-active-rooms-count">
+        {{ active_rooms_count }}
+    </strong>
+</div>
 
             <div class="marketplace-listing-detail-section negotiation-inbox">
                 <h2>{{ t("negotiation.messages") }}</h2>
