@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.user import UserModel, UserRole
-from app.schemas.user import UserCreate, UserOut, UserLogin, Token
+from app.schemas.user import UserCreate, UserOut, UserLogin, PasswordChange, Token
 from app.services.subscription_service import SubscriptionService
 from app.core.security import (
     get_password_hash,
@@ -159,6 +159,27 @@ def require_role(*allowed_roles):
         return user
 
     return role_guard
+
+
+@router.post("/change-password")
+def change_password(
+    password_data: PasswordChange,
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
+):
+    if not verify_password(
+        password_data.current_password,
+        user.hashed_password,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="كلمة المرور الحالية غير صحيحة",
+        )
+
+    user.hashed_password = get_password_hash(password_data.new_password)
+    db.commit()
+
+    return {"message": "تم تغيير كلمة المرور بنجاح"}
 
 
 @router.get("/me", response_model=UserOut)
