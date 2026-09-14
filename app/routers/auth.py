@@ -273,6 +273,16 @@ def require_role(*allowed_roles):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",
             )
+
+        if (
+            user.role == UserRole.MERCHANT
+            and not user.is_approved
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Merchant approval required",
+            )
+
         return user
 
     return role_guard
