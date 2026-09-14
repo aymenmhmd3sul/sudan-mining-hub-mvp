@@ -114,8 +114,83 @@
 
                         <div class="admin-deal-commission">
                             <div>
-                                <span>تفعيل مجاني / إعفاء إداري</span>
-                                <strong>إدارة الاشتراك</strong>
+                                <span>تفعيل مدفوع يدويًا</span>
+                                <strong>بعد التحقق من الدفع</strong>
+                            </div>
+
+                            <form
+                                method="post"
+                                action="/admin/subscriptions/{{ row.user.id }}/activate-paid-manual"
+                            >
+                                <div class="admin-deal-info-grid">
+                                    <div class="admin-deal-info">
+                                        <label for="paid-plan-{{ row.user.id }}">الخطة</label>
+                                        <input
+                                            id="paid-plan-{{ row.user.id }}"
+                                            name="plan"
+                                            type="text"
+                                            value="{% if row.subscription %}{{ row.subscription.plan }}{% else %}monthly{% endif %}"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="admin-deal-info">
+                                        <label for="paid-currency-{{ row.user.id }}">العملة</label>
+                                        <select
+                                            id="paid-currency-{{ row.user.id }}"
+                                            name="currency"
+                                            required
+                                        >
+                                            <option value="SDG">SDG</option>
+                                            <option value="USD">USD</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="admin-deal-info">
+                                        <label for="payment-method-{{ row.user.id }}">طريقة الدفع</label>
+                                        <input
+                                            id="payment-method-{{ row.user.id }}"
+                                            name="payment_method"
+                                            type="text"
+                                            placeholder="Bankak / O-Cash / تحويل"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="admin-deal-info">
+                                        <label for="payment-provider-{{ row.user.id }}">مزود الدفع</label>
+                                        <input
+                                            id="payment-provider-{{ row.user.id }}"
+                                            name="provider"
+                                            type="text"
+                                            placeholder="Bankak / O-Cash"
+                                        >
+                                    </div>
+
+                                    <div class="admin-deal-info">
+                                        <label for="payment-reference-{{ row.user.id }}">مرجع الدفع</label>
+                                        <input
+                                            id="payment-reference-{{ row.user.id }}"
+                                            name="external_reference"
+                                            type="text"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                >
+                                    تأكيد الدفع وتفعيل الاشتراك
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="admin-deal-commission">
+                            <div>
+                                <span>إعفاء إداري</span>
+                                <strong>تفعيل مجاني</strong>
                             </div>
 
                             <form
@@ -123,34 +198,32 @@
                                 action="/admin/subscriptions/{{ row.user.id }}/activate-free"
                             >
                                 <div class="admin-deal-info-grid">
-
                                     <div class="admin-deal-info">
-                                        <label for="plan-{{ row.user.id }}">الخطة</label>
+                                        <label for="free-plan-{{ row.user.id }}">الخطة</label>
                                         <input
-                                            id="plan-{{ row.user.id }}"
+                                            id="free-plan-{{ row.user.id }}"
                                             name="plan"
                                             type="text"
-                                            value="{% if row.subscription %}{{ row.subscription.plan }}{% endif %}"
+                                            value="{% if row.subscription %}{{ row.subscription.plan }}{% else %}monthly{% endif %}"
                                             required
                                         >
                                     </div>
 
                                     <div class="admin-deal-info">
-                                        <label for="expires-{{ row.user.id }}">تاريخ الانتهاء</label>
+                                        <label for="free-expires-{{ row.user.id }}">تاريخ الانتهاء</label>
                                         <input
-                                            id="expires-{{ row.user.id }}"
+                                            id="free-expires-{{ row.user.id }}"
                                             name="expires_at"
                                             type="datetime-local"
                                         >
                                     </div>
-
                                 </div>
 
                                 <button
                                     type="submit"
-                                    class="btn btn-primary"
+                                    class="btn btn-secondary"
                                 >
-                                    تفعيل / تجديد الاشتراك
+                                    تفعيل مجاني / إعفاء إداري
                                 </button>
                             </form>
                         </div>

@@ -22,6 +22,7 @@ from app.services.listing_service import ListingService
 from app.services.commission_settings_service import CommissionSettingsService
 from app.services.commission_service import CommissionService
 from app.services.subscription_service import SubscriptionService
+from app.services.subscription_billing_service import SubscriptionBillingService
 from app.services.deal_service import DealService
 from app.translations.templates import template_context
 
@@ -440,6 +441,69 @@ def admin_subscriptions(
         name="admin/subscriptions.html",
         context=context,
     )
+
+
+
+@router.post("/subscriptions/{user_id}/activate-paid-manual")
+def activate_user_subscription_paid_manual(
+    user_id: int,
+    plan: str = Form(...),
+    currency: str = Form(...),
+    payment_method: str = Form(...),
+    provider: str | None = Form(None),
+    external_reference: str = Form(...),
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    target_user = (
+        db.query(UserModel)
+        .filter(UserModel.id == user_id)
+        .first()
+    )
+    if target_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if target_user.role == UserRole.ADMIN:
+        raise HTTPException(
+            status_code=400,
+            detail="ADMIN users do not require subscriptions",
+        )
+
+    if not external_reference.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Payment reference is required",
+        )
+
+    try:
+        payment = SubscriptionBillingService.create_payment(
+            db,
+            user_id=target_user.id,
+            plan=plan,
+            currency=currency,
+            payment_method=payment_method,
+            provider=provider,
+            external_reference=external_reference.strip(),
+        )
+
+        SubscriptionBillingService.mark_paid(
+            db,
+            payment,
+            provider=provider,
+            external_reference=external_reference.strip(),
+        )
+
+        SubscriptionBillingService.activate_paid_payment(
+            db,
+            payment,
+        )
+
+        db.commit()
+    except (ValueError, PermissionError) as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return RedirectResponse(url="/admin/subscriptions", status_code=303)
 
 
 @router.post("/subscriptions/{user_id}/activate-free")
