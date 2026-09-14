@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import RedirectResponse
@@ -416,8 +417,11 @@ def update_subscription_pricing(
     user=Depends(require_role("ADMIN")),
 ):
     try:
-        parsed_amount = float(amount)
-    except (TypeError, ValueError):
+        parsed_amount = Decimal(amount.strip())
+    except (AttributeError, InvalidOperation):
+        raise HTTPException(status_code=400, detail="Invalid subscription amount")
+
+    if not parsed_amount.is_finite():
         raise HTTPException(status_code=400, detail="Invalid subscription amount")
 
     try:
