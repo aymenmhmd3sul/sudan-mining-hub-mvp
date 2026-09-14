@@ -82,6 +82,12 @@ def merchant_dashboard(
         .count()
     )
 
+    active_rooms_count = (
+        db.query(NegotiationRoom)
+        .filter(NegotiationRoom.status == NegotiationStatus.OPEN)
+        .count()
+    )
+
     context = template_context(request)
     context.update(
         {
