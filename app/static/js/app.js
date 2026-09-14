@@ -39,24 +39,25 @@
     }
 
     function bindExploreButton() {
-        const exploreBtn =
-            document.getElementById("exploreBtn");
+    const exploreBtn =
+        document.getElementById("exploreBtn");
+    const guidance =
+        document.getElementById("gatewayInformation");
 
-        if (!exploreBtn) {
-            return;
-        }
-
-        exploreBtn.addEventListener("click", function () {
-            document
-                .getElementById("gatewayModules")
-                ?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
-        });
+    if (!exploreBtn || !guidance) {
+        return;
     }
 
-    function bindLoginButton() {
+    exploreBtn.addEventListener("click", function () {
+        guidance.hidden = false;
+        guidance.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    });
+}
+
+function bindLoginButton() {
         const loginBtn =
             document.getElementById("loginBtn");
 
