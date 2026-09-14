@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.models.user import UserModel, UserRole
 from app.models.subscription import Subscription
+from app.models.subscription_pricing import SubscriptionPricing
 from app.models.commission import Commission
 from app.models.deal import Deal
 from app.models.negotiation import NegotiationRoom, NegotiationMessage
@@ -405,6 +406,36 @@ def settle_commission(
 
 
 
+@router.post("/subscriptions/pricing")
+def update_subscription_pricing(
+    plan: str = Form(...),
+    currency: str = Form(...),
+    amount: str = Form(...),
+    billing_period_months: int = Form(1),
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    try:
+        parsed_amount = float(amount)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid subscription amount")
+
+    try:
+        SubscriptionBillingService.set_price(
+            db,
+            plan=plan,
+            currency=currency,
+            amount=parsed_amount,
+            billing_period_months=billing_period_months,
+        )
+        db.commit()
+    except (ValueError, PermissionError) as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return RedirectResponse(url="/admin/subscriptions", status_code=303)
+
+
 @router.get("/subscriptions")
 def admin_subscriptions(
     request: Request,
@@ -431,10 +462,21 @@ def admin_subscriptions(
         rows.append({"user": target_user, "subscription": subscription})
 
     context = template_context(request)
+    pricing_rows = (
+        db.query(SubscriptionPricing)
+        .order_by(
+            SubscriptionPricing.plan.asc(),
+            SubscriptionPricing.currency.asc(),
+            SubscriptionPricing.id.desc(),
+        )
+        .all()
+    )
+
     context.update({
         "title": "الاشتراكات",
         "current_user": user,
         "rows": rows,
+        "pricing_rows": pricing_rows,
     })
     return templates.TemplateResponse(
         request=request,

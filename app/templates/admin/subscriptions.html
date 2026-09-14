@@ -22,6 +22,88 @@
         </div>
     </section>
 
+    <section class="admin-deals-browser" aria-label="أسعار الاشتراك">
+        <div class="admin-deal-card">
+            <div class="admin-deal-card-header">
+                <div>
+                    <span class="admin-deal-eyebrow">SUBSCRIPTION PRICING</span>
+                    <h2>إدارة أسعار الاشتراك</h2>
+                    <small>السعر الفعلي يُحفظ حسب الخطة والعملة، ويمكن أن يكون 0 للإعفاء أو العرض المجاني.</small>
+                </div>
+            </div>
+
+            <div class="admin-deal-info-grid">
+                {% for price in pricing_rows %}
+                    <div class="admin-deal-info">
+                        <span>{{ price.plan }} / {{ price.currency }}</span>
+                        <strong>
+                            {{ price.amount }} {{ price.currency }}
+                            — {{ price.billing_period_months }} شهر
+                            {% if price.is_active %} — نشط{% else %} — غير نشط{% endif %}
+                        </strong>
+                    </div>
+                {% else %}
+                    <div class="admin-deal-info">
+                        <span>الحالة</span>
+                        <strong>لا توجد أسعار اشتراك محفوظة حاليًا.</strong>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <form method="post" action="/admin/subscriptions/pricing">
+                <div class="admin-deal-info-grid">
+                    <div class="admin-deal-info">
+                        <label for="pricing-plan">الخطة</label>
+                        <input
+                            id="pricing-plan"
+                            name="plan"
+                            type="text"
+                            value="monthly"
+                            required
+                        >
+                    </div>
+
+                    <div class="admin-deal-info">
+                        <label for="pricing-currency">العملة</label>
+                        <select id="pricing-currency" name="currency" required>
+                            <option value="SDG">SDG</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-deal-info">
+                        <label for="pricing-amount">السعر</label>
+                        <input
+                            id="pricing-amount"
+                            name="amount"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+                    </div>
+
+                    <div class="admin-deal-info">
+                        <label for="pricing-period">مدة الفوترة بالأشهر</label>
+                        <input
+                            id="pricing-period"
+                            name="billing_period_months"
+                            type="number"
+                            min="1"
+                            step="1"
+                            value="1"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    حفظ سعر الاشتراك
+                </button>
+            </form>
+        </div>
+    </section>
+
     <section class="admin-deals-browser" aria-label="اشتراكات المستخدمين">
 
         {% if rows %}
