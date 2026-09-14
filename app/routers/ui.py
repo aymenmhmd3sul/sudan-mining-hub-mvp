@@ -190,11 +190,6 @@ def merchant_listing_create_page(
     user=Depends(require_role("MERCHANT")),
 ):
     context = template_context(request)
-    active_rooms_count = (
-        db.query(NegotiationRoom)
-        .filter(NegotiationRoom.status == NegotiationStatus.OPEN)
-        .count()
-    )
 
     context.update({
         "title": "إضافة سلعة",
