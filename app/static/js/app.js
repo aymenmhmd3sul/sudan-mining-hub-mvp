@@ -390,6 +390,181 @@ function bindModuleCards() {
         loadListings();
     }
 
+    function bindRequestsPage() {
+        const list = document.getElementById("requestsList");
+        const status = document.getElementById("requestsStatus");
+        const refresh = document.getElementById("requestsRefresh");
+
+        if (!list || !status) {
+            return;
+        }
+
+        const isEnglish = getLanguage() === "en";
+
+        const labels = isEnglish
+            ? {
+                loading: "Loading requests...",
+                refresh: "Refresh",
+                empty: "No open buyer requests are available.",
+                error: "Unable to load buyer requests.",
+                login: "Please sign in with a merchant or admin account.",
+                location: "Target location",
+                currency: "Currency",
+                status: "Status",
+                buyer: "Buyer",
+                items: "Requested items"
+            }
+            : {
+                loading: "جاري تحميل الطلبات...",
+                refresh: "تحديث",
+                empty: "لا توجد طلبات مشترين مفتوحة حاليًا.",
+                error: "تعذر تحميل طلبات المشترين.",
+                login: "يرجى تسجيل الدخول بحساب تاجر أو مشرف.",
+                location: "موقع الاستهداف",
+                currency: "العملة",
+                status: "الحالة",
+                buyer: "المشتري",
+                items: "العناصر المطلوبة"
+            };
+
+        if (refresh) {
+            refresh.textContent = labels.refresh;
+        }
+
+        function escape(value) {
+            return window.escapeHtml
+                ? window.escapeHtml(String(value ?? ""))
+                : String(value ?? "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+        }
+
+        function render(requests) {
+            list.innerHTML = "";
+
+            if (!requests.length) {
+                list.innerHTML =
+                    '<div class="requests-empty">' +
+                    escape(labels.empty) +
+                    "</div>";
+                status.textContent = labels.empty;
+                return;
+            }
+
+            status.textContent = isEnglish
+                ? requests.length + " open request(s)"
+                : requests.length + " طلب مفتوح";
+
+            requests.forEach(function (item) {
+                const card = document.createElement("article");
+                card.className = "requests-card";
+
+                const items = Array.isArray(item.items)
+                    ? item.items
+                    : [];
+
+                const itemsHtml = items.length
+                    ? '<ul class="requests-items">' +
+                      items.map(function (entry) {
+                          return (
+                              "<li><strong>" +
+                              escape(entry.title) +
+                              "</strong>" +
+                              (entry.quantity
+                                  ? " — " + escape(entry.quantity)
+                                  : "") +
+                              (entry.unit
+                                  ? " " + escape(entry.unit)
+                                  : "") +
+                              "</li>"
+                          );
+                      }).join("") +
+                      "</ul>"
+                    : "";
+
+                card.innerHTML =
+                    "<h2>" + escape(item.title) + "</h2>" +
+                    "<p>" + escape(item.description || "") + "</p>" +
+                    '<div class="requests-card-meta">' +
+                    "<div><span>" + escape(labels.buyer) +
+                    "</span><strong>#" +
+                    escape(item.buyer_id) + "</strong></div>" +
+                    "<div><span>" + escape(labels.status) +
+                    "</span><strong>" +
+                    escape(item.status) + "</strong></div>" +
+                    "<div><span>" + escape(labels.currency) +
+                    "</span><strong>" +
+                    escape(item.currency) + "</strong></div>" +
+                    "<div><span>" + escape(labels.location) +
+                    "</span><strong>" +
+                    escape(item.target_location || "—") +
+                    "</strong></div>" +
+                    "</div>" +
+                    (items.length
+                        ? "<strong>" + escape(labels.items) +
+                          "</strong>" + itemsHtml
+                        : "");
+
+                list.appendChild(card);
+            });
+        }
+
+        async function loadRequests() {
+            status.textContent = labels.loading;
+            list.innerHTML = "";
+
+            try {
+                const response = await fetch(
+                    "/api/v1/requests?limit=100",
+                    {
+                        method: "GET",
+                        credentials: "same-origin",
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                if (response.status === 401 || response.status === 403) {
+                    list.innerHTML =
+                        '<div class="requests-error">' +
+                        escape(labels.login) +
+                        "</div>";
+                    status.textContent = labels.login;
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    throw new Error("Invalid requests response");
+                }
+
+                render(data);
+            } catch (error) {
+                console.error("REQUESTS_LOAD_ERROR", error);
+                list.innerHTML =
+                    '<div class="requests-error">' +
+                    escape(labels.error) +
+                    "</div>";
+                status.textContent = labels.error;
+            }
+        }
+
+        if (refresh) {
+            refresh.addEventListener("click", loadRequests);
+        }
+
+        loadRequests();
+    }
+
     function bindInteractions() {
         bindLanguageToggle();
         bindExploreButton();
@@ -397,6 +572,7 @@ function bindModuleCards() {
     bindRegisterButton();
         bindModuleCards();
         bindMarketplace();
+        bindRequestsPage();
     }
 
     document.addEventListener(

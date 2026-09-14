@@ -1,10 +1,9 @@
 {% extends "base/base.html" %}
 
 {% block content %}
-<main class="gateway">
+<main class="gateway requests-page">
     <section class="gateway-hero">
         <div class="hero-content">
-
             <span class="eyebrow">
                 {{ t("pages.requests.eyebrow") }}
             </span>
@@ -22,8 +21,27 @@
                     {{ t("common.back_to_gateway") }}
                 </a>
             </div>
-
         </div>
+    </section>
+
+    <section class="requests-browser" aria-labelledby="requestsHeading">
+        <div class="requests-toolbar">
+            <div>
+                <span class="eyebrow" id="requestsHeading">طلبات المشترين</span>
+                <p id="requestsStatus" class="requests-status" aria-live="polite">
+                    جاري تحميل الطلبات...
+                </p>
+            </div>
+            <button
+                type="button"
+                class="btn btn-secondary"
+                id="requestsRefresh"
+            >
+                تحديث
+            </button>
+        </div>
+
+        <div id="requestsList" class="requests-list"></div>
     </section>
 </main>
 {% endblock %}
