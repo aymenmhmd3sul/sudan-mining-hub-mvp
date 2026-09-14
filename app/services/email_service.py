@@ -7,7 +7,7 @@ from app.core.config import settings
 
 
 def generate_verification_token() -> str:
-    return secrets.token_urlsafe(32)
+    return f"{secrets.randbelow(1_000_000):06d}"
 
 
 def hash_verification_token(token: str) -> str:
@@ -28,20 +28,15 @@ def send_verification_email(email: str, token: str) -> None:
             "Email delivery is not configured: " + ", ".join(missing)
         )
 
-    verification_url = (
-        f"{settings.APP_BASE_URL.rstrip('/')}"
-        f"/auth/verify-email?token={token}"
-    )
-
     message = EmailMessage()
-    message["Subject"] = "Sudan Mining Hub - Confirm your email"
+    message["Subject"] = "Sudan Mining Hub - Email verification code"
     message["From"] = settings.SMTP_FROM
     message["To"] = email
     message.set_content(
         "Welcome to Sudan Mining Hub.\n\n"
-        "Please confirm your email address by opening this link:\n"
-        f"{verification_url}\n\n"
-        f"This verification link is valid for "
+        "Your email verification code is:\n\n"
+        f"{token}\n\n"
+        f"This code is valid for "
         f"{settings.EMAIL_VERIFICATION_EXPIRE_HOURS} hours."
     )
 

@@ -2,68 +2,121 @@
 
 {% block content %}
 <main class="gateway">
-<section class="gateway-hero">
-<div class="hero-content">
-<span class="eyebrow">{{ t("pages.register.eyebrow") }}</span>
-<h1>{{ t("pages.register.title") }}</h1>
-<p>{{ t("pages.register.description") }}</p>
+    <section class="gateway-hero">
+        <div class="hero-content">
 
-<form id="registerForm" class="login-form">
-<label for="registerName">{{ t("auth.full_name") }}</label>
-<input id="registerName" name="full_name" type="text" autocomplete="name"
-       placeholder="{{ t('auth.full_name_placeholder') }}">
+            <div id="registerStep">
+                <span class="eyebrow">{{ t("pages.register.eyebrow") }}</span>
+                <h1>{{ t("pages.register.title") }}</h1>
+                <p>{{ t("pages.register.description") }}</p>
 
-<label for="registerEmail">{{ t("auth.email") }}</label>
-<input id="registerEmail" name="email" type="email" autocomplete="email"
-       required placeholder="example@email.com">
+                <form id="registerForm" class="login-form">
+                    <label for="registerName">{{ t("auth.full_name") }}</label>
+                    <input id="registerName" name="full_name" type="text"
+                           autocomplete="name"
+                           placeholder="{{ t('auth.full_name_placeholder') }}">
 
-<label for="registerPhone">{{ t("auth.phone_number") }}</label>
-<input id="registerPhone" name="phone_number" type="tel" autocomplete="tel"
-       placeholder="{{ t('auth.phone_placeholder') }}">
+                    <label for="registerEmail">{{ t("auth.email") }}</label>
+                    <input id="registerEmail" name="email" type="email"
+                           autocomplete="email" required
+                           placeholder="example@email.com">
 
-<label for="registerRole">{{ t("auth.role") }}</label>
-<select id="registerRole" name="role" required>
-<option value="BUYER">{{ t("auth.role_buyer") }}</option>
-<option value="MERCHANT">{{ t("auth.role_merchant") }}</option>
-<option value="AGENT">{{ t("auth.role_agent") }}</option>
-</select>
+                    <label for="registerPhone">{{ t("auth.phone_number") }}</label>
+                    <input id="registerPhone" name="phone_number" type="tel"
+                           autocomplete="tel"
+                           placeholder="{{ t('auth.phone_placeholder') }}">
 
-<label for="registerPassword">{{ t("auth.password") }}</label>
-<div class="password-field">
-<input id="registerPassword" name="password" type="password"
-       autocomplete="new-password" required minlength="6">
-<button type="button" id="togglePassword" class="password-toggle"
-        aria-label="{{ t('auth.show_password') }}">👁</button>
-</div>
+                    <label for="registerRole">{{ t("auth.role") }}</label>
+                    <select id="registerRole" name="role" required>
+                        <option value="BUYER">{{ t("auth.role_buyer") }}</option>
+                        <option value="MERCHANT">{{ t("auth.role_merchant") }}</option>
+                        <option value="AGENT">{{ t("auth.role_agent") }}</option>
+                    </select>
 
-<div id="registerStatus" class="login-status" role="status" aria-live="polite"></div>
+                    <label for="registerPassword">{{ t("auth.password") }}</label>
+                    <div class="password-field">
+                        <input id="registerPassword" name="password"
+                               type="password" autocomplete="new-password"
+                               required minlength="6">
+                        <button type="button" id="togglePassword"
+                                class="password-toggle"
+                                aria-label="{{ t('auth.show_password') }}">👁</button>
+                    </div>
 
-<button type="submit" id="registerSubmit" class="btn btn-primary">
-{{ t("auth.register") }}
-</button>
-</form>
+                    <div id="registerStatus" class="login-status"
+                         role="status" aria-live="polite"></div>
 
-<div class="hero-actions">
-<a class="btn btn-secondary" href="/login">{{ t("auth.have_account") }}</a>
-<a class="btn btn-secondary" href="/">{{ t("common.back_to_gateway") }}</a>
-</div>
-</div>
-</section>
+                    <button type="submit" id="registerSubmit"
+                            class="btn btn-primary">
+                        {{ t("auth.register") }}
+                    </button>
+                </form>
+            </div>
+
+            <div id="verifyStep" hidden>
+                <span class="eyebrow">EMAIL VERIFICATION</span>
+                <h1>تأكيد البريد الإلكتروني</h1>
+                <p>
+                    أرسلنا رمز تحقق من 6 أرقام إلى بريدك الإلكتروني.
+                    أدخل الرمز لإكمال إنشاء الحساب.
+                </p>
+
+                <form id="verifyForm" class="login-form">
+                    <label for="verificationCode">رمز التحقق</label>
+                    <input id="verificationCode"
+                           name="code"
+                           type="text"
+                           inputmode="numeric"
+                           autocomplete="one-time-code"
+                           maxlength="6"
+                           pattern="[0-9]{6}"
+                           required
+                           placeholder="000000">
+
+                    <div id="verifyStatus" class="login-status"
+                         role="status" aria-live="polite"></div>
+
+                    <button type="submit" id="verifySubmit"
+                            class="btn btn-primary">
+                        تأكيد البريد الإلكتروني
+                    </button>
+                </form>
+            </div>
+
+            <div class="hero-actions">
+                <a class="btn btn-secondary" href="/login">
+                    {{ t("auth.have_account") }}
+                </a>
+                <a class="btn btn-secondary" href="/">
+                    {{ t("common.back_to_gateway") }}
+                </a>
+            </div>
+
+        </div>
+    </section>
 </main>
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("registerForm");
+    const registerStep = document.getElementById("registerStep");
+    const verifyStep = document.getElementById("verifyStep");
+
+    const registerForm = document.getElementById("registerForm");
     const name = document.getElementById("registerName");
     const email = document.getElementById("registerEmail");
     const phone = document.getElementById("registerPhone");
     const role = document.getElementById("registerRole");
     const password = document.getElementById("registerPassword");
     const toggle = document.getElementById("togglePassword");
-    const status = document.getElementById("registerStatus");
-    const submit = document.getElementById("registerSubmit");
+    const registerStatus = document.getElementById("registerStatus");
+    const registerSubmit = document.getElementById("registerSubmit");
+
+    const verifyForm = document.getElementById("verifyForm");
+    const verificationCode = document.getElementById("verificationCode");
+    const verifyStatus = document.getElementById("verifyStatus");
+    const verifySubmit = document.getElementById("verifySubmit");
 
     toggle.addEventListener("click", function () {
         const visible = password.type === "text";
@@ -77,10 +130,11 @@ document.addEventListener("DOMContentLoaded", function () {
         );
     });
 
-    form.addEventListener("submit", async function (event) {
+    registerForm.addEventListener("submit", async function (event) {
         event.preventDefault();
-        status.textContent = "{{ t('auth.registering') }}";
-        submit.disabled = true;
+
+        registerStatus.textContent = "{{ t('auth.registering') }}";
+        registerSubmit.disabled = true;
 
         try {
             const response = await fetch("/auth/register", {
@@ -107,15 +161,61 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
             }
 
-            status.textContent = "{{ t('auth.registration_success') }}";
-            submit.disabled = true;
+            registerStep.hidden = true;
+            verifyStep.hidden = false;
+            verificationCode.focus();
+
+        } catch (error) {
+            registerStatus.textContent = error.message;
+            registerSubmit.disabled = false;
+        }
+    });
+
+    verifyForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const code = verificationCode.value.trim();
+
+        if (!/^[0-9]{6}$/.test(code)) {
+            verifyStatus.textContent = "رمز التحقق يجب أن يتكون من 6 أرقام";
+            return;
+        }
+
+        verifyStatus.textContent = "جارٍ تأكيد البريد الإلكتروني...";
+        verifySubmit.disabled = true;
+
+        try {
+            const body = new URLSearchParams();
+            body.set("code", code);
+
+            const response = await fetch("/auth/verify-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json"
+                },
+                credentials: "same-origin",
+                body: body.toString()
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || "تعذر تأكيد البريد الإلكتروني"
+                );
+            }
+
+            verifyStatus.textContent = data.message ||
+                "تم تأكيد البريد الإلكتروني بنجاح";
 
             setTimeout(function () {
                 window.location.href = "/login";
-            }, 700);
+            }, 900);
+
         } catch (error) {
-            status.textContent = error.message;
-            submit.disabled = false;
+            verifyStatus.textContent = error.message;
+            verifySubmit.disabled = false;
         }
     });
 });

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie, Form
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -133,17 +133,25 @@ def login(
     }
 
 
-@router.get("/verify-email")
+@router.post("/verify-email")
 def verify_email(
-    token: str,
+    code: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    token_hash = hash_verification_token(token)
+    normalized_code = code.strip()
+
+    if not normalized_code.isdigit() or len(normalized_code) != 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="رمز التحقق يجب أن يتكون من 6 أرقام",
+        )
+
+    code_hash = hash_verification_token(normalized_code)
 
     user = (
         db.query(UserModel)
         .filter(
-            UserModel.email_verification_token_hash == token_hash,
+            UserModel.email_verification_token_hash == code_hash,
             UserModel.email_verified.is_(False),
         )
         .first()
@@ -152,14 +160,14 @@ def verify_email(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="رابط تأكيد البريد الإلكتروني غير صالح",
+            detail="رمز التحقق غير صحيح",
         )
 
     expires_at = user.email_verification_expires_at
     if not expires_at or expires_at < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="انتهت صلاحية رابط تأكيد البريد الإلكتروني",
+            detail="انتهت صلاحية رمز التحقق",
         )
 
     user.email_verified = True
