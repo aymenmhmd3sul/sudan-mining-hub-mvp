@@ -11,6 +11,27 @@ from app.translations.templates import template_context
 
 app = FastAPI(title="Sudan Mining Hub MVP")
 
+
+@app.exception_handler(403)
+async def subscription_ui_forbidden(request: Request, exc):
+    if (
+        request.url.path not in {"/auth/login", "/auth/register"}
+        and request.headers.get("accept", "").find("text/html") >= 0
+        and getattr(exc, "detail", None) == "Active subscription required"
+    ):
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(
+            url="/?subscription_required=1",
+            status_code=303,
+        )
+
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=403,
+        content={"detail": exc.detail},
+    )
+
+
 app.add_middleware(LanguageMiddleware)
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

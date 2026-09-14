@@ -3,6 +3,32 @@
 {% block content %}
 <main class="gateway">
 
+  {% if request.query_params.get("subscription_required") == "1" %}
+  <section
+    class="gateway-information"
+    aria-labelledby="subscriptionRequiredTitle"
+    style="display:block;"
+  >
+    <div class="gateway-information-content">
+      <div class="gateway-information-header">
+        <h2 id="subscriptionRequiredTitle">
+          {{ t("gateway.info.subscription.title") }}
+        </h2>
+        <p>
+          {{ t("gateway.info.subscription.description") }}
+        </p>
+        <p>
+          {% if lang == "ar" %}
+            يحتاج حسابك إلى اشتراك نشط للمتابعة. يرجى مراجعة الإدارة لتفعيل الاشتراك.
+          {% else %}
+            Your account needs an active subscription to continue. Please contact the administration to activate your subscription.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
   <header class="gateway-header">
     <div class="brand">
       <div class="brand-mark">SMH</div>
