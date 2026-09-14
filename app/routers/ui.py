@@ -72,6 +72,7 @@ def merchant_dashboard(
     request: Request,
     db: Session = Depends(get_db),
     user=Depends(require_role("MERCHANT")),
+    _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     pending_offers_count = (
         db.query(Offer)
@@ -188,6 +189,7 @@ def agent_dashboard(
 def merchant_listing_create_page(
     request: Request,
     user=Depends(require_role("MERCHANT")),
+    _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     context = template_context(request)
 
