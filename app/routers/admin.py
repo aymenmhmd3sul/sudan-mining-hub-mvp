@@ -442,13 +442,11 @@ def admin_subscriptions(
     )
 
 
-@router.post("/subscriptions/{user_id}/activate")
-def activate_user_subscription(
+@router.post("/subscriptions/{user_id}/activate-free")
+def activate_user_subscription_free(
     user_id: int,
     plan: str = Form(...),
     expires_at: str | None = Form(None),
-    payment_reference: str | None = Form(None),
-    renewal_reference: str | None = Form(None),
     db: Session = Depends(get_db),
     user=Depends(require_role("ADMIN")),
 ):
@@ -463,7 +461,7 @@ def activate_user_subscription(
     if target_user.role == UserRole.ADMIN:
         raise HTTPException(
             status_code=400,
-            detail="ADMIN users cannot have subscriptions",
+            detail="ADMIN users do not require subscriptions",
         )
 
     parsed_expires_at = None
@@ -481,8 +479,6 @@ def activate_user_subscription(
             user_id=target_user.id,
             plan=plan,
             expires_at=parsed_expires_at,
-            payment_reference=payment_reference or None,
-            renewal_reference=renewal_reference or None,
         )
         db.commit()
     except (ValueError, PermissionError) as exc:

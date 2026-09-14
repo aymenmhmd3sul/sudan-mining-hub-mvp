@@ -114,13 +114,13 @@
 
                         <div class="admin-deal-commission">
                             <div>
-                                <span>تفعيل / تجديد الاشتراك</span>
+                                <span>تفعيل مجاني / إعفاء إداري</span>
                                 <strong>إدارة الاشتراك</strong>
                             </div>
 
                             <form
                                 method="post"
-                                action="/admin/subscriptions/{{ row.user.id }}/activate"
+                                action="/admin/subscriptions/{{ row.user.id }}/activate-free"
                             >
                                 <div class="admin-deal-info-grid">
 
@@ -141,24 +141,6 @@
                                             id="expires-{{ row.user.id }}"
                                             name="expires_at"
                                             type="datetime-local"
-                                        >
-                                    </div>
-
-                                    <div class="admin-deal-info">
-                                        <label for="payment-{{ row.user.id }}">مرجع الدفع</label>
-                                        <input
-                                            id="payment-{{ row.user.id }}"
-                                            name="payment_reference"
-                                            type="text"
-                                        >
-                                    </div>
-
-                                    <div class="admin-deal-info">
-                                        <label for="renewal-{{ row.user.id }}">مرجع التجديد</label>
-                                        <input
-                                            id="renewal-{{ row.user.id }}"
-                                            name="renewal_reference"
-                                            type="text"
                                         >
                                     </div>
 
