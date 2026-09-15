@@ -60,10 +60,13 @@ def register_page(request: Request):
 
 @router.get("/verify-email")
 def verify_email_page(request: Request):
-    return render(
-        request,
-        "auth/register.html",
-        "pages.register.title",
+    context = template_context(request)
+    context["title"] = context["t"]("pages.register.title")
+    context["verification_only"] = True
+    return templates.TemplateResponse(
+        request=request,
+        name="auth/register.html",
+        context=context,
     )
 
 

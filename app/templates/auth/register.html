@@ -5,7 +5,7 @@
     <section class="gateway-hero">
         <div class="hero-content">
 
-            <div id="registerStep">
+            <div id="registerStep" {% if verification_only %}hidden{% endif %}>
                 <span class="eyebrow">{{ t("pages.register.eyebrow") }}</span>
                 <h1>{{ t("pages.register.title") }}</h1>
                 <p>{{ t("pages.register.description") }}</p>
@@ -53,7 +53,7 @@
                 </form>
             </div>
 
-            <div id="verifyStep" hidden>
+            <div id="verifyStep" {% if not verification_only %}hidden{% endif %}>
                 <span class="eyebrow">EMAIL VERIFICATION</span>
                 <h1>تأكيد البريد الإلكتروني</h1>
                 <p>
