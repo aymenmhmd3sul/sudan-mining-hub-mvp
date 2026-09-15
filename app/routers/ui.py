@@ -58,6 +58,15 @@ def register_page(request: Request):
         "pages.register.title",
     )
 
+@router.get("/verify-email")
+def verify_email_page(request: Request):
+    return render(
+        request,
+        "auth/register.html",
+        "pages.register.title",
+    )
+
+
 @router.get("/login")
 def login_page(request: Request):
     return render(
