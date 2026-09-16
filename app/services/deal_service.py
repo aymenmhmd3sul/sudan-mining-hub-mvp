@@ -144,42 +144,84 @@ class DealService:
         from datetime import datetime, timezone
 
         try:
-            settings = CommissionService.get_active_settings(
+            from app.services.commission_tier_service import CommissionTierService
+
+            deal_amount = Decimal(str(deal.final_amount))
+            tier = CommissionTierService.get_for_amount(
                 db,
                 deal.currency,
+                deal_amount,
             )
 
-            final_commission, adjusted_by_platform = (
-                CommissionService.calculate_platform_commission(
-                    deal_amount=Decimal(str(deal.final_amount)),
-                    merchant_amount=None,
-                    merchant_rate=None,
-                    minimum_amount=settings.minimum_amount,
-                    platform_rate=settings.commission_rate,
-                    currency=deal.currency,
+            if tier is not None:
+                final_commission, adjusted_by_platform = (
+                    CommissionService.calculate_platform_commission(
+                        deal_amount=deal_amount,
+                        merchant_amount=None,
+                        merchant_rate=None,
+                        minimum_amount=tier.minimum_amount,
+                        platform_rate=tier.commission_rate,
+                        currency=deal.currency,
+                    )
                 )
-            )
 
-            platform_amount = (
-                Decimal(str(deal.final_amount))
-                * settings.commission_rate
-                / Decimal("100")
-            )
+                platform_amount = (
+                    deal_amount
+                    * tier.commission_rate
+                    / Decimal("100")
+                )
 
-            CommissionService.create(
-                db,
-                deal_id=deal.id,
-                merchant_id=deal.merchant_id,
-                proposed_amount=None,
-                proposed_currency=None,
-                proposed_rate=None,
-                platform_amount=platform_amount,
-                platform_rate=settings.commission_rate,
-                minimum_amount=settings.minimum_amount,
-                final_amount=final_commission,
-                currency=deal.currency,
-                adjusted_by_platform=adjusted_by_platform,
-            )
+                CommissionService.create(
+                    db,
+                    deal_id=deal.id,
+                    merchant_id=deal.merchant_id,
+                    proposed_amount=None,
+                    proposed_currency=None,
+                    proposed_rate=None,
+                    platform_amount=platform_amount,
+                    platform_rate=tier.commission_rate,
+                    minimum_amount=tier.minimum_amount,
+                    final_amount=final_commission,
+                    currency=deal.currency,
+                    adjusted_by_platform=adjusted_by_platform,
+                )
+            else:
+                settings = CommissionService.get_active_settings(
+                    db,
+                    deal.currency,
+                )
+
+                final_commission, adjusted_by_platform = (
+                    CommissionService.calculate_platform_commission(
+                        deal_amount=deal_amount,
+                        merchant_amount=None,
+                        merchant_rate=None,
+                        minimum_amount=settings.minimum_amount,
+                        platform_rate=settings.commission_rate,
+                        currency=deal.currency,
+                    )
+                )
+
+                platform_amount = (
+                    deal_amount
+                    * settings.commission_rate
+                    / Decimal("100")
+                )
+
+                CommissionService.create(
+                    db,
+                    deal_id=deal.id,
+                    merchant_id=deal.merchant_id,
+                    proposed_amount=None,
+                    proposed_currency=None,
+                    proposed_rate=None,
+                    platform_amount=platform_amount,
+                    platform_rate=settings.commission_rate,
+                    minimum_amount=settings.minimum_amount,
+                    final_amount=final_commission,
+                    currency=deal.currency,
+                    adjusted_by_platform=adjusted_by_platform,
+                )
 
             deal.buyer_approved = True
             deal.status = DealStatus.CONFIRMED

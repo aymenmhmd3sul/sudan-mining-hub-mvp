@@ -10,6 +10,7 @@ from app.models.user import UserModel, UserRole
 from app.models.subscription import Subscription
 from app.models.subscription_pricing import SubscriptionPricing
 from app.models.commission import Commission
+from app.models.commission_tier import CommissionTier
 from app.models.deal import Deal
 from app.models.negotiation import NegotiationRoom, NegotiationMessage
 from app.models.offer import Offer
@@ -23,6 +24,7 @@ from app.schemas.commission_settings import (
 from app.services.listing_service import ListingService
 from app.services.commission_settings_service import CommissionSettingsService
 from app.services.commission_service import CommissionService
+from app.services.commission_tier_service import CommissionTierService
 from app.services.subscription_service import SubscriptionService
 from app.services.subscription_billing_service import SubscriptionBillingService
 from app.services.deal_service import DealService
@@ -369,6 +371,57 @@ def create_commission_settings(
     except ValueError as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/commission-tiers")
+def commission_tiers_page(
+    request: Request,
+    currency: str = "USD",
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    tiers = CommissionTierService.list_active(db, currency)
+    context = template_context(request)
+    context["user"] = user
+    context["currency"] = currency.upper()
+    context["tiers"] = tiers
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/commission_tiers.html",
+        context=context,
+    )
+
+
+@router.post("/commission-tiers")
+def replace_commission_tiers(
+    request: Request,
+    currency: str = Form(...),
+    tiers_json: str = Form(...),
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    import json
+
+    try:
+        tiers = json.loads(tiers_json)
+        if not isinstance(tiers, list):
+            raise ValueError("tiers_json must contain a JSON array")
+
+        CommissionTierService.replace_active(
+            db,
+            currency,
+            tiers,
+        )
+        db.commit()
+    except (ValueError, TypeError, json.JSONDecodeError) as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return RedirectResponse(
+        url=f"/admin/commission-tiers?currency={currency.upper()}",
+        status_code=303,
+    )
+
 
 @router.post(
     "/commissions/{commission_id}/settle",

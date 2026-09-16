@@ -1,0 +1,98 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<main class="admin-deals-page">
+    <section class="admin-deals-hero">
+        <div class="admin-deals-hero-content">
+            <span class="admin-deals-eyebrow">ADMIN CONTROL</span>
+            <h1>شرائح عمولة المنصة</h1>
+            <p>
+                تعديل نسب العمولة والحدود الدنيا للعمولة حسب قيمة الصفقة.
+            </p>
+
+            <div class="admin-deals-actions">
+                <a class="btn btn-secondary" href="/admin/">
+                    العودة إلى لوحة المشرف
+                </a>
+                <a class="btn btn-primary" href="/admin/deals">
+                    الصفقات والعمولات
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-deals-browser">
+        <div class="marketplace-listing-detail-section">
+            <h2>عملة {{ currency }}</h2>
+
+            <form method="post" action="/admin/commission-tiers">
+                <input type="hidden" name="currency" value="{{ currency }}">
+
+                <p>
+                    اكتب الشرائح بصيغة JSON. يجب أن تكون آخر شريحة
+                    <code>"max_amount": null</code>.
+                </p>
+
+                <textarea
+                    name="tiers_json"
+                    rows="12"
+                    style="width:100%; font-family:monospace;"
+                    required
+                >[
+  {
+    "max_amount": 1000,
+    "commission_rate": 0.5,
+    "minimum_amount": 0
+  },
+  {
+    "max_amount": null,
+    "commission_rate": 1,
+    "minimum_amount": 0
+  }
+]</textarea>
+
+                <div class="hero-actions">
+                    <button type="submit" class="btn btn-primary">
+                        حفظ شرائح العمولة
+                    </button>
+                </div>
+            </form>
+
+            <hr>
+
+            <h2>الشرائح الحالية</h2>
+
+            {% if tiers %}
+                <div class="admin-deals-grid">
+                    {% for tier in tiers %}
+                    <article class="admin-deal-card">
+                        <div class="admin-deal-card-header">
+                            <div>
+                                <span class="admin-deal-eyebrow">TIER</span>
+                                <h2>
+                                    {% if tier.max_amount is none %}
+                                        الشريحة النهائية
+                                    {% else %}
+                                        حتى {{ tier.max_amount }} {{ currency }}
+                                    {% endif %}
+                                </h2>
+                            </div>
+                            <span class="admin-deal-status">
+                                {{ tier.commission_rate }}%
+                            </span>
+                        </div>
+
+                        <p>
+                            الحد الأدنى للعمولة:
+                            <strong>{{ tier.minimum_amount }} {{ currency }}</strong>
+                        </p>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>لا توجد شرائح فعالة لهذه العملة.</p>
+            {% endif %}
+        </div>
+    </section>
+</main>
+{% endblock %}

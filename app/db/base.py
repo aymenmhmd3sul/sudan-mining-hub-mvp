@@ -20,10 +20,10 @@ from app.models.negotiation import (
 
 from app.models.deal import Deal
 from app.models.commission import Commission
-
 from app.models.deal_item import DealItem
-
 from app.models.commission_settings import CommissionSettings
+from app.models.commission_tier import CommissionTier
+
 from app.models.subscription import Subscription
 from app.models.subscription_pricing import SubscriptionPricing
 from app.models.subscription_payment import SubscriptionPayment
