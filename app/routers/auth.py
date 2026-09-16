@@ -29,6 +29,30 @@ from app.core.security import (
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
+def _auth_cookie_secure() -> bool:
+    return settings.APP_BASE_URL.lower().startswith("https://")
+
+
+def _set_auth_cookie(response: Response, access_token: str) -> None:
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=_auth_cookie_secure(),
+        samesite="lax",
+        path="/",
+    )
+
+
+def _delete_auth_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key="access_token",
+        secure=_auth_cookie_secure(),
+        samesite="lax",
+        path="/",
+    )
+
+
 @router.post(
     "/register",
     response_model=UserOut,
@@ -121,11 +145,7 @@ def login(
         }
     )
 
-    response.set_cookie(
-        key="access_token",
-        value=f"Bearer {access_token}",
-        httponly=True,
-    )
+    _set_auth_cookie(response, access_token)
 
     return {
         "access_token": access_token,
@@ -291,6 +311,7 @@ def require_role(*allowed_roles):
 @router.post("/change-password")
 def change_password(
     password_data: PasswordChange,
+    response: Response,
     db: Session = Depends(get_db),
     user: UserModel = Depends(get_current_user),
 ):
@@ -305,8 +326,15 @@ def change_password(
 
     user.hashed_password = get_password_hash(password_data.new_password)
     db.commit()
+    _delete_auth_cookie(response)
 
     return {"message": "تم تغيير كلمة المرور بنجاح"}
+
+
+@router.post("/logout")
+def logout(response: Response):
+    _delete_auth_cookie(response)
+    return {"message": "تم تسجيل الخروج بنجاح"}
 
 
 @router.get("/me", response_model=UserOut)
