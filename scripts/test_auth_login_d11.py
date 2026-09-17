@@ -1,3 +1,5 @@
+import os
+
 from fastapi.testclient import TestClient
 
 import app.db.base  # CENTRAL ORM REGISTRY — SINGLE SOURCE OF TRUTH
@@ -11,12 +13,9 @@ USERS = [
     ("buyer2.demo@example.com", "BUYER"),
 ]
 
-PASSWORD = "password123"
-
-
+PASSWORD = os.environ["DEMO_PASSWORD"]
 
 print("===== PHASE 2M-D11 — AUTH LOGIN INTEGRATION TEST =====")
-
 client = TestClient(fastapi_app)
 
 for email, expected_role in USERS:
@@ -39,7 +38,6 @@ for email, expected_role in USERS:
 
     body = response.json()
     token = body.get("access_token")
-
     assert token, f"JWT MISSING: {email}"
     print("JWT: PASS")
 
@@ -61,7 +59,6 @@ for email, expected_role in USERS:
     print("ACCESS_TOKEN COOKIE: PASS")
 
     me = client.get("/auth/me")
-
     print("ME STATUS:", me.status_code)
     print("ME BODY:", me.text)
 
@@ -74,7 +71,6 @@ for email, expected_role in USERS:
     assert me_body.get("email") == email, (
         f"/auth/me EMAIL FAIL: {email}"
     )
-
     assert me_body.get("role") == expected_role, (
         f"/auth/me ROLE FAIL: {email}: {me_body.get('role')}"
     )

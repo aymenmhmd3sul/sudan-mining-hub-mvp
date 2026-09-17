@@ -1,9 +1,11 @@
+import os
+
 import app.db.base  # CENTRAL ORM REGISTRY — SINGLE SOURCE OF TRUTH
 from app.db.session import SessionLocal
 from app.models.user import UserModel, UserRole
 from app.core.security import get_password_hash
 
-DEMO_PASSWORD = "password123"
+DEMO_PASSWORD = os.environ["DEMO_PASSWORD"]
 
 DEMO_USERS = [
     {
@@ -35,7 +37,6 @@ DEMO_USERS = [
 
 def main():
     db = SessionLocal()
-
     try:
         password_hash = get_password_hash(DEMO_PASSWORD)
 
@@ -67,13 +68,12 @@ def main():
 
             db.add(user)
             print(f"CREATE: {data['email']} [{data['role'].value}]")
-
-        db.commit()
+            db.commit()
 
         print("===== DEMO USERS SEED PASS =====")
         print("MERCHANTS: 2")
         print("BUYERS: 2")
-        print("PASSWORD: password123")
+        print("PASSWORD: [REDACTED]")
 
     finally:
         db.close()
