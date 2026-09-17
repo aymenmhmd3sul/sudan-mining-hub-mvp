@@ -9,3 +9,5 @@ python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
 jinja2
+
+email-validator==2.3.0
