@@ -517,8 +517,8 @@ function bindModuleCards() {
             list.innerHTML = "";
 
             try {
-                const response = await fetch(
-                    "/api/v1/requests?limit=100",
+                let response = await fetch(
+                    "/api/v1/requests/mine?limit=100",
                     {
                         method: "GET",
                         credentials: "same-origin",
@@ -527,6 +527,19 @@ function bindModuleCards() {
                         }
                     }
                 );
+
+                if (response.status === 403) {
+                    response = await fetch(
+                        "/api/v1/requests?limit=100",
+                        {
+                            method: "GET",
+                            credentials: "same-origin",
+                            headers: {
+                                "Accept": "application/json"
+                            }
+                        }
+                    );
+                }
 
                 if (response.status === 401 || response.status === 403) {
                     list.innerHTML =

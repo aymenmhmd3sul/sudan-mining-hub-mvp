@@ -23,6 +23,20 @@ class RequestService:
         )
 
     @staticmethod
+    def list_for_buyer(
+        db: Session,
+        buyer_id: int,
+        limit: int = 100,
+    ) -> list[BuyerRequest]:
+        return (
+            db.query(BuyerRequest)
+            .filter(BuyerRequest.buyer_id == buyer_id)
+            .order_by(BuyerRequest.id.desc())
+            .limit(limit)
+            .all()
+        )
+
+    @staticmethod
     def create(db: Session, **data) -> BuyerRequest:
         request = BuyerRequest(**data)
         db.add(request)
