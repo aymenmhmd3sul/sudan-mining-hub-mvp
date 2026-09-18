@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
+import time
+from collections import defaultdict, deque
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie, Form, Request
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -111,12 +113,75 @@ def register_user(
     return new_user
 
 
+# Login rate limiting: in-process for the current single-instance MVP.
+LOGIN_RATE_LIMIT_WINDOW_SECONDS = 300
+LOGIN_RATE_LIMIT_MAX_ATTEMPTS = 10
+LOGIN_RATE_LIMIT_BLOCK_SECONDS = 300
+
+_login_attempts = defaultdict(deque)
+_login_blocked_until = {}
+
+
+def _login_rate_limit_key(request: Request, email: str) -> str:
+    host = request.client.host if request.client else "unknown"
+    normalized_email = (email or "").strip().lower()
+    return f"{host}:{normalized_email}"
+
+
+def _check_login_rate_limit(request: Request, email: str):
+    now = time.monotonic()
+    key = _login_rate_limit_key(request, email)
+
+    blocked_until = _login_blocked_until.get(key, 0)
+    if blocked_until > now:
+        return False, max(1, int(blocked_until - now))
+
+    attempts = _login_attempts[key]
+    cutoff = now - LOGIN_RATE_LIMIT_WINDOW_SECONDS
+
+    while attempts and attempts[0] <= cutoff:
+        attempts.popleft()
+
+    if len(attempts) >= LOGIN_RATE_LIMIT_MAX_ATTEMPTS:
+        blocked_until = now + LOGIN_RATE_LIMIT_BLOCK_SECONDS
+        _login_blocked_until[key] = blocked_until
+        return False, LOGIN_RATE_LIMIT_BLOCK_SECONDS
+
+    return True, 0
+
+
+def _record_login_attempt(request: Request, email: str):
+    now = time.monotonic()
+    key = _login_rate_limit_key(request, email)
+    attempts = _login_attempts[key]
+    cutoff = now - LOGIN_RATE_LIMIT_WINDOW_SECONDS
+
+    while attempts and attempts[0] <= cutoff:
+        attempts.popleft()
+
+    attempts.append(now)
+
+
 @router.post("/login", response_model=Token)
 def login(
     user_credentials: UserLogin,
+    request: Request,
     response: Response,
     db: Session = Depends(get_db),
 ):
+    allowed, retry_after = _check_login_rate_limit(
+        request,
+        user_credentials.email,
+    )
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please try again later.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    _record_login_attempt(request, user_credentials.email)
+
     user = (
         db.query(UserModel)
         .filter(UserModel.email == user_credentials.email)
