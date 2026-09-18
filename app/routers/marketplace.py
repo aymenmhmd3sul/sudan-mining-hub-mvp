@@ -94,6 +94,26 @@ async def upload_listing_image(
     if not data:
         raise HTTPException(status_code=400, detail="Empty image")
 
+    # Validate the actual file signature; client-supplied Content-Type is not trusted.
+    signatures = {
+        "image/jpeg": lambda payload: payload.startswith(b"\xff\xd8\xff"),
+        "image/png": lambda payload: payload.startswith(
+            b"\x89PNG\r\n\x1a\n"
+        ),
+        "image/webp": lambda payload: (
+            len(payload) >= 12
+            and payload[:4] == b"RIFF"
+            and payload[8:12] == b"WEBP"
+        ),
+    }
+
+    validator = signatures.get(file.content_type or "")
+    if validator is None or not validator(data):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid image content",
+        )
+
     upload_dir = Path("app/static/uploads/listings")
     upload_dir.mkdir(parents=True, exist_ok=True)
 
