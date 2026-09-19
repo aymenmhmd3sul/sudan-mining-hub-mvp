@@ -10,6 +10,8 @@ from app.models.negotiation import NegotiationParticipant, NegotiationRoom, Nego
 from app.models.user import UserModel
 from app.routers.auth import require_role, require_active_subscription
 from app.services.offer_service import OfferService
+from app.models.notification import NotificationChannel
+from app.services.notification_service import NotificationService
 
 
 router = APIRouter(prefix="/api/v1/offers", tags=["Offers"])
@@ -68,6 +70,20 @@ def create_offer(
                     user_id=offer.merchant_id,
                 ),
             ]
+        )
+
+        NotificationService.create(
+            db,
+            recipient_user_id=offer.request.buyer_id,
+            event_type="NEW_OFFER",
+            title="New offer received",
+            message=(
+                f"A merchant submitted a new offer for your request "
+                f"#{offer.request_id}."
+            ),
+            channel=NotificationChannel.IN_APP,
+            related_type="offer",
+            related_id=offer.id,
         )
 
         db.commit()
