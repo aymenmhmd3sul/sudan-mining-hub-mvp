@@ -133,5 +133,16 @@
   "gateway.info.disclaimer.description": "المنصة وسيط تقني للتعارف والتفاوض وتبادل العروض، وليست طرفًا في أي عقد أو صفقة بين المستخدمين. كل اتفاق والتزام ونزاع يكون بين أطرافه مباشرة. تحتفظ المنصة بسجل غرفة التفاوض والرسائل والعروض التي تمت داخلها، ويمكن الرجوع إليه وطباعته كسجل لما تم تبادله. لا تتولى المنصة الفصل في النزاعات. أي خلاف يفسر حسب القانون السوداني الواجب التطبيق في حينه.",
   "gateway.info.card.title": "إرشادات استخدام المنصة",
   "gateway.info.card.description": "طريقة الاستخدام والتكاليف والتفاوض وحدود مسؤولية المنصة.",
-  "gateway.info.card.action": "عرض الإرشادات"
+  "gateway.info.card.action": "عرض الإرشادات",
+  "dashboard.whatsapp_kicker": "WhatsApp",
+  "dashboard.whatsapp_title": "إشعارات WhatsApp",
+  "dashboard.whatsapp_description": "يمكنك اختيار استقبال رسائل WhatsApp من منصة التعدين السودانية عند توفر القناة الرسمية.",
+  "dashboard.whatsapp_number": "رقم الهاتف",
+  "dashboard.whatsapp_enabled": "استقبال WhatsApp مفعّل",
+  "dashboard.whatsapp_disabled": "استقبال WhatsApp غير مفعّل",
+  "dashboard.whatsapp_enable": "تفعيل استقبال WhatsApp",
+  "dashboard.whatsapp_disable": "إلغاء استقبال WhatsApp",
+  "dashboard.whatsapp_phone_required": "أضف رقم هاتفك أولًا قبل تفعيل استقبال WhatsApp.",
+  "dashboard.whatsapp_note": "لن تبدأ المنصة محادثات WhatsApp من تلقاء نفسها في هذا التصميم.",
+  "dashboard.whatsapp_action_failed": "تعذر تحديث إعداد WhatsApp."
 }

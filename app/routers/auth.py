@@ -407,3 +407,43 @@ def current_user(
     user: UserModel = Depends(get_current_user),
 ):
     return user
+
+
+@router.post("/whatsapp-opt-in")
+def whatsapp_opt_in(
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
+):
+    if not user.phone_number or not user.phone_number.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A phone number is required before enabling WhatsApp notifications.",
+        )
+
+    user.whatsapp_opt_in = True
+    user.whatsapp_opt_in_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": "تم تفعيل استقبال رسائل WhatsApp من Sudan Mining Hub",
+        "whatsapp_opt_in": user.whatsapp_opt_in,
+        "whatsapp_opt_in_at": user.whatsapp_opt_in_at,
+    }
+
+
+@router.delete("/whatsapp-opt-in")
+def whatsapp_opt_out(
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
+):
+    user.whatsapp_opt_in = False
+    user.whatsapp_opt_in_at = None
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": "تم إلغاء استقبال رسائل WhatsApp من Sudan Mining Hub",
+        "whatsapp_opt_in": user.whatsapp_opt_in,
+        "whatsapp_opt_in_at": user.whatsapp_opt_in_at,
+    }

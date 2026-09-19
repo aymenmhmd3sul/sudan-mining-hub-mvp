@@ -26,6 +26,8 @@ class UserOut(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
+    whatsapp_opt_in: bool
+    whatsapp_opt_in_at: Optional[datetime] = None
     role: UserRole
     is_approved: bool
     email_verified: bool

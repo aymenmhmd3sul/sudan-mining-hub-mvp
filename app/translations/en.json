@@ -133,5 +133,16 @@
   "gateway.info.disclaimer.description": "The platform is a technical intermediary for connecting users, negotiation, and exchanging offers. It is not a party to any contract or transaction between users. Each agreement, obligation, and dispute remains between its parties. The platform keeps the negotiation room, messages, and offers as a record that may be reviewed and printed. The platform does not adjudicate disputes. Any dispute shall be interpreted under the applicable Sudanese law in force at the relevant time.",
   "gateway.info.card.title": "Platform usage guidelines",
   "gateway.info.card.description": "How to use the platform, commercial terms, negotiation, and scope of responsibility.",
-  "gateway.info.card.action": "View guidelines"
+  "gateway.info.card.action": "View guidelines",
+  "dashboard.whatsapp_kicker": "WhatsApp",
+  "dashboard.whatsapp_title": "WhatsApp notifications",
+  "dashboard.whatsapp_description": "You can choose to receive WhatsApp messages from Sudan Mining Hub when the official channel is available.",
+  "dashboard.whatsapp_number": "Phone number",
+  "dashboard.whatsapp_enabled": "WhatsApp reception is enabled",
+  "dashboard.whatsapp_disabled": "WhatsApp reception is disabled",
+  "dashboard.whatsapp_enable": "Enable WhatsApp reception",
+  "dashboard.whatsapp_disable": "Disable WhatsApp reception",
+  "dashboard.whatsapp_phone_required": "Add your phone number first before enabling WhatsApp reception.",
+  "dashboard.whatsapp_note": "The platform will not initiate WhatsApp conversations automatically in this design.",
+  "dashboard.whatsapp_action_failed": "Unable to update WhatsApp settings."
 }

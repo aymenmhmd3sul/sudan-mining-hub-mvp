@@ -22,6 +22,8 @@ class UserModel(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
+    whatsapp_opt_in = Column(Boolean, nullable=False, default=False)
+    whatsapp_opt_in_at = Column(DateTime(timezone=True), nullable=True)
     role = Column(SQLEnum(UserRole), default=UserRole.BUYER, nullable=False)
     is_approved = Column(Boolean, default=False)
 
