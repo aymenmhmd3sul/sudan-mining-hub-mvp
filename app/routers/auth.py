@@ -102,11 +102,7 @@ def register_user(
             verification_token,
         )
         db.commit()
-    except Exception as exc:
-        print(
-            f"REGISTRATION_EMAIL_ERROR: {type(exc).__name__}: {exc}",
-            flush=True,
-        )
+    except Exception:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

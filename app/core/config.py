@@ -9,11 +9,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
     APP_BASE_URL: str = "http://127.0.0.1:8001"
-    SMTP_HOST: str | None = None
-    SMTP_PORT: int = 587
-    SMTP_USERNAME: str | None = None
-    SMTP_PASSWORD: str | None = None
-    SMTP_FROM: str | None = None
+
+    RESEND_API_KEY: str | None = None
+    EMAIL_FROM: str = "onboarding@resend.dev"
+
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = 24
 
     model_config = SettingsConfigDict(
