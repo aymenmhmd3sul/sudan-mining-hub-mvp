@@ -11,4 +11,3 @@ python-multipart
 jinja2
 
 email-validator==2.3.0
-resend==2.47.0

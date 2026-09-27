@@ -10,8 +10,9 @@ class Settings(BaseSettings):
 
     APP_BASE_URL: str = "http://127.0.0.1:8001"
 
-    RESEND_API_KEY: str | None = None
-    EMAIL_FROM: str = "onboarding@resend.dev"
+    BREVO_API_KEY: str | None = None
+    SENDER_EMAIL: str = "notifications@sudanmininghub.com"
+    SENDER_NAME: str = "Sudan Mining Hub"
 
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = 24
 
