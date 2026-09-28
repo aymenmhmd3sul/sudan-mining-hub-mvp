@@ -47,6 +47,7 @@ class DealService:
         merchant_id: int,
         final_amount: Decimal,
         currency: str,
+        commit: bool = True,
     ) -> Deal:
         deal = Deal(
             request_id=request_id,
@@ -94,8 +95,12 @@ class DealService:
                 )
             )
 
-        db.commit()
-        db.refresh(deal)
+        if commit:
+            db.commit()
+            db.refresh(deal)
+        else:
+            db.flush()
+
         return deal
 
     @staticmethod
@@ -131,109 +136,38 @@ class DealService:
         db: Session,
         deal: Deal,
         buyer_id: int,
+        commit: bool = True,
     ) -> Deal:
         if deal.buyer_id != buyer_id:
             raise PermissionError("Only the buyer can approve the deal")
+
         if deal.status != DealStatus.PENDING_BUYER_APPROVAL:
             raise ValueError(
                 "Only deals pending buyer approval can be approved"
             )
+
         if deal.buyer_approved:
             raise ValueError("Deal has already been approved by the buyer")
 
         from datetime import datetime, timezone
+        from app.services.commission_service import CommissionService
 
-        try:
-            from app.services.commission_tier_service import CommissionTierService
-
-            deal_amount = Decimal(str(deal.final_amount))
-            tier = CommissionTierService.get_for_amount(
-                db,
-                deal.currency,
-                deal_amount,
+        commission = CommissionService.get_for_deal(db, deal.id)
+        if commission is None:
+            raise ValueError(
+                "Commission must be calculated before buyer approval"
             )
 
-            if tier is not None:
-                final_commission, adjusted_by_platform = (
-                    CommissionService.calculate_platform_commission(
-                        deal_amount=deal_amount,
-                        merchant_amount=None,
-                        merchant_rate=None,
-                        minimum_amount=tier.minimum_amount,
-                        platform_rate=tier.commission_rate,
-                        currency=deal.currency,
-                    )
-                )
+        deal.buyer_approved = True
+        deal.status = DealStatus.CONFIRMED
+        deal.approved_at = datetime.now(timezone.utc)
 
-                platform_amount = (
-                    deal_amount
-                    * tier.commission_rate
-                    / Decimal("100")
-                )
-
-                CommissionService.create(
-                    db,
-                    deal_id=deal.id,
-                    merchant_id=deal.merchant_id,
-                    proposed_amount=None,
-                    proposed_currency=None,
-                    proposed_rate=None,
-                    platform_amount=platform_amount,
-                    platform_rate=tier.commission_rate,
-                    minimum_amount=tier.minimum_amount,
-                    final_amount=final_commission,
-                    currency=deal.currency,
-                    adjusted_by_platform=adjusted_by_platform,
-                )
-            else:
-                settings = CommissionService.get_active_settings(
-                    db,
-                    deal.currency,
-                )
-
-                final_commission, adjusted_by_platform = (
-                    CommissionService.calculate_platform_commission(
-                        deal_amount=deal_amount,
-                        merchant_amount=None,
-                        merchant_rate=None,
-                        minimum_amount=settings.minimum_amount,
-                        platform_rate=settings.commission_rate,
-                        currency=deal.currency,
-                    )
-                )
-
-                platform_amount = (
-                    deal_amount
-                    * settings.commission_rate
-                    / Decimal("100")
-                )
-
-                CommissionService.create(
-                    db,
-                    deal_id=deal.id,
-                    merchant_id=deal.merchant_id,
-                    proposed_amount=None,
-                    proposed_currency=None,
-                    proposed_rate=None,
-                    platform_amount=platform_amount,
-                    platform_rate=settings.commission_rate,
-                    minimum_amount=settings.minimum_amount,
-                    final_amount=final_commission,
-                    currency=deal.currency,
-                    adjusted_by_platform=adjusted_by_platform,
-                )
-
-            deal.buyer_approved = True
-            deal.status = DealStatus.CONFIRMED
-            deal.approved_at = datetime.now(timezone.utc)
-
+        if commit:
             db.commit()
             db.refresh(deal)
-            return deal
-
-        except Exception:
-            db.rollback()
-            raise
+        else:
+            db.flush()
+        return deal
 
     @staticmethod
     def mark_delivered(

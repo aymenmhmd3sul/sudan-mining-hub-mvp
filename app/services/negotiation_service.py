@@ -12,6 +12,7 @@ from decimal import Decimal, InvalidOperation
 from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.deal import Deal
 from app.services.deal_service import DealService
+from app.services.commission_service import CommissionService
 
 
 class NegotiationService:
@@ -61,14 +62,259 @@ class NegotiationService:
         return participant
 
     @staticmethod
+    def finalize_offer(
+        db: Session,
+        offer_id: int,
+        merchant_id: int,
+    ) -> NegotiationRoom:
+        from app.models.listing import Listing, ListingStatus
+
+        offer = (
+            db.query(Offer)
+            .filter(Offer.id == offer_id)
+            .with_for_update()
+            .first()
+        )
+        if offer is None:
+            raise ValueError("Offer not found")
+
+        request = (
+            db.query(BuyerRequest)
+            .filter(BuyerRequest.id == offer.request_id)
+            .first()
+        )
+        if request is None:
+            raise ValueError("Buyer request not found")
+
+        # Every new negotiation/final offer must be isolated to one listing.
+        # Legacy offers with no listing remain untouched, but cannot enter
+        # the new final-sale flow.
+        if offer.listing_id is None:
+            raise ValueError("Offer must be linked to a listing before finalization")
+
+        if request.listing_id is None:
+            raise ValueError("Buyer request must be linked to a listing before finalization")
+
+        if offer.listing_id != request.listing_id:
+            raise ValueError("Offer is not linked to the requested listing")
+
+        if offer.merchant_id != merchant_id:
+            raise PermissionError(
+                "Only the offer merchant can finalize this offer"
+            )
+
+        if offer.status != OfferStatus.SUBMITTED:
+            raise ValueError("Only submitted offers can be finalized")
+
+        room = (
+            db.query(NegotiationRoom)
+            .filter(
+                NegotiationRoom.offer_id == offer.id,
+                NegotiationRoom.request_id == request.id,
+            )
+            .order_by(NegotiationRoom.id.desc())
+            .first()
+        )
+        if room is None:
+            raise ValueError("Negotiation room for this offer not found")
+
+        if room.status != NegotiationStatus.OPEN:
+            raise ValueError("Negotiation room is not open")
+
+        participant = (
+            db.query(NegotiationParticipant)
+            .filter(
+                NegotiationParticipant.room_id == room.id,
+                NegotiationParticipant.user_id == merchant_id,
+            )
+            .first()
+        )
+        if participant is None:
+            raise PermissionError(
+                "Merchant is not a participant in this negotiation room"
+            )
+
+        listing = None
+        if offer.listing_id is not None:
+            listing = (
+                db.query(Listing)
+                .filter(Listing.id == offer.listing_id)
+                .with_for_update()
+                .first()
+            )
+            if listing is None:
+                raise ValueError("Listing not found")
+
+            if listing.status != ListingStatus.ACTIVE:
+                raise ValueError("Listing is no longer available")
+
+            if offer.listing_id != request.listing_id:
+                raise ValueError(
+                    "Offer is not linked to the requested listing"
+                )
+
+            if listing.owner_id != merchant_id:
+                raise PermissionError(
+                    "Merchant does not own the requested listing"
+                )
+
+        try:
+            final_amount = Decimal(str(offer.amount))
+        except (InvalidOperation, TypeError, ValueError):
+            raise ValueError("Offer amount must be a valid decimal amount")
+
+        if final_amount <= 0:
+            raise ValueError("Offer amount must be greater than zero")
+
+        # Prevent two final deals from being opened for the same listing.
+        if listing is not None:
+            existing_final = (
+                db.query(Offer)
+                .filter(
+                    Offer.listing_id == listing.id,
+                    Offer.id != offer.id,
+                    Offer.status == OfferStatus.FINAL,
+                )
+                .first()
+            )
+            if existing_final is not None:
+                raise ValueError(
+                    "Another final offer is already awaiting buyer approval"
+                )
+
+            from app.models.deal import Deal, DealStatus
+
+            existing_pending_deal = (
+                db.query(Deal)
+                .filter(
+                    Deal.listing_id == listing.id,
+                    Deal.status == DealStatus.PENDING_BUYER_APPROVAL,
+                    Deal.offer_id != offer.id,
+                )
+                .first()
+            )
+            if existing_pending_deal is not None:
+                raise ValueError(
+                    "Another deal is already awaiting buyer approval"
+                )
+
+        currency = offer.currency or request.currency or "SDG"
+
+        try:
+            deal = DealService.create(
+                db,
+                request_id=request.id,
+                offer_id=offer.id,
+                listing_id=offer.listing_id,
+                negotiation_room_id=room.id,
+                buyer_id=request.buyer_id,
+                merchant_id=offer.merchant_id,
+                final_amount=final_amount,
+                currency=currency,
+                commit=False,
+            )
+
+            from app.services.commission_tier_service import CommissionTierService
+
+            tier = CommissionTierService.get_for_amount(
+                db,
+                currency,
+                final_amount,
+            )
+
+            if tier is not None:
+                final_commission, adjusted_by_platform = (
+                    CommissionService.calculate_platform_commission(
+                        deal_amount=final_amount,
+                        merchant_amount=None,
+                        merchant_rate=None,
+                        minimum_amount=tier.minimum_amount,
+                        platform_rate=tier.commission_rate,
+                        currency=currency,
+                    )
+                )
+                platform_amount = (
+                    final_amount
+                    * tier.commission_rate
+                    / Decimal("100")
+                )
+
+                CommissionService.create(
+                    db,
+                    deal_id=deal.id,
+                    merchant_id=offer.merchant_id,
+                    proposed_amount=None,
+                    proposed_currency=None,
+                    proposed_rate=None,
+                    platform_amount=platform_amount,
+                    platform_rate=tier.commission_rate,
+                    minimum_amount=tier.minimum_amount,
+                    final_amount=final_commission,
+                    currency=currency,
+                    adjusted_by_platform=adjusted_by_platform,
+                )
+            else:
+                settings = CommissionService.get_active_settings(
+                    db,
+                    currency,
+                )
+
+                final_commission, adjusted_by_platform = (
+                    CommissionService.calculate_platform_commission(
+                        deal_amount=final_amount,
+                        merchant_amount=None,
+                        merchant_rate=None,
+                        minimum_amount=settings.minimum_amount,
+                        platform_rate=settings.commission_rate,
+                        currency=currency,
+                    )
+                )
+                platform_amount = (
+                    final_amount
+                    * settings.commission_rate
+                    / Decimal("100")
+                )
+
+                CommissionService.create(
+                    db,
+                    deal_id=deal.id,
+                    merchant_id=offer.merchant_id,
+                    proposed_amount=None,
+                    proposed_currency=None,
+                    proposed_rate=None,
+                    platform_amount=platform_amount,
+                    platform_rate=settings.commission_rate,
+                    minimum_amount=settings.minimum_amount,
+                    final_amount=final_commission,
+                    currency=currency,
+                    adjusted_by_platform=adjusted_by_platform,
+                )
+
+            offer.status = OfferStatus.FINAL
+            room.status = NegotiationStatus.AGREED
+            request.status = RequestStatus.NEGOTIATING
+
+            db.commit()
+            db.refresh(room)
+            return room
+
+        except Exception:
+            db.rollback()
+            raise
+
+    @staticmethod
     def accept_offer(
         db: Session,
         offer_id: int,
         buyer_id: int,
     ) -> NegotiationRoom:
+        from app.models.listing import Listing, ListingStatus
+        from app.models.deal import Deal, DealStatus
+
         offer = (
             db.query(Offer)
             .filter(Offer.id == offer_id)
+            .with_for_update()
             .first()
         )
         if offer is None:
@@ -85,77 +331,135 @@ class NegotiationService:
         if request.buyer_id != buyer_id:
             raise PermissionError("Only the request owner can accept an offer")
 
-        if offer.status != OfferStatus.SUBMITTED:
-            raise ValueError("Only submitted offers can be accepted")
-
-        if request.status not in (
-            RequestStatus.OPEN,
-            RequestStatus.NEGOTIATING,
-        ):
-            raise ValueError("Buyer request is not open for negotiation")
+        if offer.status != OfferStatus.FINAL:
+            raise ValueError(
+                "Only final offers can be accepted by the buyer"
+            )
 
         room = (
             db.query(NegotiationRoom)
-            .filter(NegotiationRoom.request_id == request.id)
+            .filter(
+                NegotiationRoom.offer_id == offer.id,
+                NegotiationRoom.request_id == request.id,
+            )
             .order_by(NegotiationRoom.id.desc())
             .first()
         )
         if room is None:
-            raise ValueError("Negotiation room not found")
+            raise ValueError("Negotiation room for this offer not found")
 
-        offer.status = OfferStatus.ACCEPTED
-        room.offer_id = offer.id
-        room.status = NegotiationStatus.AGREED
-        request.status = RequestStatus.NEGOTIATING
+        if room.status != NegotiationStatus.AGREED:
+            raise ValueError(
+                "This final offer is not awaiting buyer approval"
+            )
 
-        competing_offers = (
-            db.query(Offer)
+        participant = (
+            db.query(NegotiationParticipant)
             .filter(
-                Offer.request_id == request.id,
-                Offer.id != offer.id,
-                Offer.status == OfferStatus.SUBMITTED,
+                NegotiationParticipant.room_id == room.id,
+                NegotiationParticipant.user_id == buyer_id,
             )
-            .all()
-        )
-
-        for competing_offer in competing_offers:
-            competing_offer.status = OfferStatus.REJECTED
-
-            competing_room = (
-                db.query(NegotiationRoom)
-                .filter(NegotiationRoom.offer_id == competing_offer.id)
-                .first()
-            )
-            if competing_room is not None:
-                competing_room.status = NegotiationStatus.CLOSED
-
-        existing_deal = (
-            db.query(Deal)
-            .filter(Deal.offer_id == offer.id)
             .first()
         )
-
-        if existing_deal is None:
-            try:
-                final_amount = Decimal(str(offer.amount))
-            except (InvalidOperation, TypeError, ValueError):
-                raise ValueError("Offer amount must be a valid decimal amount")
-
-            DealService.create(
-                db,
-                request_id=request.id,
-                offer_id=offer.id,
-                listing_id=offer.listing_id,
-                negotiation_room_id=room.id,
-                buyer_id=request.buyer_id,
-                merchant_id=offer.merchant_id,
-                final_amount=final_amount,
-                currency=offer.currency or request.currency or "SDG",
+        if participant is None:
+            raise PermissionError(
+                "Buyer is not a participant in this negotiation room"
             )
 
-        db.commit()
-        db.refresh(room)
-        return room
+        listing = None
+        if request.listing_id is not None:
+            listing = (
+                db.query(Listing)
+                .filter(Listing.id == request.listing_id)
+                .with_for_update()
+                .first()
+            )
+            if listing is None:
+                raise ValueError("Listing not found")
+
+            if listing.status != ListingStatus.ACTIVE:
+                raise ValueError("Listing is no longer available")
+
+            if offer.listing_id != listing.id:
+                raise ValueError(
+                    "Offer is not linked to the requested listing"
+                )
+
+            if offer.merchant_id != listing.owner_id:
+                raise PermissionError(
+                    "Offer merchant does not own the requested listing"
+                )
+
+        deal = (
+            db.query(Deal)
+            .filter(Deal.offer_id == offer.id)
+            .with_for_update()
+            .first()
+        )
+        if deal is None:
+            raise ValueError("Deal for this final offer not found")
+
+        if deal.status != DealStatus.PENDING_BUYER_APPROVAL:
+            raise ValueError("Deal is not awaiting buyer approval")
+
+        try:
+            DealService.approve_by_buyer(
+                db,
+                deal=deal,
+                buyer_id=buyer_id,
+                commit=False,
+            )
+
+            offer.status = OfferStatus.ACCEPTED
+            room.status = NegotiationStatus.CLOSED
+            request.status = RequestStatus.NEGOTIATING
+
+            if listing is not None:
+                listing.status = ListingStatus.SOLD
+                listing.version += 1
+
+                other_offers = (
+                    db.query(Offer)
+                    .filter(
+                        Offer.listing_id == listing.id,
+                        Offer.id != offer.id,
+                        Offer.status.in_(
+                            (
+                                OfferStatus.SUBMITTED,
+                                OfferStatus.FINAL,
+                            )
+                        ),
+                    )
+                    .all()
+                )
+
+                for other_offer in other_offers:
+                    other_offer.status = OfferStatus.CLOSED
+
+                    other_rooms = (
+                        db.query(NegotiationRoom)
+                        .filter(
+                            NegotiationRoom.offer_id == other_offer.id,
+                            NegotiationRoom.status.in_(
+                                (
+                                    NegotiationStatus.OPEN,
+                                    NegotiationStatus.AGREED,
+                                )
+                            ),
+                        )
+                        .all()
+                    )
+
+                    for other_room in other_rooms:
+                        other_room.status = NegotiationStatus.CLOSED
+
+            db.commit()
+            db.refresh(room)
+            return room
+
+        except Exception:
+            db.rollback()
+            raise
 
     @staticmethod
     def add_message(

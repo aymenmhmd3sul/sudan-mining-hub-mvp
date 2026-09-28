@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.models.offer import Offer, OfferStatus
 from app.models.offer_item import OfferItem
 from app.models.request_item import RequestItem
+from app.models.buyer_request import BuyerRequest
+from app.models.listing import Listing, ListingStatus
 
 
 class OfferService:
@@ -44,6 +46,37 @@ class OfferService:
         request_id = data.get("request_id")
         if request_id is None:
             raise ValueError("request_id is required")
+
+        request = (
+            db.query(BuyerRequest)
+            .filter(BuyerRequest.id == request_id)
+            .first()
+        )
+        if request is None:
+            raise ValueError("Buyer request not found")
+
+        if request.listing_id is not None:
+            listing = (
+                db.query(Listing)
+                .filter(Listing.id == request.listing_id)
+                .first()
+            )
+            if listing is None:
+                raise ValueError("Listing not found")
+
+            if listing.status != ListingStatus.ACTIVE:
+                raise ValueError("Listing is no longer available")
+
+            merchant_id = data.get("merchant_id")
+            if merchant_id != listing.owner_id:
+                raise ValueError("Merchant can only offer on their own listing")
+
+            for item in items:
+                item_listing_id = item.get("listing_id")
+                if item_listing_id != request.listing_id:
+                    raise ValueError(
+                        "Every OfferItem must reference the requested listing"
+                    )
 
         request_item_ids = [int(item["request_item_id"]) for item in items]
         request_items = (

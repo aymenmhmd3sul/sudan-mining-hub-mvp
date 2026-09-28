@@ -19,6 +19,7 @@ from app.db.session import Base
 class OfferStatus(str, enum.Enum):
     DRAFT = "DRAFT"
     SUBMITTED = "SUBMITTED"
+    FINAL = "FINAL"
     ACCEPTED = "ACCEPTED"
     REJECTED = "REJECTED"
     WITHDRAWN = "WITHDRAWN"

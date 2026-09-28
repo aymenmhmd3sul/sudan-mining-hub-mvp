@@ -145,9 +145,13 @@
                 );
             }
 
-            window.location.href =
-                "/negotiation?room_id=" +
-                encodeURIComponent(data.id);
+            if (data.id) {
+                window.location.href =
+                    "/negotiation?room_id=" +
+                    encodeURIComponent(data.id);
+            } else {
+                window.location.href = "/requests";
+            }
         } catch (error) {
             console.error("Negotiation error:", error);
             button.disabled = false;

@@ -107,6 +107,7 @@
                     {% endfor %}
                 </div>
 
+                {% if room and room.status.value == "OPEN" %}
                 <form id="negotiationMessageForm">
                     <label for="negotiationMessage">
                         {{ t("negotiation.message_placeholder") }}
@@ -130,6 +131,7 @@
 
                     <p id="negotiationMessageError" hidden></p>
                 </form>
+                {% endif %}
 
             <div id="negotiationModal" class="smh-modal-overlay" hidden>
                 <div class="smh-modal" role="dialog" aria-modal="true">
@@ -156,13 +158,125 @@
                     <p>{{ offer.message }}</p>
                     {% endif %}
 
-                    {% if current_user.role.value == "BUYER" and offer.status.value == "SUBMITTED" %}
+                    {% if offer.status.value == "FINAL" %}
+
+
+                    <div class="marketplace-listing-detail-item">
+
+
+                        <strong>العرض النهائي</strong>
+
+
+                        <p>
+
+
+                            مبلغ الصفقة:
+
+
+                            {{ offer.amount or "-" }}
+
+
+                            {{ offer.currency or "" }}
+
+
+                        </p>
+
+
+
+                        {% if deal is not none %}
+
+
+                        <p>
+
+
+                            المبلغ النهائي:
+
+
+                            {{ deal.final_amount }}
+
+
+                            {{ deal.currency }}
+
+
+                        </p>
+
+
+                        {% endif %}
+
+
+
+                        {% if commission is not none %}
+
+
+                        <p>
+
+
+                            عمولة المنصة:
+
+
+                            {{ commission.final_amount }}
+
+
+                            {{ commission.currency }}
+
+
+                        </p>
+
+
+                        <p>
+
+
+                            حالة العمولة:
+
+
+                            {{ commission.status.value }}
+
+
+                        </p>
+
+
+                        {% endif %}
+
+
+
+                        <p>
+
+
+                            بانتظار موافقة المشتري لإتمام البيع.
+
+
+                        </p>
+
+
+                    </div>
+
+
+                    {% endif %}
+
+                    {% if current_user.role.value == "MERCHANT" and offer.status.value == "SUBMITTED" %}
+                    <button
+                        type="button"
+                        class="marketplace-primary-button finalize-offer-btn"
+                        data-offer-id="{{ offer.id }}"
+                    >
+                        إرسال العرض النهائي
+                    </button>
+                    {% endif %}
+
+                    {% if current_user.role.value == "BUYER" and offer.status.value == "FINAL" %}
+                    <div class="marketplace-listing-detail-item">
+                        <strong>العرض النهائي بانتظار موافقتك</strong>
+                        <p>
+                            {{ offer.amount or "-" }}
+                            {{ offer.currency or "" }}
+                        </p>
+                    </div>
                     <button
                         type="button"
                         class="marketplace-primary-button accept-offer-btn"
                         data-offer-id="{{ offer.id }}"
                     >
-                        {{ t("negotiation.accept_offer") }}
+                        قبول العرض النهائي
                     </button>
                     {% endif %}
                 </div>
@@ -208,6 +322,48 @@
             }
         });
     }
+
+    const finalizeOfferButtons = document.querySelectorAll(".finalize-offer-btn");
+
+    finalizeOfferButtons.forEach(function (finalizeButton) {
+        finalizeButton.addEventListener("click", async function () {
+            const offerId = finalizeButton.dataset.offerId;
+            if (!offerId) return;
+
+            finalizeButton.disabled = true;
+
+            try {
+                const response = await fetch(
+                    "/api/v1/negotiation/offers/" +
+                    encodeURIComponent(offerId) +
+                    "/finalize",
+                    {
+                        method: "POST",
+                        credentials: "same-origin"
+                    }
+                );
+
+                if (response.status === 401) {
+                    window.location.href = "/login";
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail || "تعذر إرسال العرض النهائي"
+                    );
+                }
+
+                window.location.reload();
+            } catch (error) {
+                console.error("Negotiation final offer error:", error);
+                showNegotiationModal(error.message);
+                finalizeButton.disabled = false;
+            }
+        });
+    });
 
     const acceptOfferButtons = document.querySelectorAll(".accept-offer-btn");
 

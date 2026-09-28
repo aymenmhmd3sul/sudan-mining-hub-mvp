@@ -14,6 +14,7 @@ from app.models.negotiation import (
 )
 from app.models.offer import Offer
 from app.models.deal import Deal
+from app.services.commission_service import CommissionService
 from app.models.user import UserModel
 from app.routers.auth import get_current_user, get_optional_current_user, require_role, require_active_subscription
 from sqlalchemy.orm import Session
@@ -262,27 +263,39 @@ def start_listing_negotiation(
             detail="You cannot negotiate your own listing",
         )
 
-    existing_room = (
-        db.query(NegotiationRoom)
-        .join(
-            BuyerRequest,
-            BuyerRequest.id == NegotiationRoom.request_id,
-        )
+    existing_request = (
+        db.query(BuyerRequest)
         .filter(
             BuyerRequest.buyer_id == user.id,
             BuyerRequest.listing_id == listing.id,
-            NegotiationRoom.status == NegotiationStatus.OPEN,
+            BuyerRequest.status.in_(
+                (RequestStatus.OPEN, RequestStatus.NEGOTIATING)
+            ),
         )
-        .order_by(NegotiationRoom.id.desc())
+        .order_by(BuyerRequest.id.desc())
         .first()
     )
 
-    if existing_room is not None:
+    if existing_request is not None:
+        existing_room = (
+            db.query(NegotiationRoom)
+            .filter(
+                NegotiationRoom.request_id == existing_request.id,
+                NegotiationRoom.status == NegotiationStatus.OPEN,
+            )
+            .order_by(NegotiationRoom.id.desc())
+            .first()
+        )
+
         return {
-            "id": existing_room.id,
-            "request_id": existing_room.request_id,
+            "id": existing_room.id if existing_room is not None else None,
+            "request_id": existing_request.id,
             "listing_id": listing.id,
-            "status": existing_room.status,
+            "status": (
+                existing_room.status
+                if existing_room is not None
+                else existing_request.status
+            ),
             "existing": True,
         }
 
@@ -314,7 +327,7 @@ def start_listing_negotiation(
 
     target_location = " — ".join(dict.fromkeys(location_parts)) or None
 
-    request = BuyerRequest(
+    buyer_request = BuyerRequest(
         buyer_id=user.id,
         listing_id=listing.id,
         title=listing.title,
@@ -323,11 +336,11 @@ def start_listing_negotiation(
         currency=listing.currency,
         target_location=target_location,
     )
-    db.add(request)
+    db.add(buyer_request)
     db.flush()
 
     request_item = RequestItem(
-        request_id=request.id,
+        request_id=buyer_request.id,
         category_id=listing.category_id,
         title=listing.title,
         description=listing.description,
@@ -335,36 +348,14 @@ def start_listing_negotiation(
         unit="listing",
     )
     db.add(request_item)
-    db.flush()
-
-    room = NegotiationRoom(
-        request_id=request.id,
-        status=NegotiationStatus.OPEN,
-    )
-    db.add(room)
-    db.flush()
-
-    db.add_all(
-        [
-            NegotiationParticipant(
-                room_id=room.id,
-                user_id=user.id,
-            ),
-            NegotiationParticipant(
-                room_id=room.id,
-                user_id=listing.owner_id,
-            ),
-        ]
-    )
-
     db.commit()
-    db.refresh(room)
+    db.refresh(buyer_request)
 
     return {
-        "id": room.id,
-        "request_id": request.id,
+        "id": None,
+        "request_id": buyer_request.id,
         "listing_id": listing.id,
-        "status": room.status,
+        "status": buyer_request.status,
         "existing": False,
     }
 
@@ -528,27 +519,34 @@ def negotiation_page(
         ) if room is not None else []
 
         offers = (
-            db.query(Offer)
-            .filter(Offer.request_id == request_obj.id)
-            .order_by(
-                Offer.created_at.asc(),
-                Offer.id.asc(),
+            [room.offer]
+            if room is not None and room.offer is not None
+            else []
+        )
+
+        deal = None
+        commission = None
+        if room is not None and room.offer is not None:
+            deal = (
+                db.query(Deal)
+                .filter(Deal.offer_id == room.offer.id)
+                .first()
             )
-            .all()
-        ) if request_obj is not None else []
+            if deal is not None:
+                commission = CommissionService.get_for_deal(db, deal.id)
 
-    active_rooms_count = (
-        db.query(NegotiationRoom)
-        .filter(NegotiationRoom.status == NegotiationStatus.OPEN)
-        .count()
-    )
+        active_rooms_count = (
+            db.query(NegotiationRoom)
+            .filter(NegotiationRoom.status == NegotiationStatus.OPEN)
+            .count()
+        )
 
-    room = locals().get("room", None)
-    inbox_rooms = locals().get("inbox_rooms", [])
-    request_obj = locals().get("request_obj", None)
-    listing = locals().get("listing", None)
-    messages = locals().get("messages", [])
-    offers = locals().get("offers", [])
+        room = locals().get("room", None)
+        inbox_rooms = locals().get("inbox_rooms", [])
+        request_obj = locals().get("request_obj", None)
+        listing = locals().get("listing", None)
+        messages = locals().get("messages", [])
+        offers = locals().get("offers", [])
 
     context = template_context(request)
     context.update(
@@ -560,6 +558,8 @@ def negotiation_page(
             "listing": listing,
             "messages": messages,
             "offers": offers,
+            "deal": deal,
+            "commission": commission,
             "current_user": user,
             "active_rooms_count": active_rooms_count,
         }
@@ -570,6 +570,60 @@ def negotiation_page(
         name="negotiation/negotiation.html",
         context=context,
     )
+
+
+@router.post("/api/v1/negotiation/offers/{offer_id}/finalize")
+def finalize_negotiation_offer(
+    offer_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("MERCHANT")),
+    _subscription_user=Depends(require_active_subscription),
+):
+    try:
+        room = NegotiationService.finalize_offer(
+            db,
+            offer_id=offer_id,
+            merchant_id=user.id,
+        )
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    deal = (
+        db.query(Deal)
+        .filter(Deal.offer_id == offer_id)
+        .first()
+    )
+
+    commission = None
+    if deal is not None:
+        from app.models.commission import Commission
+
+        commission = (
+            db.query(Commission)
+            .filter(Commission.deal_id == deal.id)
+            .first()
+        )
+
+    return {
+        "offer_id": offer_id,
+        "room_id": room.id,
+        "room_status": room.status,
+        "deal_id": deal.id if deal is not None else None,
+        "deal_status": deal.status if deal is not None else None,
+        "final_amount": str(deal.final_amount) if deal is not None else None,
+        "currency": deal.currency if deal is not None else None,
+        "commission": (
+            {
+                "final_amount": str(commission.final_amount),
+                "currency": commission.currency,
+                "status": commission.status,
+            }
+            if commission is not None
+            else None
+        ),
+    }
 
 
 @router.post("/api/v1/negotiation/offers/{offer_id}/accept")
@@ -636,6 +690,7 @@ def send_negotiation_message(
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
     if room.status in (
+        NegotiationStatus.AGREED,
         NegotiationStatus.CANCELLED,
         NegotiationStatus.CLOSED,
     ):
