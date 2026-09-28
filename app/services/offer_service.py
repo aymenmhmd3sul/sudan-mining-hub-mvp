@@ -126,6 +126,8 @@ class OfferService:
             raise ValueError(f"Invalid OfferItem payload: {exc}") from exc
 
         data["amount"] = str(grand_total.quantize(Decimal("0.01")))
+        if request.listing_id is not None:
+            data["listing_id"] = request.listing_id
 
         offer = Offer(**data)
         offer.items = offer_items
