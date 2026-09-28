@@ -5,16 +5,17 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.offer import OfferStatus
-from app.models.negotiation import NegotiationParticipant, NegotiationRoom, NegotiationStatus
-from app.models.user import UserModel
-from app.routers.auth import require_role, require_active_subscription
-from app.services.offer_service import OfferService
 from app.models.notification import NotificationChannel
+from app.models.user import UserModel
+from app.routers.auth import require_active_subscription, require_role
 from app.services.notification_service import NotificationService
+from app.services.offer_service import OfferService
 
 
-router = APIRouter(prefix="/api/v1/offers", tags=["Offers"])
+router = APIRouter(
+    prefix="/api/v1/offers",
+    tags=["Offers"],
+)
 
 
 class OfferItemPayload(BaseModel):
@@ -25,10 +26,9 @@ class OfferItemPayload(BaseModel):
 
 
 class OfferCreatePayload(BaseModel):
-    request_id: int
+    room_id: int
     currency: str | None = None
     message: str | None = None
-    status: OfferStatus = OfferStatus.SUBMITTED
     items: list[OfferItemPayload] = Field(min_length=1)
 
 
@@ -36,50 +36,27 @@ class OfferCreatePayload(BaseModel):
 def create_offer(
     payload: OfferCreatePayload,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("MERCHANT", "ADMIN")),
+    user: UserModel = Depends(require_role("BUYER")),
     _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     try:
-        offer = OfferService.create(
+        offer, room = OfferService.create_buyer_offer(
             db,
-            request_id=payload.request_id,
-            merchant_id=user.id,
+            room_id=payload.room_id,
+            buyer_id=user.id,
             currency=payload.currency,
             message=payload.message,
-            status=payload.status,
             items=[item.model_dump() for item in payload.items],
-            commit=False,
-        )
-
-        room = NegotiationRoom(
-            request_id=offer.request_id,
-            offer_id=offer.id,
-            status=NegotiationStatus.OPEN,
-        )
-        db.add(room)
-        db.flush()
-
-        db.add_all(
-            [
-                NegotiationParticipant(
-                    room_id=room.id,
-                    user_id=offer.request.buyer_id,
-                ),
-                NegotiationParticipant(
-                    room_id=room.id,
-                    user_id=offer.merchant_id,
-                ),
-            ]
         )
 
         NotificationService.create(
             db,
-            recipient_user_id=offer.request.buyer_id,
+            recipient_user_id=offer.merchant_id,
             event_type="NEW_OFFER",
-            title="New offer received",
+            title="New buyer offer received",
             message=(
-                f"A merchant submitted a new offer for your request "
-                f"#{offer.request_id}."
+                f"A buyer submitted an offer for your negotiation "
+                f"#{room.id}."
             ),
             channel=NotificationChannel.IN_APP,
             related_type="offer",
@@ -89,14 +66,26 @@ def create_offer(
         db.commit()
         db.refresh(offer)
         db.refresh(room)
+
+    except PermissionError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     except ValueError as exc:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
+    except Exception:
+        db.rollback()
+        raise
 
     return {
         "id": offer.id,
+        "room_id": room.id,
         "request_id": offer.request_id,
         "merchant_id": offer.merchant_id,
         "amount": offer.amount,

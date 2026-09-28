@@ -265,7 +265,7 @@
 
                     {% if current_user.role.value == "BUYER" and offer.status.value == "FINAL" %}
                     <div class="marketplace-listing-detail-item">
-                        <strong>العرض النهائي بانتظار موافقتك</strong>
+                        <strong>العرض النهائي بعد موافقة التاجر</strong>
                         <p>
                             {{ offer.amount or "-" }}
                             {{ offer.currency or "" }}

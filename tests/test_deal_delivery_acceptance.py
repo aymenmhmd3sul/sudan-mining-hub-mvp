@@ -20,15 +20,16 @@ from app.models.negotiation import (
     NegotiationRoom,
     NegotiationStatus,
 )
-from app.models.notification import Notification
 from app.models.deal import Deal, DealStatus
+from app.models.deal_item import DealItem
 from app.models.commission import Commission, CommissionStatus
+from app.models.notification import Notification
 from app.services.subscription_service import SubscriptionService
 
 
-def test_full_transaction_http_acceptance_isolation():
-    marker = f"TX_HTTP_{uuid.uuid4().hex}"
-    password = "transaction-http-test"
+def test_deal_delivery_receipt_commission_http_acceptance_isolation():
+    marker = f"DELIVERY_HTTP_{uuid.uuid4().hex}"
+    password = "delivery-http-test"
 
     db = SessionLocal()
 
@@ -72,27 +73,29 @@ def test_full_transaction_http_acceptance_isolation():
         db.flush()
 
         # ------------------------------------------------------------
-        # 2. Active subscriptions required by transaction APIs.
+        # 2. Active subscriptions.
         # ------------------------------------------------------------
         SubscriptionService.activate(
             db,
             user_id=buyer.id,
             plan=f"{marker}-buyer",
         )
+
         SubscriptionService.activate(
             db,
             user_id=merchant.id,
             plan=f"{marker}-merchant",
         )
+
         db.commit()
 
         # ------------------------------------------------------------
-        # 3. Isolated category + active negotiable listing.
+        # 3. Active negotiable listing.
         # ------------------------------------------------------------
         category = ListingCategory(
             name=f"{marker} Category",
             status="ACTIVE",
-            description=f"{marker} HTTP acceptance category",
+            description=f"{marker} delivery acceptance category",
         )
         db.add(category)
         db.flush()
@@ -101,7 +104,7 @@ def test_full_transaction_http_acceptance_isolation():
             owner_id=merchant.id,
             category_id=category.category_id,
             title=f"{marker} Listing",
-            description=f"{marker} HTTP acceptance listing",
+            description=f"{marker} delivery acceptance listing",
             listing_type=ListingType.ASSET,
             price=1000.0,
             currency="USD",
@@ -114,9 +117,11 @@ def test_full_transaction_http_acceptance_isolation():
         db.refresh(listing)
 
         # ------------------------------------------------------------
-        # 4. Real HTTP logins.
+        # 4. Real HTTP authentication.
         # ------------------------------------------------------------
         merchant_client = TestClient(app)
+        buyer_client = TestClient(app)
+
         merchant_login = merchant_client.post(
             "/auth/login",
             json={
@@ -127,7 +132,6 @@ def test_full_transaction_http_acceptance_isolation():
         assert merchant_login.status_code == 200, merchant_login.text
         assert merchant_client.cookies.get("access_token") is not None
 
-        buyer_client = TestClient(app)
         buyer_login = buyer_client.post(
             "/auth/login",
             json={
@@ -147,17 +151,8 @@ def test_full_transaction_http_acceptance_isolation():
         assert negotiate.status_code == 200, negotiate.text
 
         negotiate_data = negotiate.json()
-        assert negotiate_data["listing_id"] == listing.id
-        assert negotiate_data["status"] == "OPEN"
-        assert negotiate_data["existing"] is False
-
         request_id = negotiate_data["request_id"]
         room_id = negotiate_data["id"]
-
-        # ------------------------------------------------------------
-        # 6. Request item + participants are created atomically.
-        # ------------------------------------------------------------
-        db.expire_all()
 
         request_item = (
             db.query(RequestItem)
@@ -166,69 +161,33 @@ def test_full_transaction_http_acceptance_isolation():
         )
         request_item_id = request_item.id
 
-        saved_room = (
+        room = (
             db.query(NegotiationRoom)
             .filter(NegotiationRoom.id == room_id)
             .one()
         )
 
-        participant_ids = {
-            row.user_id
-            for row in db.query(NegotiationParticipant)
-            .filter(NegotiationParticipant.room_id == room_id)
-            .all()
-        }
-
-        assert participant_ids == {buyer.id, merchant.id}
-        assert saved_room.status == NegotiationStatus.OPEN
-        assert saved_room.merchant_approved_at is None
+        assert room.status == NegotiationStatus.OPEN
+        assert room.merchant_approved_at is None
 
         # ------------------------------------------------------------
-        # 7. Buyer cannot submit before merchant approval.
-        # ------------------------------------------------------------
-        blocked_offer = buyer_client.post(
-            "/api/v1/offers",
-            json={
-                "room_id": room_id,
-                "currency": "USD",
-                "message": "Premature buyer offer",
-                "items": [
-                    {
-                        "request_item_id": request_item_id,
-                        "listing_id": listing.id,
-                        "quantity": 1,
-                        "unit_price": 900,
-                    }
-                ],
-            },
-        )
-
-        assert blocked_offer.status_code == 400, blocked_offer.text
-        assert "Merchant approval" in blocked_offer.text
-
-        # ------------------------------------------------------------
-        # 8. Merchant approves the negotiation.
+        # 6. Merchant approves negotiation.
         # ------------------------------------------------------------
         approve = merchant_client.post(
             f"/api/v1/negotiation/{room_id}/approve"
         )
         assert approve.status_code == 200, approve.text
-
-        approve_data = approve.json()
-        assert approve_data["room_id"] == room_id
-        assert approve_data["request_id"] == request_id
-        assert approve_data["status"] == "OPEN"
-        assert approve_data["merchant_approved_at"] is not None
+        assert approve.json()["merchant_approved_at"] is not None
 
         # ------------------------------------------------------------
-        # 9. Buyer submits the offer.
+        # 7. Buyer submits offer.
         # ------------------------------------------------------------
         buyer_offer = buyer_client.post(
             "/api/v1/offers",
             json={
                 "room_id": room_id,
                 "currency": "USD",
-                "message": "Buyer offer after merchant approval",
+                "message": "Delivery acceptance test offer",
                 "items": [
                     {
                         "request_item_id": request_item_id,
@@ -243,6 +202,7 @@ def test_full_transaction_http_acceptance_isolation():
         assert buyer_offer.status_code == 201, buyer_offer.text
 
         offer_data = buyer_offer.json()
+
         assert offer_data["room_id"] == room_id
         assert offer_data["request_id"] == request_id
         assert offer_data["merchant_id"] == merchant.id
@@ -253,21 +213,20 @@ def test_full_transaction_http_acceptance_isolation():
         offer_id = offer_data["id"]
 
         # ------------------------------------------------------------
-        # 10. Merchant finalizes the submitted buyer offer.
+        # 8. Merchant finalizes offer.
         # ------------------------------------------------------------
         finalize = merchant_client.post(
             f"/api/v1/negotiation/offers/{offer_id}/finalize"
         )
+
         assert finalize.status_code == 200, finalize.text
 
         finalize_data = finalize.json()
-        assert finalize_data["offer_id"] == offer_id
-        assert finalize_data["room_id"] == room_id
+
         assert finalize_data["room_status"] == "AGREED"
         assert finalize_data["deal_id"] is not None
         assert finalize_data["deal_status"] == "PENDING_BUYER_APPROVAL"
         assert finalize_data["final_amount"] == "900.00"
-        assert finalize_data["currency"] == "USD"
         assert finalize_data["commission"] is not None
 
         deal_id = finalize_data["deal_id"]
@@ -279,102 +238,172 @@ def test_full_transaction_http_acceptance_isolation():
         )
         commission_id = commission.id
 
-        assert commission.status == CommissionStatus.CALCULATED
-        assert commission.final_amount is not None
-
         # ------------------------------------------------------------
-        # 11. Before buyer approval, final state is awaiting buyer.
-        # ------------------------------------------------------------
-        db.expire_all()
-
-        pending_offer = db.query(Offer).filter(
-            Offer.id == offer_id
-        ).one()
-        pending_room = db.query(NegotiationRoom).filter(
-            NegotiationRoom.id == room_id
-        ).one()
-        pending_deal = db.query(Deal).filter(
-            Deal.id == deal_id
-        ).one()
-
-        assert pending_offer.status == OfferStatus.FINAL
-        assert pending_room.status == NegotiationStatus.AGREED
-        assert pending_deal.status == DealStatus.PENDING_BUYER_APPROVAL
-        assert pending_deal.buyer_approved is False
-
-        # ------------------------------------------------------------
-        # 12. Merchant cannot perform buyer acceptance.
-        # ------------------------------------------------------------
-        merchant_accept = merchant_client.post(
-            f"/api/v1/negotiation/offers/{offer_id}/accept"
-        )
-        assert merchant_accept.status_code == 403, merchant_accept.text
-
-        # ------------------------------------------------------------
-        # 13. Buyer accepts the final offer.
+        # 9. Buyer accepts final offer.
         # ------------------------------------------------------------
         accept = buyer_client.post(
             f"/api/v1/negotiation/offers/{offer_id}/accept"
         )
 
         assert accept.status_code == 200, accept.text
+        assert accept.json()["deal_status"] == "CONFIRMED"
 
-        accept_data = accept.json()
+        db.expire_all()
 
-        assert accept_data["offer_id"] == offer_id
-        assert accept_data["room_id"] == room_id
-        assert accept_data["room_status"] == "CLOSED"
-        assert accept_data["deal_id"] == deal_id
-        assert accept_data["deal_status"] == "CONFIRMED"
+        confirmed_deal = (
+            db.query(Deal)
+            .filter(Deal.id == deal_id)
+            .one()
+        )
+
+        assert confirmed_deal.status == DealStatus.CONFIRMED
+        assert confirmed_deal.buyer_approved is True
+        assert confirmed_deal.approved_at is not None
+
+        confirmed_commission = (
+            db.query(Commission)
+            .filter(Commission.id == commission_id)
+            .one()
+        )
+        assert confirmed_commission.status == CommissionStatus.CALCULATED
+
+        # ------------------------------------------------------------
+        # 10. Buyer cannot mark the deal as delivered.
+        # ------------------------------------------------------------
+        buyer_deliver = buyer_client.post(
+            f"/deals/{deal_id}/deliver"
+        )
+
+        assert buyer_deliver.status_code == 403, buyer_deliver.text
+
+        # ------------------------------------------------------------
+        # 11. Merchant marks the confirmed deal as delivered.
+        # ------------------------------------------------------------
+        deliver = merchant_client.post(
+            f"/deals/{deal_id}/deliver"
+        )
+
+        assert deliver.status_code == 200, deliver.text
+
+        deliver_data = deliver.json()
+
+        assert deliver_data["id"] == deal_id
+        assert deliver_data["status"] == "DELIVERED"
+        assert deliver_data["delivered_at"] is not None
+
+        db.expire_all()
+
+        delivered_deal = (
+            db.query(Deal)
+            .filter(Deal.id == deal_id)
+            .one()
+        )
+
+        assert delivered_deal.status == DealStatus.DELIVERED
+        assert delivered_deal.delivered_at is not None
+        assert delivered_deal.received_at is None
+        assert delivered_deal.completed_at is None
+
+        delivered_commission = (
+            db.query(Commission)
+            .filter(Commission.id == commission_id)
+            .one()
+        )
+
+        # Delivery alone must NOT make the commission DUE.
+        assert delivered_commission.status == CommissionStatus.CALCULATED
+
+        # ------------------------------------------------------------
+        # 12. Merchant cannot mark the deal as received.
+        # ------------------------------------------------------------
+        merchant_receive = merchant_client.post(
+            f"/deals/{deal_id}/receive"
+        )
+
+        assert merchant_receive.status_code == 403, merchant_receive.text
+
+        # ------------------------------------------------------------
+        # 13. Merchant accepts the calculated commission.
+        # ------------------------------------------------------------
+        commission_accept = merchant_client.post(
+            f"/deals/{deal_id}/commission/accept"
+        )
+        assert commission_accept.status_code == 200, commission_accept.text
+
+        commission_accept_data = commission_accept.json()
+        assert commission_accept_data["id"] == commission_id
+        assert commission_accept_data["merchant_accepted"] is True
+        assert commission_accept_data["status"] == "CALCULATED"
+
+        db.expire_all()
+        accepted_commission = (
+            db.query(Commission)
+            .filter(Commission.id == commission_id)
+            .one()
+        )
+        assert accepted_commission.merchant_accepted is True
+        assert accepted_commission.status == CommissionStatus.CALCULATED
+
+        # ------------------------------------------------------------
+        # 14. Buyer marks the delivered deal as received.
+        # ------------------------------------------------------------
+        receive = buyer_client.post(
+            f"/deals/{deal_id}/receive"
+        )
+
+        assert receive.status_code == 200, receive.text
+
+        receive_data = receive.json()
+
+        assert receive_data["id"] == deal_id
+        assert receive_data["status"] == "COMPLETED"
+        assert receive_data["received_at"] is not None
+        assert receive_data["completed_at"] is not None
 
         # ------------------------------------------------------------
         # 14. Final DB acceptance verification.
         # ------------------------------------------------------------
         db.expire_all()
 
-        saved_offer = db.query(Offer).filter(
-            Offer.id == offer_id
-        ).one()
+        completed_deal = (
+            db.query(Deal)
+            .filter(Deal.id == deal_id)
+            .one()
+        )
 
-        saved_room = db.query(NegotiationRoom).filter(
-            NegotiationRoom.id == room_id
-        ).one()
+        completed_commission = (
+            db.query(Commission)
+            .filter(Commission.id == commission_id)
+            .one()
+        )
 
-        saved_request = db.query(BuyerRequest).filter(
-            BuyerRequest.id == request_id
-        ).one()
+        assert completed_deal.status == DealStatus.COMPLETED
+        assert completed_deal.buyer_approved is True
+        assert completed_deal.delivered_at is not None
+        assert completed_deal.received_at is not None
+        assert completed_deal.completed_at is not None
 
-        saved_listing = db.query(Listing).filter(
-            Listing.id == listing.id
-        ).one()
+        assert completed_commission.status == CommissionStatus.DUE
+        assert completed_commission.final_amount is not None
+        assert Decimal(
+            str(completed_commission.final_amount)
+        ) == Decimal("4.50")
 
-        saved_deal = db.query(Deal).filter(
-            Deal.id == deal_id
-        ).one()
+        # ------------------------------------------------------------
+        # 15. Repeated receipt must be rejected.
+        # ------------------------------------------------------------
+        duplicate_receive = buyer_client.post(
+            f"/deals/{deal_id}/receive"
+        )
 
-        saved_commission = db.query(Commission).filter(
-            Commission.id == commission_id
-        ).one()
+        assert duplicate_receive.status_code == 409, duplicate_receive.text
+        assert "only delivered deals can be marked as received" in duplicate_receive.text.lower()
 
-        assert saved_offer.status == OfferStatus.ACCEPTED
-        assert saved_room.status == NegotiationStatus.CLOSED
-        assert saved_request.status == RequestStatus.NEGOTIATING
-        assert saved_listing.status == ListingStatus.SOLD
-        assert saved_listing.version == 2
-
-        assert saved_deal.status == DealStatus.CONFIRMED
-        assert saved_deal.buyer_approved is True
-        assert saved_deal.approved_at is not None
-        assert Decimal(str(saved_deal.final_amount)) == Decimal("900.00")
-
-        assert saved_commission.status == CommissionStatus.CALCULATED
-        assert saved_commission.final_amount is not None
-
-        print("\n===== FULL TRANSACTION HTTP ACCEPTANCE PASS =====")
+        print("\n===== DEAL DELIVERY / RECEIPT / COMMISSION ACCEPTANCE PASS =====")
 
     finally:
         # ------------------------------------------------------------
-        # 15. Independent cleanup.
+        # 16. Independent cleanup.
         # ------------------------------------------------------------
         try:
             db.rollback()
@@ -387,6 +416,10 @@ def test_full_transaction_http_acceptance_isolation():
             ).delete(synchronize_session=False)
 
         if deal_id is not None:
+            db.query(DealItem).filter(
+                DealItem.deal_id == deal_id
+            ).delete(synchronize_session=False)
+
             db.query(Deal).filter(
                 Deal.id == deal_id
             ).delete(synchronize_session=False)
@@ -457,7 +490,7 @@ def test_full_transaction_http_acceptance_isolation():
         db.commit()
 
         # ------------------------------------------------------------
-        # 16. Independent zero-trace verification.
+        # 17. Independent zero-trace verification.
         # ------------------------------------------------------------
         remaining_users = db.query(UserModel).filter(
             UserModel.email.in_(

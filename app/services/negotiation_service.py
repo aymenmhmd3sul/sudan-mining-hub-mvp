@@ -8,6 +8,7 @@ from app.models.negotiation import (
 )
 from app.models.offer import Offer, OfferStatus
 from decimal import Decimal, InvalidOperation
+from datetime import datetime, timezone
 
 from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.deal import Deal
@@ -60,6 +61,79 @@ class NegotiationService:
         db.commit()
         db.refresh(participant)
         return participant
+
+    @staticmethod
+    def approve_negotiation(
+        db: Session,
+        room_id: int,
+        merchant_id: int,
+    ) -> NegotiationRoom:
+        room = (
+            db.query(NegotiationRoom)
+            .filter(NegotiationRoom.id == room_id)
+            .with_for_update()
+            .first()
+        )
+
+        if room is None:
+            raise ValueError("Negotiation room not found")
+
+        if room.status != NegotiationStatus.OPEN:
+            raise ValueError("Negotiation room is not open")
+
+        request = (
+            db.query(BuyerRequest)
+            .filter(BuyerRequest.id == room.request_id)
+            .first()
+        )
+
+        if request is None:
+            raise ValueError("Buyer request not found")
+
+        if request.listing_id is None:
+            raise ValueError(
+                "Buyer request must be linked to a listing"
+            )
+
+        from app.models.listing import Listing, ListingStatus
+
+        listing = (
+            db.query(Listing)
+            .filter(Listing.id == request.listing_id)
+            .first()
+        )
+
+        if listing is None:
+            raise ValueError("Listing not found")
+
+        if listing.status != ListingStatus.ACTIVE:
+            raise ValueError("Listing is no longer available")
+
+        if listing.owner_id != merchant_id:
+            raise PermissionError(
+                "Only the listing merchant can approve this negotiation"
+            )
+
+        participant = (
+            db.query(NegotiationParticipant)
+            .filter(
+                NegotiationParticipant.room_id == room.id,
+                NegotiationParticipant.user_id == merchant_id,
+            )
+            .first()
+        )
+
+        if participant is None:
+            raise PermissionError(
+                "Merchant is not a participant in this negotiation room"
+            )
+
+        if room.merchant_approved_at is None:
+            room.merchant_approved_at = datetime.now(timezone.utc)
+
+        db.commit()
+        db.refresh(room)
+        return room
 
     @staticmethod
     def finalize_offer(
@@ -120,6 +194,11 @@ class NegotiationService:
 
         if room.status != NegotiationStatus.OPEN:
             raise ValueError("Negotiation room is not open")
+
+        if room.merchant_approved_at is None:
+            raise ValueError(
+                "Merchant must approve the negotiation before approving the offer"
+            )
 
         participant = (
             db.query(NegotiationParticipant)

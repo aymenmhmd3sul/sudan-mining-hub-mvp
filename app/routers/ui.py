@@ -287,17 +287,14 @@ def start_listing_negotiation(
             .first()
         )
 
-        return {
-            "id": existing_room.id if existing_room is not None else None,
-            "request_id": existing_request.id,
-            "listing_id": listing.id,
-            "status": (
-                existing_room.status
-                if existing_room is not None
-                else existing_request.status
-            ),
-            "existing": True,
-        }
+        if existing_room is not None:
+            return {
+                "id": existing_room.id,
+                "request_id": existing_request.id,
+                "listing_id": listing.id,
+                "status": existing_room.status,
+                "existing": True,
+            }
 
     listing_location = next(
         (
@@ -327,35 +324,63 @@ def start_listing_negotiation(
 
     target_location = " — ".join(dict.fromkeys(location_parts)) or None
 
-    buyer_request = BuyerRequest(
-        buyer_id=user.id,
-        listing_id=listing.id,
-        title=listing.title,
-        description=listing.description,
-        status=RequestStatus.OPEN,
-        currency=listing.currency,
-        target_location=target_location,
-    )
-    db.add(buyer_request)
-    db.flush()
+    try:
+        buyer_request = BuyerRequest(
+            buyer_id=user.id,
+            listing_id=listing.id,
+            title=listing.title,
+            description=listing.description,
+            status=RequestStatus.OPEN,
+            currency=listing.currency,
+            target_location=target_location,
+        )
+        db.add(buyer_request)
+        db.flush()
 
-    request_item = RequestItem(
-        request_id=buyer_request.id,
-        category_id=listing.category_id,
-        title=listing.title,
-        description=listing.description,
-        quantity=1,
-        unit="listing",
-    )
-    db.add(request_item)
-    db.commit()
-    db.refresh(buyer_request)
+        request_item = RequestItem(
+            request_id=buyer_request.id,
+            category_id=listing.category_id,
+            title=listing.title,
+            description=listing.description,
+            quantity=1,
+            unit="listing",
+        )
+        db.add(request_item)
+        db.flush()
+
+        room = NegotiationRoom(
+            request_id=buyer_request.id,
+            status=NegotiationStatus.OPEN,
+        )
+        db.add(room)
+        db.flush()
+
+        db.add_all(
+            [
+                NegotiationParticipant(
+                    room_id=room.id,
+                    user_id=user.id,
+                ),
+                NegotiationParticipant(
+                    room_id=room.id,
+                    user_id=listing.owner_id,
+                ),
+            ]
+        )
+
+        db.commit()
+        db.refresh(buyer_request)
+        db.refresh(room)
+
+    except Exception:
+        db.rollback()
+        raise
 
     return {
-        "id": None,
+        "id": room.id,
         "request_id": buyer_request.id,
         "listing_id": listing.id,
-        "status": buyer_request.status,
+        "status": room.status,
         "existing": False,
     }
 

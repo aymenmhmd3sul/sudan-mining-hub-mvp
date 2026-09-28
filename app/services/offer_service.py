@@ -1,10 +1,17 @@
 from decimal import Decimal
+
 from sqlalchemy.orm import Session
+
 from app.models.offer import Offer, OfferStatus
 from app.models.offer_item import OfferItem
 from app.models.request_item import RequestItem
 from app.models.buyer_request import BuyerRequest
 from app.models.listing import Listing, ListingStatus
+from app.models.negotiation import (
+    NegotiationParticipant,
+    NegotiationRoom,
+    NegotiationStatus,
+)
 
 
 class OfferService:
@@ -145,3 +152,85 @@ class OfferService:
             db.flush()
 
         return offer
+
+    @staticmethod
+    def create_buyer_offer(
+        db: Session,
+        *,
+        room_id: int,
+        buyer_id: int,
+        currency: str | None = None,
+        message: str | None = None,
+        items: list[dict] | None = None,
+    ) -> tuple[Offer, NegotiationRoom]:
+        room = (
+            db.query(NegotiationRoom)
+            .filter(NegotiationRoom.id == room_id)
+            .with_for_update()
+            .first()
+        )
+        if room is None:
+            raise ValueError("Negotiation room not found")
+
+        if room.status != NegotiationStatus.OPEN:
+            raise ValueError("Negotiation room is not open")
+
+        if room.merchant_approved_at is None:
+            raise ValueError("Merchant approval is required before submitting an offer")
+
+        request = (
+            db.query(BuyerRequest)
+            .filter(BuyerRequest.id == room.request_id)
+            .first()
+        )
+        if request is None:
+            raise ValueError("Buyer request not found")
+
+        if request.buyer_id != buyer_id:
+            raise PermissionError("Only the buyer who started the request can submit an offer")
+
+        participant = (
+            db.query(NegotiationParticipant)
+            .filter(
+                NegotiationParticipant.room_id == room.id,
+                NegotiationParticipant.user_id == buyer_id,
+            )
+            .first()
+        )
+        if participant is None:
+            raise PermissionError("Buyer is not a participant in this negotiation")
+
+        listing = None
+        if request.listing_id is not None:
+            listing = (
+                db.query(Listing)
+                .filter(Listing.id == request.listing_id)
+                .first()
+            )
+            if listing is None:
+                raise ValueError("Listing not found")
+
+            if listing.status != ListingStatus.ACTIVE:
+                raise ValueError("Listing is no longer available")
+
+        if room.offer_id is not None:
+            raise ValueError("An offer has already been submitted for this negotiation")
+
+        if listing is None:
+            raise ValueError("A listing is required for this negotiation")
+
+        offer = OfferService.create(
+            db,
+            request_id=request.id,
+            merchant_id=listing.owner_id,
+            currency=currency or request.currency,
+            message=message,
+            status=OfferStatus.SUBMITTED,
+            items=items,
+            commit=False,
+        )
+
+        room.offer_id = offer.id
+        db.flush()
+
+        return offer, room
