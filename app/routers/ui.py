@@ -13,7 +13,7 @@ from app.models.negotiation import (
     NegotiationStatus,
 )
 from app.models.offer import Offer
-from app.models.deal import Deal
+from app.models.deal import Deal, DealStatus
 from app.services.commission_service import CommissionService
 from app.models.user import UserModel
 from app.routers.auth import get_current_user, get_optional_current_user, require_role, require_active_subscription
@@ -421,7 +421,7 @@ def negotiation_page(
         if room_id is not None:
             room = NegotiationService.get_room(db, room_id)
         else:
-            room = (
+            candidate_rooms = (
                 db.query(NegotiationRoom)
                 .join(
                     NegotiationParticipant,
@@ -429,11 +429,50 @@ def negotiation_page(
                 )
                 .filter(
                     NegotiationParticipant.user_id == user.id,
-                    NegotiationRoom.status == NegotiationStatus.OPEN,
                 )
-                .order_by(NegotiationRoom.id.desc())
-                .first()
+                .order_by(
+                    NegotiationRoom.updated_at.desc(),
+                    NegotiationRoom.id.desc(),
+                )
+                .all()
             )
+
+            room = None
+
+            # Prefer a final deal that is explicitly waiting for this buyer.
+            # All deal/offer checks remain tied to the same room and offer,
+            # preventing data from another active negotiation room from mixing in.
+            for candidate in candidate_rooms:
+                if (
+                    candidate.status == NegotiationStatus.AGREED
+                    and candidate.offer_id is not None
+                    and candidate.offer is not None
+                    and candidate.offer.status.value == "FINAL"
+                ):
+                    candidate_deal = (
+                        db.query(Deal)
+                        .filter(
+                            Deal.negotiation_room_id == candidate.id,
+                            Deal.offer_id == candidate.offer_id,
+                            Deal.status == DealStatus.PENDING_BUYER_APPROVAL,
+                        )
+                        .first()
+                    )
+                    if candidate_deal is not None:
+                        room = candidate
+                        break
+
+            # If no buyer-actionable final deal exists, preserve the
+            # existing behavior: open the latest active negotiation room.
+            if room is None:
+                room = next(
+                    (
+                        candidate
+                        for candidate in candidate_rooms
+                        if candidate.status == NegotiationStatus.OPEN
+                    ),
+                    None,
+                )
 
         if room_id is not None and room is None:
             raise HTTPException(status_code=404, detail="Negotiation room not found")
