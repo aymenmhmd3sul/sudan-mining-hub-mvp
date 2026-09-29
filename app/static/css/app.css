@@ -13,8 +13,26 @@
     --gold-soft: rgba(214, 168, 79, 0.10);
     --gold-line: rgba(214, 168, 79, 0.26);
 
-    --text: #f5f7fa;
-    --muted: #8996a6;
+    /* Central typography controls */
+    --font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    --font-size-base: 16px;
+    --font-weight-base: 400;
+    --line-height-base: 1.7;
+
+    /* Central text / contrast controls */
+    --text-primary: #f5f7fa;
+    --text-secondary: #c7ced8;
+    --text-muted: #8996a6;
+    --contrast-scale: 1;
+
+    --text: var(--text-primary);
+    --muted: var(--text-muted);
 
     --line: rgba(255, 255, 255, 0.075);
 
@@ -22,6 +40,27 @@
     --radius-lg: 22px;
     --radius-md: 17px;
     --radius-sm: 12px;
+}
+
+/* Central typography scale */
+html {
+    --font-scale: 1;
+}
+
+html[data-font-size="large"] {
+    --font-scale: 1.125;
+}
+
+html[data-font-size="small"] {
+    --font-scale: 0.9375;
+}
+
+/* High-contrast appearance */
+html[data-contrast="high"] {
+    --text-primary: #ffffff;
+    --text-secondary: #e8edf3;
+    --text-muted: #b8c2ce;
+    --contrast-scale: 1.15;
 }
 
 * {
@@ -47,14 +86,12 @@ body {
             var(--bg-2)
         );
 
-    color: var(--text);
+    color: var(--text-primary);
 
-    font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-base);
+    line-height: var(--line-height-base);
 }
 
 button {
@@ -122,7 +159,7 @@ button:focus-visible {
 
     color: var(--gold-light);
 
-    font-size: 11px;
+    font-size: calc(11px * var(--font-scale));
     font-weight: 900;
     letter-spacing: 0.09em;
 
@@ -138,14 +175,14 @@ button:focus-visible {
 }
 
 .brand-copy strong {
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale));
     font-weight: 800;
     letter-spacing: -0.01em;
 }
 
 .brand-copy span {
     color: var(--muted);
-    font-size: 11px;
+    font-size: calc(11px * var(--font-scale));
 }
 
 .language-toggle {
@@ -250,7 +287,7 @@ button:focus-visible {
 
     color: var(--gold-light);
 
-    font-size: 11px;
+    font-size: calc(11px * var(--font-scale));
     font-weight: 800;
     letter-spacing: 0.10em;
     text-transform: uppercase;
@@ -274,7 +311,7 @@ h1 {
 
     margin: 0;
 
-    font-size: clamp(38px, 7vw, 70px);
+    font-size: clamp(calc(38px * var(--font-scale)), calc(7vw * var(--font-scale)), calc(70px * var(--font-scale)));
     line-height: 0.99;
 
     letter-spacing: -0.055em;
@@ -289,7 +326,7 @@ h1 {
 
     color: var(--muted);
 
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale));
     line-height: 1.85;
 }
 
@@ -376,7 +413,7 @@ h1 {
 
     font-family: Georgia, serif;
 
-    font-size: 38px;
+    font-size: calc(38px * var(--font-scale));
     font-weight: 500;
 
     line-height: 1;
@@ -387,7 +424,7 @@ h1 {
 
     color: var(--muted);
 
-    font-size: 8px;
+    font-size: calc(8px * var(--font-scale));
     font-weight: 800;
 
     letter-spacing: 0.18em;
@@ -421,7 +458,7 @@ h1 {
 
     cursor: pointer;
 
-    font-size: 14px;
+    font-size: calc(14px * var(--font-scale));
     font-weight: 800;
 
     transition:
@@ -457,7 +494,7 @@ h1 {
 }
 
 .btn-arrow {
-    font-size: 16px;
+    font-size: calc(16px * var(--font-scale));
 }
 
 .btn-secondary {
@@ -594,14 +631,14 @@ h1 {
 
     color: var(--gold-light);
 
-    font-size: 10px;
+    font-size: calc(10px * var(--font-scale));
     font-weight: 900;
 }
 
 .module-arrow {
     color: rgba(242, 208, 131, 0.55);
 
-    font-size: 17px;
+    font-size: calc(17px * var(--font-scale));
 
     transition:
         transform 170ms ease,
@@ -625,14 +662,14 @@ h1 {
 }
 
 .module-card strong {
-    font-size: 16px;
+    font-size: calc(16px * var(--font-scale));
     font-weight: 800;
 }
 
 .module-card > .module-content > span {
     color: var(--muted);
 
-    font-size: 11px;
+    font-size: calc(11px * var(--font-scale));
     line-height: 1.65;
 }
 
@@ -656,7 +693,7 @@ h1 {
 .dashboard-whatsapp-kicker {
     display: block;
     margin-bottom: 8px;
-    font-size: 0.78rem;
+    font-size: calc(0.78rem * var(--font-scale));
     letter-spacing: 0.08em;
     text-transform: uppercase;
     opacity: 0.72;
@@ -673,7 +710,7 @@ h1 {
 .dashboard-whatsapp-phone,
 .dashboard-whatsapp-status {
     margin-top: 10px;
-    font-size: 0.92rem;
+    font-size: calc(0.92rem * var(--font-scale));
 }
 
 .dashboard-whatsapp-status-active {
@@ -703,7 +740,7 @@ h1 {
 
 .dashboard-whatsapp-note {
     margin-top: 14px !important;
-    font-size: 0.82rem;
+    font-size: calc(0.82rem * var(--font-scale));
     opacity: 0.68;
 }
 
@@ -783,7 +820,7 @@ h1 {
     }
 
     .emblem-core span {
-        font-size: 29px;
+        font-size: calc(29px * var(--font-scale));
     }
 
     .hero-content {
@@ -791,11 +828,11 @@ h1 {
     }
 
     h1 {
-        font-size: clamp(37px, 10.5vw, 54px);
+        font-size: clamp(calc(37px * var(--font-scale)), calc(10.5vw * var(--font-scale)), calc(54px * var(--font-scale)));
     }
 
     .hero-content p {
-        font-size: 14px;
+        font-size: calc(14px * var(--font-scale));
         line-height: 1.75;
     }
 
@@ -828,11 +865,11 @@ h1 {
     }
 
     .hero-kicker {
-        font-size: 10px;
+        font-size: calc(10px * var(--font-scale));
     }
 
     h1 {
-        font-size: clamp(36px, 11.5vw, 49px);
+        font-size: clamp(calc(36px * var(--font-scale)), calc(11.5vw * var(--font-scale)), calc(49px * var(--font-scale)));
     }
 
     .hero-actions {
@@ -855,11 +892,11 @@ h1 {
     }
 
     .module-card strong {
-        font-size: 14px;
+        font-size: calc(14px * var(--font-scale));
     }
 
     .module-card > .module-content > span {
-        font-size: 10px;
+        font-size: calc(10px * var(--font-scale));
         line-height: 1.55;
     }
 }
@@ -980,7 +1017,7 @@ h1 {
 .marketplace-eyebrow {
     display: inline-block;
     margin-bottom: 10px;
-    font-size: .78rem;
+    font-size: calc(.78rem * var(--font-scale));
     font-weight: 700;
     letter-spacing: .08em;
     opacity: .78;
@@ -1029,7 +1066,7 @@ h1 {
 .marketplace-status {
     min-height: 24px;
     margin: 8px 2px 14px;
-    font-size: .84rem;
+    font-size: calc(.84rem * var(--font-scale));
     opacity: .72;
 }
 
@@ -1074,7 +1111,7 @@ h1 {
     min-height: 26px;
     padding: 0 9px;
     border-radius: 999px;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--font-scale));
     font-weight: 700;
 }
 
@@ -1088,7 +1125,7 @@ h1 {
 
 .marketplace-card-title {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: calc(1.05rem * var(--font-scale));
     line-height: 1.4;
 }
 
@@ -1096,7 +1133,7 @@ h1 {
     display: -webkit-box;
     margin: 9px 0 18px;
     overflow: hidden;
-    font-size: .86rem;
+    font-size: calc(.86rem * var(--font-scale));
     line-height: 1.65;
     opacity: .72;
     -webkit-box-orient: vertical;
@@ -1112,11 +1149,11 @@ h1 {
 }
 
 .marketplace-card-price {
-    font-size: .98rem;
+    font-size: calc(.98rem * var(--font-scale));
 }
 
 .marketplace-card-id {
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--font-scale));
     opacity: .5;
 }
 
@@ -1132,7 +1169,7 @@ h1 {
 .marketplace-empty h2,
 .marketplace-error h2 {
     margin: 8px 0;
-    font-size: 1.05rem;
+    font-size: calc(1.05rem * var(--font-scale));
 }
 
 .marketplace-empty p,
@@ -1144,7 +1181,7 @@ h1 {
 }
 
 .marketplace-empty-icon {
-    font-size: 2rem;
+    font-size: calc(2rem * var(--font-scale));
     opacity: .5;
 }
 
@@ -1284,7 +1321,7 @@ h1 {
 
 .marketplace-listing-detail-section h2 {
     margin: 0 0 12px;
-    font-size: 1rem;
+    font-size: calc(1rem * var(--font-scale));
     line-height: 1.4;
     color: var(--gold-light);
 }
@@ -1315,6 +1352,57 @@ h1 {
         transform 160ms ease;
 }
 
+.negotiation-inbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.35rem;
+}
+
+.negotiation-section-eyebrow {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: calc(0.78rem * var(--font-scale));
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.negotiation-room-count {
+    min-width: 2rem;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 999px;
+    text-align: center;
+}
+
+.negotiation-inbox-hint {
+    margin-bottom: 1rem;
+    opacity: 0.72;
+}
+
+.negotiation-room-item {
+    position: relative;
+    border-inline-start: 3px solid transparent;
+}
+
+.negotiation-room-item-active {
+    border-inline-start-color: var(--gold, #d4af37);
+    background: rgba(212, 175, 55, 0.08);
+}
+
+.negotiation-room-item-active::after {
+    content: "الغرفة المفتوحة";
+    display: inline-block;
+    margin-top: 0.55rem;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 999px;
+    font-size: calc(0.75rem * var(--font-scale));
+    color: inherit;
+}
+
 .negotiation-inbox .marketplace-listing-detail-item:hover {
     border-color: var(--gold-line);
     background: rgba(214, 168, 79, 0.055);
@@ -1336,7 +1424,7 @@ h1 {
     border-radius: 999px;
     background: var(--gold-soft);
     color: var(--gold-light);
-    font-size: .68rem;
+    font-size: calc(.68rem * var(--font-scale));
     font-weight: 800;
     vertical-align: middle;
 }
@@ -1355,7 +1443,7 @@ h1 {
     display: block;
     margin-top: 6px;
     color: var(--muted);
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--font-scale));
 }
 
 #negotiationMessages {
@@ -1412,14 +1500,14 @@ h1 {
 .chat-bubble-label {
     display: block;
     margin-block-end: 3px;
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--font-scale));
     font-weight: 800;
     opacity: .7;
 }
 
 .chat-bubble-body {
     display: block;
-    font-size: .92rem;
+    font-size: calc(.92rem * var(--font-scale));
 }
 
 #negotiationMessageForm {
@@ -1430,7 +1518,7 @@ h1 {
     display: block;
     margin-bottom: 8px;
     color: var(--muted);
-    font-size: .78rem;
+    font-size: calc(.78rem * var(--font-scale));
     font-weight: 700;
 }
 
@@ -1482,7 +1570,7 @@ h1 {
     border-radius: var(--radius-sm);
     background: rgba(214, 168, 79, 0.07);
     color: var(--gold-light);
-    font-size: .84rem;
+    font-size: calc(.84rem * var(--font-scale));
 }
 
 /* Offers */
@@ -1507,14 +1595,14 @@ h1 {
     border-radius: 999px;
     background: var(--gold-soft);
     color: var(--gold-light);
-    font-size: .7rem;
+    font-size: calc(.7rem * var(--font-scale));
     font-weight: 800;
 }
 
 .negotiation-offer-amount {
     display: block;
     margin-top: 7px;
-    font-size: .98rem;
+    font-size: calc(.98rem * var(--font-scale));
     font-weight: 800;
 }
 
@@ -1522,7 +1610,7 @@ h1 {
     margin: 7px 0 0;
     color: var(--muted);
     line-height: 1.55;
-    font-size: .84rem;
+    font-size: calc(.84rem * var(--font-scale));
 }
 
 /* Global negotiation modal */
@@ -1567,7 +1655,7 @@ h1 {
 .smh-modal-title {
     margin-bottom: 8px;
     color: var(--gold-light);
-    font-size: 1.08rem;
+    font-size: calc(1.08rem * var(--font-scale));
     font-weight: 800;
 }
 
@@ -1619,7 +1707,7 @@ h1 {
     display: block;
     margin: 8px 2px 0;
     color: var(--text);
-    font-size: 0.9rem;
+    font-size: calc(0.9rem * var(--font-scale));
     font-weight: 600;
     line-height: 1.5;
 }
@@ -1682,7 +1770,7 @@ h1 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: calc(1rem * var(--font-scale));
 }
 
 .login-form .password-toggle:hover {
@@ -1693,7 +1781,7 @@ h1 {
     min-height: 24px;
     margin: 4px 2px 2px;
     color: var(--muted);
-    font-size: 0.84rem;
+    font-size: calc(0.84rem * var(--font-scale));
     line-height: 1.5;
 }
 
@@ -1711,7 +1799,7 @@ h1 {
 
     .login-form label {
         margin-top: 7px;
-        font-size: 0.86rem;
+        font-size: calc(0.86rem * var(--font-scale));
     }
 
     .login-form input,
@@ -1787,7 +1875,7 @@ h1 {
 .admin-report-label,
 .admin-message-meta {
     color: var(--muted);
-    font-size: 12px;
+    font-size: calc(12px * var(--font-scale));
 }
 
 .admin-report-value,
@@ -2047,7 +2135,7 @@ h1 {
 .listing-create-page .listing-section-heading h2 {
   margin: 0;
   color: var(--gold-light);
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--font-scale));
   font-weight: 800;
   letter-spacing: .01em;
 }
@@ -2055,7 +2143,7 @@ h1 {
 .listing-create-page .listing-section-heading p {
   margin: 6px 0 0;
   color: var(--muted);
-  font-size: .86rem;
+  font-size: calc(.86rem * var(--font-scale));
 }
 
 .listing-create-page .listing-field-grid {
@@ -2076,7 +2164,7 @@ h1 {
   display: block;
   margin: 0 0 8px;
   color: var(--text);
-  font-size: .9rem;
+  font-size: calc(.9rem * var(--font-scale));
   font-weight: 700;
   text-align: right;
 }
@@ -2191,13 +2279,13 @@ h1 {
 
 .listing-create-page .listing-upload-zone strong {
   color: var(--gold-light);
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
 }
 
 .listing-create-page .listing-upload-zone span {
   margin-top: 7px;
   color: var(--muted);
-  font-size: .82rem;
+  font-size: calc(.82rem * var(--font-scale));
 }
 
 .listing-create-page #listingImages {
@@ -2222,7 +2310,7 @@ h1 {
 .listing-create-page .listing-image-preview-name {
   overflow: hidden;
   color: var(--muted);
-  font-size: .72rem;
+  font-size: calc(.72rem * var(--font-scale));
   text-overflow: ellipsis;
   white-space: nowrap;
   direction: ltr;
@@ -2261,7 +2349,7 @@ h1 {
 .listing-create-page .listing-draft-note {
   margin: 0;
   color: var(--muted);
-  font-size: .82rem;
+  font-size: calc(.82rem * var(--font-scale));
   line-height: 1.7;
   text-align: right;
 }
@@ -2358,7 +2446,7 @@ h1 {
 .listing-create-page .listing-form-card-header h2 {
   margin: 5px 0 0;
   color: var(--gold-light);
-  font-size: 1.08rem;
+  font-size: calc(1.08rem * var(--font-scale));
   font-weight: 800;
   text-align: right;
 }
@@ -2366,7 +2454,7 @@ h1 {
 .listing-create-page .listing-form-card-header p {
   margin: 7px 0 0;
   color: var(--muted);
-  font-size: .82rem;
+  font-size: calc(.82rem * var(--font-scale));
   text-align: right;
 }
 
@@ -2388,7 +2476,7 @@ h1 {
   display: block;
   margin: 0 0 8px;
   color: var(--text);
-  font-size: .9rem;
+  font-size: calc(.9rem * var(--font-scale));
   font-weight: 700;
   text-align: right;
 }
@@ -2479,12 +2567,12 @@ h1 {
 
 .listing-create-page .listing-checkbox strong {
   color: var(--text);
-  font-size: .88rem;
+  font-size: calc(.88rem * var(--font-scale));
 }
 
 .listing-create-page .listing-checkbox small {
   color: var(--muted);
-  font-size: .76rem;
+  font-size: calc(.76rem * var(--font-scale));
 }
 
 .listing-create-page .listing-image-upload {
@@ -2518,20 +2606,20 @@ h1 {
 
 .listing-create-page .listing-upload-icon {
   color: var(--gold-light);
-  font-size: 1.8rem;
+  font-size: calc(1.8rem * var(--font-scale));
   line-height: 1;
 }
 
 .listing-create-page .listing-upload-zone strong {
   margin-top: 7px;
   color: var(--gold-light);
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
 }
 
 .listing-create-page .listing-upload-zone small {
   margin-top: 7px;
   color: var(--muted);
-  font-size: .78rem;
+  font-size: calc(.78rem * var(--font-scale));
 }
 
 .listing-create-page #listingImages {
@@ -2563,7 +2651,7 @@ h1 {
 .listing-create-page .listing-image-preview-name {
   overflow: hidden;
   color: var(--muted);
-  font-size: .72rem;
+  font-size: calc(.72rem * var(--font-scale));
   text-overflow: ellipsis;
   white-space: nowrap;
   direction: ltr;
@@ -2600,7 +2688,7 @@ h1 {
 .listing-create-page .listing-draft-note {
   margin: 0;
   color: var(--muted);
-  font-size: .82rem;
+  font-size: calc(.82rem * var(--font-scale));
   line-height: 1.7;
   text-align: right;
 }
@@ -2704,7 +2792,7 @@ h1 {
     display: inline-block;
     margin-bottom: 9px;
     color: var(--gold-light);
-    font-size: .74rem;
+    font-size: calc(.74rem * var(--font-scale));
     font-weight: 800;
     letter-spacing: .1em;
     opacity: .82;
@@ -2767,7 +2855,7 @@ h1 {
 .admin-deal-card h2 {
     margin: 0;
     color: var(--gold-light);
-    font-size: 1.08rem;
+    font-size: calc(1.08rem * var(--font-scale));
     text-shadow: 0 0 22px rgba(214,168,79,.14);
 }
 
@@ -2780,7 +2868,7 @@ h1 {
     border-radius: 999px;
     background: rgba(214,168,79,.08);
     color: var(--gold-light);
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--font-scale));
     font-weight: 750;
     white-space: nowrap;
 }
@@ -2800,12 +2888,12 @@ h1 {
 .admin-deal-info > span,
 .admin-deal-commission span {
     color: var(--muted);
-    font-size: .75rem;
+    font-size: calc(.75rem * var(--font-scale));
 }
 
 .admin-deal-amount strong {
     color: var(--gold-light);
-    font-size: 1.12rem;
+    font-size: calc(1.12rem * var(--font-scale));
 }
 
 .admin-deal-info-grid {
@@ -2837,7 +2925,7 @@ h1 {
 .admin-deal-info small {
     margin-top: 4px;
     color: var(--muted);
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--font-scale));
 }
 
 .admin-deal-commission {
@@ -2866,7 +2954,7 @@ h1 {
 
 .admin-deal-commission small {
     color: var(--muted);
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--font-scale));
 }
 
 .admin-deal-commission form {
@@ -2886,7 +2974,7 @@ h1 {
 .admin-deals-empty-icon {
     margin-bottom: 10px;
     color: var(--gold-light);
-    font-size: 2rem;
+    font-size: calc(2rem * var(--font-scale));
 }
 
 .admin-deals-empty h2 {
@@ -2965,7 +3053,7 @@ h1 {
 .admin-listing-review-eyebrow {
     display: block;
     margin-bottom: 6px;
-    font-size: .72rem;
+    font-size: calc(.72rem * var(--font-scale));
     font-weight: 700;
     letter-spacing: .12em;
     opacity: .65;
@@ -2973,7 +3061,7 @@ h1 {
 
 .admin-listing-review-header h3 {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: calc(1.2rem * var(--font-scale));
 }
 
 .admin-listing-review-id {
@@ -2981,7 +3069,7 @@ h1 {
     padding: 6px 10px;
     border: 1px solid var(--line);
     border-radius: 999px;
-    font-size: .78rem;
+    font-size: calc(.78rem * var(--font-scale));
     font-weight: 700;
     opacity: .8;
 }
@@ -3022,7 +3110,7 @@ h1 {
 .admin-listing-review-contact-item > span:first-child,
 .admin-listing-review-grid span,
 .admin-listing-review-description > span {
-    font-size: .75rem;
+    font-size: calc(.75rem * var(--font-scale));
     opacity: .62;
 }
 
@@ -3139,7 +3227,7 @@ h1 {
 .gateway-information-header h2 {
   margin: 8px 0;
   color: var(--text);
-  font-size: clamp(1.45rem, 2.5vw, 2.1rem);
+  font-size: clamp(calc(1.45rem * var(--font-scale)), calc(2.5vw * var(--font-scale)), calc(2.1rem * var(--font-scale)));
   line-height: 1.2;
 }
 
@@ -3172,7 +3260,7 @@ h1 {
 .info-card-index {
   margin-bottom: 18px;
   color: var(--gold);
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.14em;
 }
@@ -3180,14 +3268,14 @@ h1 {
 .info-card h3 {
   margin: 0 0 10px;
   color: var(--text);
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
   line-height: 1.45;
 }
 
 .info-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   line-height: 1.85;
 }
 
@@ -3257,7 +3345,7 @@ h1 {
   border: 1px solid var(--gold-line);
   border-radius: 50%;
   color: var(--gold);
-  font-size: 1.35rem;
+  font-size: calc(1.35rem * var(--font-scale));
   line-height: 1;
 }
 
@@ -3269,19 +3357,19 @@ h1 {
 
 .gateway-information-summary-copy strong {
   color: var(--text);
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--font-scale));
 }
 
 .gateway-information-summary-copy > span:last-child {
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: calc(0.86rem * var(--font-scale));
   line-height: 1.5;
 }
 
 .gateway-information-summary-action {
   margin-inline-start: auto;
   color: var(--gold-light);
-  font-size: 0.82rem;
+  font-size: calc(0.82rem * var(--font-scale));
   font-weight: 700;
   white-space: nowrap;
 }

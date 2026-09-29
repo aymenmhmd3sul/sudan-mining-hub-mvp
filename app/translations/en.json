@@ -144,5 +144,19 @@
   "dashboard.whatsapp_disable": "Disable WhatsApp reception",
   "dashboard.whatsapp_phone_required": "Add your phone number first before enabling WhatsApp reception.",
   "dashboard.whatsapp_note": "The platform will not initiate WhatsApp conversations automatically in this design.",
-  "dashboard.whatsapp_action_failed": "Unable to update WhatsApp settings."
+  "dashboard.whatsapp_action_failed": "Unable to update WhatsApp settings.",
+  "appearance.title": "Appearance Settings",
+  "appearance.button": "Appearance ⚙",
+  "appearance.font_size": "Font Size",
+  "appearance.font_size_small": "Small",
+  "appearance.font_size_normal": "Normal",
+  "appearance.font_size_large": "Large",
+  "appearance.font": "Font",
+  "appearance.font_system": "System",
+  "appearance.font_readable": "Readable",
+  "appearance.font_serif": "Serif",
+  "appearance.contrast": "Contrast",
+  "appearance.contrast_normal": "Normal",
+  "appearance.contrast_high": "High",
+  "appearance.reset": "Reset"
 }

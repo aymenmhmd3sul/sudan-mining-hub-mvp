@@ -144,5 +144,19 @@
   "dashboard.whatsapp_disable": "إلغاء استقبال WhatsApp",
   "dashboard.whatsapp_phone_required": "أضف رقم هاتفك أولًا قبل تفعيل استقبال WhatsApp.",
   "dashboard.whatsapp_note": "لن تبدأ المنصة محادثات WhatsApp من تلقاء نفسها في هذا التصميم.",
-  "dashboard.whatsapp_action_failed": "تعذر تحديث إعداد WhatsApp."
+  "dashboard.whatsapp_action_failed": "تعذر تحديث إعداد WhatsApp.",
+  "appearance.title": "إعدادات المظهر",
+  "appearance.button": "المظهر ⚙",
+  "appearance.font_size": "حجم الخط",
+  "appearance.font_size_small": "صغير",
+  "appearance.font_size_normal": "عادي",
+  "appearance.font_size_large": "كبير",
+  "appearance.font": "نوع الخط",
+  "appearance.font_system": "System",
+  "appearance.font_readable": "Readable",
+  "appearance.font_serif": "Serif",
+  "appearance.contrast": "التباين",
+  "appearance.contrast_normal": "عادي",
+  "appearance.contrast_high": "مرتفع",
+  "appearance.reset": "إعادة الضبط"
 }

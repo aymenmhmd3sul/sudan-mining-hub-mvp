@@ -10,14 +10,74 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', path='css/app.css') }}?v=20260908-visual-admin"
+        href="{{ url_for('static', path='css/app.css') }}?v=20260929-appearance-v3"
     >
 </head>
 
 <body>
+    <div id="smh-appearance-root" class="smh-appearance">
+        <button
+            type="button"
+            id="smh-appearance-toggle"
+            class="smh-appearance-toggle"
+            aria-expanded="false"
+            aria-controls="smh-appearance-panel"
+        >
+            {{ t("appearance.button") }}
+        </button>
+
+        <section
+            id="smh-appearance-panel"
+            class="smh-appearance-panel"
+            hidden
+            aria-label="{{ t('appearance.title') }}"
+        >
+            <div class="smh-appearance-title">{{ t("appearance.title") }}</div>
+
+            <div class="smh-appearance-group">
+                <div class="smh-appearance-label">{{ t("appearance.font_size") }}</div>
+                <div class="smh-appearance-options" role="group" aria-label="{{ t('appearance.font_size') }}">
+                    <button type="button" data-appearance-font-size="small">{{ t("appearance.font_size_small") }}</button>
+                    <button type="button" data-appearance-font-size="normal">{{ t("appearance.font_size_normal") }}</button>
+                    <button type="button" data-appearance-font-size="large">{{ t("appearance.font_size_large") }}</button>
+                </div>
+            </div>
+
+            <div class="smh-appearance-group">
+                <div class="smh-appearance-label">{{ t("appearance.font") }}</div>
+                <div class="smh-appearance-options" role="group" aria-label="{{ t('appearance.font') }}">
+                    <button type="button" data-appearance-font="system">{{ t("appearance.font_system") }}</button>
+                    <button type="button" data-appearance-font="readable">{{ t("appearance.font_readable") }}</button>
+                    <button type="button" data-appearance-font="serif">{{ t("appearance.font_serif") }}</button>
+                </div>
+            </div>
+
+            <div class="smh-appearance-group">
+                <div class="smh-appearance-label">{{ t("appearance.contrast") }}</div>
+                <div class="smh-appearance-options" role="group" aria-label="{{ t('appearance.contrast') }}">
+                    <button type="button" data-appearance-contrast="normal">{{ t("appearance.contrast_normal") }}</button>
+                    <button type="button" data-appearance-contrast="high">{{ t("appearance.contrast_high") }}</button>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                id="smh-appearance-reset"
+                class="smh-appearance-reset"
+            >
+                {{ t("appearance.reset") }}
+            </button>
+        </section>
+    </div>
+
     <div id="app-shell">
         {% block content %}{% endblock %}
     </div>
+
+    <script
+        src="{{ url_for('static', path='js/appearance.js') }}"
+        defer
+    ></script>
 
     <script
         src="{{ url_for('static', path='js/app.js') }}"
