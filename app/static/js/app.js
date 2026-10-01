@@ -578,7 +578,89 @@ function bindModuleCards() {
         loadRequests();
     }
 
+    function bindGoldPrice() {
+        const card = document.getElementById("goldPriceCard");
+        const value = document.getElementById("goldPriceValue");
+        const status = document.getElementById("goldPriceStatus");
+        const updated = document.getElementById("goldPriceUpdated");
+
+        if (!card || !value || !status || !updated) {
+            return;
+        }
+
+        if (card.dataset.goldPriceBound === "true") {
+            return;
+        }
+
+        card.dataset.goldPriceBound = "true";
+
+        const loadingText = card.dataset.statusLoading || "Loading";
+        const errorText = card.dataset.statusError || "Unable to load";
+
+        async function loadGoldPrice() {
+            status.textContent = loadingText;
+
+            try {
+                const response = await fetch(
+                    "https://api.gold-api.com/price/XAU",
+                    {
+                        method: "GET",
+                        cache: "no-store"
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+                const price = Number(data.price);
+
+                if (!Number.isFinite(price) || price <= 0) {
+                    throw new Error("Invalid gold price");
+                }
+
+                const locale =
+                    document.documentElement.lang === "ar"
+                        ? "ar"
+                        : "en-US";
+
+                value.textContent = new Intl.NumberFormat(locale, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(price);
+
+                status.textContent = data.updatedAtReadable || "";
+
+                if (data.updatedAt) {
+                    const date = new Date(data.updatedAt);
+
+                    if (!Number.isNaN(date.getTime())) {
+                        updated.textContent =
+                            new Intl.DateTimeFormat(locale, {
+                                dateStyle: "medium",
+                                timeStyle: "short"
+                            }).format(date);
+                    } else {
+                        updated.textContent = "";
+                    }
+                } else {
+                    updated.textContent = "";
+                }
+            } catch (error) {
+                console.error("Gold price load failed:", error);
+                value.textContent = "—";
+                status.textContent = errorText;
+                updated.textContent = "";
+            }
+        }
+
+        loadGoldPrice();
+        window.setInterval(loadGoldPrice, 300000);
+    }
+
     function bindInteractions() {
+        bindGoldPrice();
         bindLanguageToggle();
         bindExploreButton();
         bindLoginButton();

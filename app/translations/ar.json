@@ -158,5 +158,10 @@
   "appearance.contrast": "التباين",
   "appearance.contrast_normal": "عادي",
   "appearance.contrast_high": "مرتفع",
-  "appearance.reset": "إعادة الضبط"
+  "appearance.reset": "إعادة الضبط",
+  "gateway.gold.eyebrow": "السوق العالمي",
+  "gateway.gold.title": "السعر العالمي للذهب",
+  "gateway.gold.unit": "دولار أمريكي / أونصة تروي",
+  "gateway.gold.status_loading": "جارٍ تحديث السعر",
+  "gateway.gold.status_error": "تعذر تحديث السعر"
 }

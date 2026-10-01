@@ -3501,3 +3501,94 @@ h1 {
         gap: 2px;
     }
 }
+
+
+/* GATEWAY GOLD PRICE */
+.gold-price-card {
+    margin-top: 18px;
+    padding: 22px;
+    border: 1px solid var(--gold-line);
+    border-radius: var(--radius-lg);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(214, 168, 79, 0.09),
+            var(--surface-2) 48%,
+            var(--surface)
+        );
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18);
+}
+
+.gold-price-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.gold-price-eyebrow {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--gold);
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.gold-price-heading h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: calc(1.15rem * var(--font-scale));
+    line-height: 1.35;
+}
+
+.gold-price-symbol {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border: 1px solid var(--gold-line);
+    border-radius: 999px;
+    color: var(--gold-light);
+    font-size: 0.78em;
+    font-weight: 700;
+}
+
+.gold-price-main {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.gold-price-main > span:first-child {
+    color: var(--gold-light);
+    font-size: calc(2rem * var(--font-scale));
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.gold-price-unit {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.gold-price-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: 0.82em;
+}
+
+@media (max-width: 640px) {
+    .gold-price-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .gold-price-symbol {
+        align-self: flex-start;
+    }
+}

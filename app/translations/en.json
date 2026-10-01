@@ -158,5 +158,10 @@
   "appearance.contrast": "Contrast",
   "appearance.contrast_normal": "Normal",
   "appearance.contrast_high": "High",
-  "appearance.reset": "Reset"
+  "appearance.reset": "Reset",
+  "gateway.gold.eyebrow": "GLOBAL MARKET",
+  "gateway.gold.title": "Global Gold Price",
+  "gateway.gold.unit": "USD / troy ounce",
+  "gateway.gold.status_loading": "Updating price",
+  "gateway.gold.status_error": "Unable to update price"
 }

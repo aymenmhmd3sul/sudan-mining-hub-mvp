@@ -182,6 +182,32 @@
 </section>
 
 <section
+    id="goldPriceCard"
+    class="gold-price-card"
+    aria-live="polite"
+    data-status-loading="{{ t("gateway.gold.status_loading") }}"
+    data-status-error="{{ t("gateway.gold.status_error") }}"
+>
+    <div class="gold-price-heading">
+        <div>
+            <span class="gold-price-eyebrow">{{ t("gateway.gold.eyebrow") }}</span>
+            <h2>{{ t("gateway.gold.title") }}</h2>
+        </div>
+        <span class="gold-price-symbol">XAU / USD</span>
+    </div>
+
+    <div class="gold-price-main">
+        <span id="goldPriceValue">—</span>
+        <span class="gold-price-unit">{{ t("gateway.gold.unit") }}</span>
+    </div>
+
+    <div class="gold-price-meta">
+        <span id="goldPriceStatus">{{ t("gateway.gold.status_loading") }}</span>
+        <span id="goldPriceUpdated"></span>
+    </div>
+</section>
+
+<section
     id="gatewayModules"
     class="gateway-modules"
     aria-label="Platform modules"
