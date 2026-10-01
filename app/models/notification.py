@@ -1,6 +1,16 @@
 import enum
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.sql import func
 
 from app.db.session import Base
@@ -30,12 +40,23 @@ class Notification(Base):
         index=True,
     )
 
-    event_type = Column(String(100), nullable=False, index=True)
+    event_type = Column(
+        String(100),
+        nullable=False,
+        index=True,
+    )
+
+    event_key = Column(
+        String(255),
+        nullable=True,
+    )
+
     channel = Column(
         Enum(NotificationChannel),
         nullable=False,
         index=True,
     )
+
     status = Column(
         Enum(NotificationStatus),
         nullable=False,
@@ -43,14 +64,35 @@ class Notification(Base):
         index=True,
     )
 
-    title = Column(String(255), nullable=False)
-    message = Column(Text, nullable=False)
+    title = Column(
+        String(255),
+        nullable=False,
+    )
 
-    related_type = Column(String(100), nullable=True)
-    related_id = Column(Integer, nullable=True)
+    message = Column(
+        Text,
+        nullable=False,
+    )
 
-    sent_at = Column(DateTime(timezone=True), nullable=True)
-    error_message = Column(Text, nullable=True)
+    related_type = Column(
+        String(100),
+        nullable=True,
+    )
+
+    related_id = Column(
+        Integer,
+        nullable=True,
+    )
+
+    sent_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    error_message = Column(
+        Text,
+        nullable=True,
+    )
 
     created_at = Column(
         DateTime(timezone=True),
@@ -68,5 +110,9 @@ class Notification(Base):
             "ix_notifications_related",
             "related_type",
             "related_id",
+        ),
+        UniqueConstraint(
+            "event_key",
+            name="uq_notifications_event_key",
         ),
     )
