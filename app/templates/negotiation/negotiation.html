@@ -8,6 +8,7 @@
                 {{ t("pages.negotiation.eyebrow") }}
             </span>
             <h1>{{ t("pages.negotiation.title") }}</h1>
+{% if request.query_params.get("room_id") is none %}
 <div class="negotiation-active-rooms" aria-label="Active negotiation rooms">
     <span class="negotiation-active-rooms-label">
         الغرف النشطة
@@ -17,13 +18,23 @@
     </strong>
 </div>
 
-            {% if current_user and room %}
+{% endif %}
+
+            {% if current_user and room and request.query_params.get("room_id") is none %}
             <div class="marketplace-listing-detail-section negotiation-inbox">
-                <h2>{{ t("negotiation.messages") }}</h2>
+                <div class="negotiation-inbox-header">
+                    <div>
+                        <span class="negotiation-section-eyebrow">الغرف</span>
+                        <h2>{{ t("negotiation.messages") }}</h2>
+                    </div>
+                    <span class="negotiation-room-count">{{ inbox_rooms|length }}</span>
+                </div>
+                <p class="negotiation-inbox-hint">اختر غرفة لفتح واجهتها ومتابعة التفاوض داخلها.</p>
 
                 {% for item in inbox_rooms %}
                         <a
-                            class="marketplace-listing-detail-item{% if item.is_new or item.unread_count > 0 %} negotiation-inbox-unread{% endif %}"
+                            class="marketplace-listing-detail-item negotiation-room-item{% if item.room.id == room.id %} negotiation-room-item-active{% endif %}{% if item.is_new or item.unread_count > 0 %} negotiation-inbox-unread{% endif %}"
+                            aria-current="{% if item.room.id == room.id %}page{% else %}false{% endif %}"
                             href="/negotiation?room_id={{ item.room.id }}"
                             style="display:block;text-decoration:none;"
                         >
@@ -73,7 +84,7 @@
 
     {% endif %}
 
-            {% if current_user and room %}
+            {% if current_user and room and request.query_params.get("room_id") is not none %}
             <section class="marketplace-browser marketplace-listing-detail">
         <article class="marketplace-listing-detail-card">
 
@@ -84,6 +95,26 @@
                 {% if listing.description %}
                 <p>{{ listing.description }}</p>
                 {% endif %}
+            </div>
+            {% endif %}
+
+            {% if current_user.role.value == "MERCHANT"
+                  and room
+                  and room.status.value == "OPEN"
+                  and room.merchant_approved_at is none %}
+            <div class="marketplace-listing-detail-section">
+                <h2>اعتماد التفاوض</h2>
+                <p>اعتمد التفاوض للسماح للمشتري بتقديم عرضه.</p>
+                <div class="marketplace-hero-actions">
+                    <button
+                        type="button"
+                        class="marketplace-primary-button approve-negotiation-btn"
+                        data-room-id="{{ room.id }}"
+                    >
+                        اعتماد التفاوض
+                    </button>
+                </div>
+                <p id="approveNegotiationError" hidden></p>
             </div>
             {% endif %}
 
@@ -143,6 +174,83 @@
                 </div>
             </div>
             </div>
+
+            {% if current_user.role.value == "BUYER"
+                  and room
+                  and room.status.value == "OPEN"
+                  and room.merchant_approved_at is not none
+                  and not offers %}
+            <div class="marketplace-listing-detail-section">
+                <h2>تقديم عرض</h2>
+
+                <form id="buyerOfferForm">
+                    {% for item in request_obj.items %}
+                    <div class="marketplace-listing-detail-item buyer-offer-item"
+                         data-request-item-id="{{ item.id }}"
+                         data-listing-id="{{ request_obj.listing_id }}"
+                         data-quantity="{{ item.quantity or 1 }}">
+                        <strong>{{ item.title }}</strong>
+
+                        {% if item.description %}
+                        <p>{{ item.description }}</p>
+                        {% endif %}
+
+                        <p>
+                            الكمية المطلوبة:
+                            <strong>{{ item.quantity or 1 }}</strong>
+                            {% if item.unit %}{{ item.unit }}{% endif %}
+                        </p>
+
+                        <label for="offerUnitPrice{{ item.id }}">
+                            سعر الوحدة
+                        </label>
+                        <input
+                            id="offerUnitPrice{{ item.id }}"
+                            class="buyer-offer-unit-price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+                    </div>
+                    {% endfor %}
+
+                    <label for="buyerOfferCurrency">العملة</label>
+                    <input
+                        id="buyerOfferCurrency"
+                        type="text"
+                        value="{{ request_obj.currency or '' }}"
+                        placeholder="USD أو SDG"
+                        maxlength="10"
+                        required
+                    >
+
+                    <label for="buyerOfferMessage">رسالة اختيارية</label>
+                    <textarea
+                        id="buyerOfferMessage"
+                        rows="4"
+                        placeholder="أضف ملاحظتك حول العرض"
+                    ></textarea>
+
+                    <div class="marketplace-listing-detail-item">
+                        <strong>إجمالي العرض</strong>
+                        <span id="buyerOfferTotal">0.00</span>
+                    </div>
+
+                    <div class="marketplace-hero-actions">
+                        <button
+                            type="submit"
+                            class="marketplace-primary-button"
+                            id="submitBuyerOffer"
+                        >
+                            تقديم العرض
+                        </button>
+                    </div>
+
+                    <p id="buyerOfferError" hidden></p>
+                </form>
+            </div>
+            {% endif %}
 
             <div class="marketplace-listing-detail-section">
                 <h2>{{ t("negotiation.offers") }}</h2>
@@ -265,7 +373,7 @@
 
                     {% if current_user.role.value == "BUYER" and offer.status.value == "FINAL" %}
                     <div class="marketplace-listing-detail-item">
-                        <strong>العرض النهائي بعد موافقة التاجر</strong>
+                        <strong>العرض النهائي من التاجر</strong>
                         <p>
                             {{ offer.amount or "-" }}
                             {{ offer.currency or "" }}
@@ -284,6 +392,109 @@
                 <p>{{ t("negotiation.no_offers") }}</p>
                 {% endfor %}
             </div>
+
+            {% if deal is not none %}
+            <div class="marketplace-listing-detail-section negotiation-deal-panel">
+                <h2>الصفقة داخل هذه الغرفة</h2>
+
+                <p>
+                    <strong>حالة الصفقة:</strong>
+                    {{ deal.status.value }}
+                </p>
+
+                <p>
+                    <strong>المبلغ النهائي:</strong>
+                    {{ deal.final_amount }}
+                    {{ deal.currency }}
+                </p>
+
+                {% if commission is not none %}
+                <p>
+                    <strong>عمولة المنصة:</strong>
+                    {{ commission.final_amount }}
+                    {{ commission.currency }}
+                </p>
+
+                <p>
+                    <strong>حالة العمولة:</strong>
+                    {{ commission.status.value }}
+                </p>
+                {% endif %}
+
+                {% if deal.status.value == "PENDING_BUYER_APPROVAL" %}
+                <p>
+                    بانتظار موافقة المشتري لإتمام الصفقة.
+                </p>
+
+                {% elif deal.status.value == "CONFIRMED"
+                      and current_user.role.value == "MERCHANT" %}
+                <p>
+                    تم تأكيد الصفقة. يمكنك الآن تسليمها للمشتري.
+                </p>
+
+                <button
+                    type="button"
+                    class="marketplace-primary-button deliver-deal-btn"
+                    data-deal-id="{{ deal.id }}"
+                >
+                    تسليم للمشتري
+                </button>
+
+                {% elif deal.status.value == "CONFIRMED"
+                      and current_user.role.value == "AGENT"
+                      and deal.agent_id == current_user.id %}
+                <p>
+                    تم تأكيد الصفقة. يمكنك الآن تنفيذ التسليم.
+                </p>
+
+                <button
+                    type="button"
+                    class="marketplace-primary-button deliver-deal-btn"
+                    data-deal-id="{{ deal.id }}"
+                >
+                    تسليم للمشتري
+                </button>
+
+                {% elif deal.status.value == "CONFIRMED" %}
+                <p>
+                    تم تأكيد الصفقة، وبانتظار تنفيذ التسليم.
+                </p>
+
+                {% elif deal.status.value == "DELIVERED"
+                      and deal.buyer_id == current_user.id %}
+                <p>
+                    تم تسجيل التسليم. يرجى تأكيد استلام الصفقة.
+                </p>
+
+                <button
+                    type="button"
+                    class="marketplace-primary-button receive-deal-btn"
+                    data-deal-id="{{ deal.id }}"
+                >
+                    تأكيد استلام الصفقة
+                </button>
+
+                {% elif deal.status.value == "DELIVERED" %}
+                <p>
+                    تم تسليم الصفقة، وبانتظار تأكيد استلام المشتري.
+                </p>
+
+                {% elif deal.status.value == "COMPLETED" %}
+                <p>
+                    اكتملت الصفقة بنجاح.
+                </p>
+                {% endif %}
+
+                {% if deal.status.value == "COMPLETED"
+                      and current_user.role.value == "MERCHANT"
+                      and commission is not none
+                      and commission.status.value == "DUE" %}
+                <p>
+                    عمولة المنصة أصبحت مستحقة على هذه الصفقة بعد استلام المشتري.
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
 
         </article>
     </section>
@@ -321,6 +532,169 @@
                 closeNegotiationModal();
             }
         });
+    }
+
+    const approveNegotiationButtons = document.querySelectorAll(".approve-negotiation-btn");
+
+    approveNegotiationButtons.forEach(function (approveButton) {
+        approveButton.addEventListener("click", async function () {
+            const roomId = approveButton.dataset.roomId;
+            const errorElement = document.getElementById("approveNegotiationError");
+
+            if (!roomId) return;
+
+            approveButton.disabled = true;
+            if (errorElement) {
+                errorElement.hidden = true;
+                errorElement.textContent = "";
+            }
+
+            try {
+                const response = await fetch(
+                    "/api/v1/negotiation/" + encodeURIComponent(roomId) + "/approve",
+                    {
+                        method: "POST",
+                        credentials: "same-origin"
+                    }
+                );
+
+                const data = await response.json().catch(function () {
+                    return {};
+                });
+
+                if (response.status === 401) {
+                    window.location.href = "/login";
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail || "تعذر اعتماد التفاوض."
+                    );
+                }
+
+                window.location.reload();
+            } catch (error) {
+                console.error("Negotiation approval error:", error);
+
+                if (errorElement) {
+                    errorElement.textContent =
+                        error.message || "تعذر اعتماد التفاوض.";
+                    errorElement.hidden = false;
+                } else {
+                    showNegotiationModal(
+                        error.message || "تعذر اعتماد التفاوض."
+                    );
+                }
+
+                approveButton.disabled = false;
+            }
+        });
+    });
+
+    const buyerOfferForm = document.getElementById("buyerOfferForm");
+
+    if (buyerOfferForm) {
+        const totalElement = document.getElementById("buyerOfferTotal");
+        const errorElement = document.getElementById("buyerOfferError");
+        const submitButton = document.getElementById("submitBuyerOffer");
+        const currencyInput = document.getElementById("buyerOfferCurrency");
+        const itemElements = Array.from(
+            document.querySelectorAll(".buyer-offer-item")
+        );
+
+        function calculateBuyerOfferTotal() {
+            let total = 0;
+
+            itemElements.forEach(function (itemElement) {
+                const quantity = Number(itemElement.dataset.quantity || "1");
+                const input = itemElement.querySelector(".buyer-offer-unit-price");
+                const unitPrice = Number(input.value || "0");
+
+                if (Number.isFinite(quantity) && Number.isFinite(unitPrice)) {
+                    total += quantity * unitPrice;
+                }
+            });
+
+            totalElement.textContent = total.toFixed(2);
+            return total;
+        }
+
+        document.querySelectorAll(".buyer-offer-unit-price").forEach(function (input) {
+            input.addEventListener("input", calculateBuyerOfferTotal);
+        });
+
+        buyerOfferForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            errorElement.hidden = true;
+            errorElement.textContent = "";
+            submitButton.disabled = true;
+
+            try {
+                const items = itemElements.map(function (itemElement) {
+                    const input = itemElement.querySelector(".buyer-offer-unit-price");
+                    const quantity = Number(itemElement.dataset.quantity || "1");
+                    const unitPrice = Number(input.value);
+
+                    if (!Number.isInteger(quantity) || quantity <= 0) {
+                        throw new Error("الكمية المطلوبة غير صالحة.");
+                    }
+
+                    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+                        throw new Error("أدخل سعر وحدة صالحًا.");
+                    }
+
+                    return {
+                        request_item_id: Number(itemElement.dataset.requestItemId),
+                        listing_id: Number(itemElement.dataset.listingId),
+                        quantity: quantity,
+                        unit_price: unitPrice,
+                    };
+                });
+
+                if (!items.length) {
+                    throw new Error("لا توجد عناصر يمكن تقديم عرض عليها.");
+                }
+
+                const currency = currencyInput.value.trim();
+
+                if (!currency) {
+                    throw new Error("أدخل العملة.");
+                }
+
+                const response = await fetch("/api/v1/offers", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        room_id: {{ room.id if room else "null" }},
+                        currency: currency,
+                        message: document.getElementById("buyerOfferMessage").value.trim() || null,
+                        items: items,
+                    }),
+                });
+
+                const data = await response.json().catch(function () {
+                    return {};
+                });
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail || "تعذر إرسال العرض."
+                    );
+                }
+
+                window.location.reload();
+            } catch (error) {
+                errorElement.textContent = error.message || "تعذر إرسال العرض.";
+                errorElement.hidden = false;
+                submitButton.disabled = false;
+            }
+        });
+
+        calculateBuyerOfferTotal();
     }
 
     const finalizeOfferButtons = document.querySelectorAll(".finalize-offer-btn");
@@ -404,6 +778,65 @@
                 showNegotiationModal(error.message);
                 acceptButton.disabled = false;
             }
+        });
+    });
+
+    async function handleDealAction(button, url, errorMessage) {
+        const dealId = button.dataset.dealId;
+        if (!dealId) return;
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                credentials: "same-origin"
+            });
+
+            if (response.status === 401) {
+                window.location.href = "/login";
+                return;
+            }
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.detail || errorMessage);
+            }
+
+            window.location.reload();
+        } catch (error) {
+            console.error("Negotiation deal action error:", error);
+            showNegotiationModal(
+                error.message || errorMessage
+            );
+            button.disabled = false;
+        }
+    }
+
+    document.querySelectorAll(".deliver-deal-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const dealId = button.dataset.dealId;
+            if (!dealId) return;
+
+            handleDealAction(
+                button,
+                "/deals/" + encodeURIComponent(dealId) + "/deliver",
+                "تعذر تسجيل تسليم الصفقة"
+            );
+        });
+    });
+
+    document.querySelectorAll(".receive-deal-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const dealId = button.dataset.dealId;
+            if (!dealId) return;
+
+            handleDealAction(
+                button,
+                "/deals/" + encodeURIComponent(dealId) + "/receive",
+                "تعذر تسجيل استلام الصفقة"
+            );
         });
     });
 

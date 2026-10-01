@@ -417,6 +417,16 @@ def negotiation_page(
     db: Session = Depends(get_db),
     user=Depends(get_optional_current_user),
 ):
+    room = None
+    inbox_rooms = []
+    request_obj = None
+    listing = None
+    messages = []
+    offers = []
+    deal = None
+    commission = None
+    active_rooms_count = 0
+
     if user is not None:
         if room_id is not None:
             room = NegotiationService.get_room(db, room_id)
@@ -439,31 +449,45 @@ def negotiation_page(
 
             room = None
 
-            # Prefer a final deal that is explicitly waiting for this buyer.
-            # All deal/offer checks remain tied to the same room and offer,
-            # preventing data from another active negotiation room from mixing in.
+            # Prefer the most recently updated participant room that has
+            # a real, non-cancelled deal tied to the same room and offer.
+            # This keeps the active negotiation completely room-scoped,
+            # including CONFIRMED, DELIVERED, and COMPLETED deal states.
             for candidate in candidate_rooms:
-                if (
-                    candidate.status == NegotiationStatus.AGREED
-                    and candidate.offer_id is not None
-                    and candidate.offer is not None
-                    and candidate.offer.status.value == "FINAL"
-                ):
-                    candidate_deal = (
-                        db.query(Deal)
-                        .filter(
-                            Deal.negotiation_room_id == candidate.id,
-                            Deal.offer_id == candidate.offer_id,
-                            Deal.status == DealStatus.PENDING_BUYER_APPROVAL,
-                        )
-                        .first()
-                    )
-                    if candidate_deal is not None:
-                        room = candidate
-                        break
+                if candidate.offer_id is None or candidate.offer is None:
+                    continue
 
-            # If no buyer-actionable final deal exists, preserve the
-            # existing behavior: open the latest active negotiation room.
+                candidate_deal = (
+                    db.query(Deal)
+                    .filter(
+                        Deal.negotiation_room_id == candidate.id,
+                        Deal.offer_id == candidate.offer_id,
+                        Deal.status != DealStatus.CANCELLED,
+                    )
+                    .first()
+                )
+
+                if candidate_deal is not None:
+                    room = candidate
+                    break
+
+            # If no deal-backed room exists, prefer a final/agreed room.
+            if room is None:
+                room = next(
+                    (
+                        candidate
+                        for candidate in candidate_rooms
+                        if (
+                            candidate.status == NegotiationStatus.AGREED
+                            and candidate.offer_id is not None
+                            and candidate.offer is not None
+                            and candidate.offer.status.value == "FINAL"
+                        )
+                    ),
+                    None,
+                )
+
+            # Otherwise preserve the existing fallback: latest open room.
             if room is None:
                 room = next(
                     (
@@ -473,7 +497,6 @@ def negotiation_page(
                     ),
                     None,
                 )
-
         if room_id is not None and room is None:
             raise HTTPException(status_code=404, detail="Negotiation room not found")
 
@@ -593,7 +616,10 @@ def negotiation_page(
         if room is not None and room.offer is not None:
             deal = (
                 db.query(Deal)
-                .filter(Deal.offer_id == room.offer.id)
+                .filter(
+                    Deal.negotiation_room_id == room.id,
+                    Deal.offer_id == room.offer.id,
+                )
                 .first()
             )
             if deal is not None:
@@ -613,6 +639,21 @@ def negotiation_page(
         offers = locals().get("offers", [])
 
     context = template_context(request)
+    print(
+        "NEGOTIATION_DEBUG:",
+        {
+            "room_id": getattr(room, "id", None),
+            "user_id": getattr(user, "id", None),
+            "user_role": getattr(getattr(user, "role", None), "value", None),
+            "deal_id": getattr(deal, "id", None),
+            "deal_room_id": getattr(deal, "negotiation_room_id", None),
+            "deal_buyer_id": getattr(deal, "buyer_id", None),
+            "deal_merchant_id": getattr(deal, "merchant_id", None),
+            "deal_agent_id": getattr(deal, "agent_id", None),
+            "deal_status": getattr(getattr(deal, "status", None), "value", None),
+        },
+    )
+
     context.update(
         {
             "title": context["t"]("pages.negotiation.title"),
@@ -656,7 +697,10 @@ def finalize_negotiation_offer(
 
     deal = (
         db.query(Deal)
-        .filter(Deal.offer_id == offer_id)
+        .filter(
+            Deal.negotiation_room_id == room.id,
+            Deal.offer_id == offer_id,
+        )
         .first()
     )
 
@@ -710,7 +754,10 @@ def accept_negotiation_offer(
 
     deal = (
         db.query(Deal)
-        .filter(Deal.offer_id == offer_id)
+        .filter(
+            Deal.negotiation_room_id == room.id,
+            Deal.offer_id == offer_id,
+        )
         .first()
     )
 
