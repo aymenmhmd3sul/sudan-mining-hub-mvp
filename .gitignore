@@ -18,3 +18,7 @@ venv/
 # Runtime / editor artifacts
 *.log
 .DS_Store
+
+# Local development artifacts
+.sqla211-test/
+backups/
