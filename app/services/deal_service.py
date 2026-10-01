@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -8,6 +9,11 @@ from app.models.deal_item import DealItem
 from app.models.offer_item import OfferItem
 from app.models.request_item import RequestItem
 from app.services.commission_service import CommissionService
+from app.services.commission_payment_settings_service import (
+    CommissionPaymentSettingsService,
+)
+from app.services.notification_service import NotificationService
+from app.models.notification import NotificationChannel
 
 
 class DealService:
@@ -215,7 +221,47 @@ class DealService:
         if commission is not None:
             CommissionService.mark_due(db, commission)
 
-        from datetime import datetime, timezone
+            payment_settings = CommissionPaymentSettingsService.get_active(
+                db,
+                commission.currency,
+            )
+
+            if payment_settings is not None:
+                payment_details = (
+                    f"رقم الحساب: "
+                    f"{payment_settings.account_number or 'غير مُعد بعد'}\n"
+                    f"اسم الحساب: "
+                    f"{payment_settings.account_name or 'غير مُعد بعد'}\n"
+                    f"تعليمات التحويل: "
+                    f"{payment_settings.payment_instructions or 'غير مُعدّة بعد'}"
+                )
+            else:
+                payment_details = (
+                    "بيانات التحويل لهذه العملة غير مُعدّة بعد. "
+                    "يرجى التواصل مع المشرف."
+                )
+
+            NotificationService.create(
+                db,
+                recipient_user_id=deal.merchant_id,
+                event_type="COMMISSION_DUE",
+                event_key=f"commission_due:{commission.id}",
+                title="العمولة مستحقة بعد استلام الصفقة",
+                message=(
+                    f"تم استلام الصفقة رقم #{deal.id} من المشتري.\n\n"
+                    f"مبلغ العمولة المستحق: "
+                    f"{commission.final_amount} {commission.currency}\n"
+                    f"تاريخ الاستحقاق: "
+                    f"{datetime.now(timezone.utc).date().isoformat()}\n\n"
+                    f"بيانات التحويل:\n"
+                    f"{payment_details}\n\n"
+                    "بعد تنفيذ التحويل، يجب تسجيل تاريخ التحويل "
+                    "ورقم التحويل وإرفاق إثبات التحويل."
+                ),
+                channel=NotificationChannel.IN_APP,
+                related_type="commission",
+                related_id=commission.id,
+            )
 
         now = datetime.now(timezone.utc)
         deal.status = DealStatus.COMPLETED

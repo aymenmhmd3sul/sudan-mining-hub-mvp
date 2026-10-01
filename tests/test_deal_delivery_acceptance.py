@@ -323,18 +323,8 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
         assert merchant_receive.status_code == 403, merchant_receive.text
 
         # ------------------------------------------------------------
-        # 13. Merchant accepts the calculated commission.
+        # 13. Commission is already merchant-accepted at creation.
         # ------------------------------------------------------------
-        commission_accept = merchant_client.post(
-            f"/deals/{deal_id}/commission/accept"
-        )
-        assert commission_accept.status_code == 200, commission_accept.text
-
-        commission_accept_data = commission_accept.json()
-        assert commission_accept_data["id"] == commission_id
-        assert commission_accept_data["merchant_accepted"] is True
-        assert commission_accept_data["status"] == "CALCULATED"
-
         db.expire_all()
         accepted_commission = (
             db.query(Commission)
@@ -390,7 +380,45 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
         ) == Decimal("4.50")
 
         # ------------------------------------------------------------
-        # 15. Repeated receipt must be rejected.
+        # 15. Commission due notification acceptance.
+        # ------------------------------------------------------------
+        notification = (
+            db.query(Notification)
+            .filter(
+                Notification.event_key
+                == f"commission_due:{commission_id}"
+            )
+            .one()
+        )
+
+        assert notification.recipient_user_id == merchant.id
+        assert notification.event_type == "COMMISSION_DUE"
+        assert notification.related_type == "commission"
+        assert notification.related_id == commission_id
+        assert notification.status.value == "PENDING"
+
+        assert "4.50" in notification.message
+        assert "USD" in notification.message
+        assert "تاريخ الاستحقاق" in notification.message
+        assert "بيانات التحويل" in notification.message
+        assert "رقم الحساب" in notification.message
+        assert "اسم الحساب" in notification.message
+        assert "تعليمات التحويل" in notification.message
+        assert "رقم التحويل" in notification.message
+        assert "إثبات التحويل" in notification.message
+
+        notification_count = (
+            db.query(Notification)
+            .filter(
+                Notification.event_key
+                == f"commission_due:{commission_id}"
+            )
+            .count()
+        )
+        assert notification_count == 1
+
+        # ------------------------------------------------------------
+        # 16. Repeated receipt must be rejected.
         # ------------------------------------------------------------
         duplicate_receive = buyer_client.post(
             f"/deals/{deal_id}/receive"
@@ -427,6 +455,11 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
         if offer_id is not None:
             db.query(OfferItem).filter(
                 OfferItem.offer_id == offer_id
+            ).delete(synchronize_session=False)
+
+            db.query(Notification).filter(
+                Notification.related_type == "commission",
+                Notification.related_id == commission_id,
             ).delete(synchronize_session=False)
 
             db.query(Notification).filter(
