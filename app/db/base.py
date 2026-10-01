@@ -28,3 +28,5 @@ from app.models.subscription import Subscription
 from app.models.subscription_pricing import SubscriptionPricing
 from app.models.subscription_payment import SubscriptionPayment
 from app.models.notification import Notification
+
+from app.models.commission_payment_settings import CommissionPaymentSettings

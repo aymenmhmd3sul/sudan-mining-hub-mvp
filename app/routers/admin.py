@@ -21,8 +21,15 @@ from app.schemas.commission_settings import (
     CommissionSettingsCreate,
     CommissionSettingsResponse,
 )
+from app.schemas.commission_payment_settings import (
+    CommissionPaymentSettingsCreate,
+    CommissionPaymentSettingsResponse,
+)
 from app.services.listing_service import ListingService
 from app.services.commission_settings_service import CommissionSettingsService
+from app.services.commission_payment_settings_service import (
+    CommissionPaymentSettingsService,
+)
 from app.services.commission_service import CommissionService
 from app.services.commission_tier_service import CommissionTierService
 from app.services.subscription_service import SubscriptionService
@@ -368,6 +375,44 @@ def create_commission_settings(
         db.refresh(settings)
         return settings
 
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get(
+    "/commission-payment-settings",
+    response_model=list[CommissionPaymentSettingsResponse],
+)
+def list_commission_payment_settings(
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    return CommissionPaymentSettingsService.list_active(db)
+
+
+@router.post(
+    "/commission-payment-settings",
+    response_model=CommissionPaymentSettingsResponse,
+    status_code=201,
+)
+def create_commission_payment_settings(
+    payload: CommissionPaymentSettingsCreate,
+    db: Session = Depends(get_db),
+    user=Depends(require_role("ADMIN")),
+):
+    try:
+        settings = CommissionPaymentSettingsService.create(
+            db,
+            currency=payload.currency,
+            account_number=payload.account_number,
+            account_name=payload.account_name,
+            payment_instructions=payload.payment_instructions,
+            is_active=payload.is_active,
+        )
+        db.commit()
+        db.refresh(settings)
+        return settings
     except ValueError as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(exc))

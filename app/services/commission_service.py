@@ -123,7 +123,7 @@ class CommissionService:
             final_amount=final_amount,
             currency=currency,
             adjusted_by_platform=adjusted_by_platform,
-            merchant_accepted=False,
+            merchant_accepted=True,
             status=CommissionStatus.CALCULATED,
         )
 
@@ -167,10 +167,6 @@ class CommissionService:
                 "Only CALCULATED commissions can become DUE"
             )
 
-        if not commission.merchant_accepted:
-            raise ValueError(
-                "Merchant must accept the commission before it becomes DUE"
-            )
 
         commission.status = CommissionStatus.DUE
         db.flush()

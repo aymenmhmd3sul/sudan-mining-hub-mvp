@@ -816,6 +816,194 @@ document.addEventListener("DOMContentLoaded", function () {
     bindListingCreate();
 });
 
+/* ADMIN PAYMENT SETTINGS */
+function bindAdminPaymentSettings() {
+    const container = document.getElementById("adminPaymentSettings");
+    const status = document.getElementById("adminPaymentSettingsStatus");
+
+    if (!container || !status) {
+        return;
+    }
+
+    function renderSettings(settings) {
+        container.innerHTML = "";
+
+        if (!settings.length) {
+            status.textContent = "لا توجد إعدادات تحويل مفعلة.";
+            return;
+        }
+
+        status.textContent = "إعدادات التحويل المفعلة.";
+
+        settings.forEach(function (item) {
+            const card = document.createElement("article");
+            card.className = "admin-listing-review-card";
+
+            card.innerHTML = `
+                <div class="admin-listing-review-header">
+                    <div>
+                        <span class="admin-listing-review-eyebrow">PAYMENT SETTINGS</span>
+                        <h3>${escapeHtml(item.currency)}</h3>
+                    </div>
+                    <span class="admin-listing-review-id">
+                        #${escapeHtml(String(item.id))}
+                    </span>
+                </div>
+
+                <form class="admin-payment-settings-form"
+                      data-currency="${escapeHtml(item.currency)}">
+
+                    <div class="admin-listing-review-grid">
+                        <div>
+                            <label for="payment-account-${escapeHtml(item.currency)}">
+                                رقم الحساب
+                            </label>
+                            <input
+                                id="payment-account-${escapeHtml(item.currency)}"
+                                name="account_number"
+                                type="text"
+                                maxlength="255"
+                                value="${escapeHtml(item.account_number || "")}"
+                                placeholder="أدخل رقم الحساب"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="payment-name-${escapeHtml(item.currency)}">
+                                اسم الحساب
+                            </label>
+                            <input
+                                id="payment-name-${escapeHtml(item.currency)}"
+                                name="account_name"
+                                type="text"
+                                maxlength="255"
+                                value="${escapeHtml(item.account_name || "")}"
+                                placeholder="أدخل اسم الحساب"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="admin-listing-review-description">
+                        <label for="payment-instructions-${escapeHtml(item.currency)}">
+                            تعليمات التحويل
+                        </label>
+                        <textarea
+                            id="payment-instructions-${escapeHtml(item.currency)}"
+                            name="payment_instructions"
+                            maxlength="2000"
+                            rows="4"
+                            placeholder="اكتب تعليمات التحويل للتاجر"
+                        >${escapeHtml(item.payment_instructions || "")}</textarea>
+                    </div>
+
+                    <div class="admin-listing-review-actions">
+                        <button
+                            class="btn btn-primary admin-save-payment-settings"
+                            type="submit"
+                        >
+                            حفظ إعدادات ${escapeHtml(item.currency)}
+                        </button>
+                    </div>
+                </form>
+            `;
+
+            container.appendChild(card);
+        });
+
+        container.querySelectorAll(".admin-payment-settings-form")
+            .forEach(function (form) {
+                form.addEventListener("submit", function (event) {
+                    event.preventDefault();
+                    savePaymentSettings(form);
+                });
+            });
+    }
+
+    async function loadPaymentSettings() {
+        try {
+            const response = await fetch(
+                "/admin/commission-payment-settings"
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || "فشل تحميل إعدادات التحويل"
+                );
+            }
+
+            renderSettings(data);
+        } catch (error) {
+            console.error(
+                "Admin payment settings load failed:",
+                error
+            );
+            status.textContent =
+                "تعذر تحميل إعدادات التحويل: " + error.message;
+        }
+    }
+
+    async function savePaymentSettings(form) {
+        const currency = form.dataset.currency;
+        const button = form.querySelector(
+            ".admin-save-payment-settings"
+        );
+
+        button.disabled = true;
+        button.textContent = "جارٍ الحفظ...";
+
+        const payload = {
+            currency: currency,
+            account_number:
+                form.elements.account_number.value.trim() || null,
+            account_name:
+                form.elements.account_name.value.trim() || null,
+            payment_instructions:
+                form.elements.payment_instructions.value.trim() || null,
+            is_active: true,
+        };
+
+        try {
+            const response = await fetch(
+                "/admin/commission-payment-settings",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || "فشل حفظ إعدادات التحويل"
+                );
+            }
+
+            button.textContent = "تم الحفظ";
+            status.textContent =
+                "تم حفظ إعدادات التحويل لعملة " + currency + ".";
+
+            await loadPaymentSettings();
+        } catch (error) {
+            console.error(
+                "Admin payment settings save failed:",
+                error
+            );
+            button.disabled = false;
+            button.textContent = "حفظ إعدادات " + currency;
+            status.textContent =
+                "تعذر حفظ إعدادات التحويل: " + error.message;
+        }
+    }
+
+    loadPaymentSettings();
+}
+
 /* ADMIN LISTING REVIEW */
 function bindAdminListingReview() {
     const container = document.getElementById("adminPendingListings");
@@ -1002,5 +1190,6 @@ function bindAdminListingReview() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+    bindAdminPaymentSettings();
     bindAdminListingReview();
 });

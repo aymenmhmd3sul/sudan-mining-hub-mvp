@@ -1,11 +1,11 @@
-from sqlalchemy import Boolean, Column, DateTime, Index, Integer, Numeric, String
+from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String
 from sqlalchemy.sql import func
 
 from app.db.session import Base
 
 
-class CommissionSettings(Base):
-    __tablename__ = "commission_settings"
+class CommissionPaymentSettings(Base):
+    __tablename__ = "commission_payment_settings"
 
     id = Column(Integer, primary_key=True, index=True)
 
@@ -14,22 +14,12 @@ class CommissionSettings(Base):
         nullable=False,
     )
 
-    commission_rate = Column(
-        Numeric(8, 4),
-        nullable=False,
-    )
-
-    minimum_amount = Column(
-        Numeric(18, 2),
-        nullable=True,
-    )
-
-    payment_account_number = Column(
+    account_number = Column(
         String(255),
         nullable=True,
     )
 
-    payment_account_name = Column(
+    account_name = Column(
         String(255),
         nullable=True,
     )
@@ -58,10 +48,9 @@ class CommissionSettings(Base):
         nullable=False,
     )
 
-
     __table_args__ = (
         Index(
-            "uq_commission_settings_active_currency",
+            "uq_commission_payment_settings_active_currency",
             "currency",
             unique=True,
             postgresql_where=(is_active.is_(True)),
