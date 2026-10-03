@@ -9,7 +9,7 @@ from app.core.security import get_password_hash
 from app.db.session import SessionLocal
 from app.models.user import UserModel, UserRole
 from app.models.listing_category import ListingCategory
-from app.models.listing import Listing, ListingStatus, ListingType
+from app.models.listing import Listing, ListingStatus, ListingType, QuantityMode
 from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.request_item import RequestItem
 from app.models.offer import Offer, OfferStatus
@@ -86,6 +86,7 @@ def test_full_transaction_acceptance_isolation():
             title=f"{marker} Listing",
             description=f"{marker} acceptance-test listing",
             listing_type=ListingType.ASSET,
+            quantity_mode=QuantityMode.SINGLE,
             price=1000.0,
             currency="USD",
             is_negotiable=True,
@@ -168,6 +169,14 @@ def test_full_transaction_acceptance_isolation():
         db.add_all([merchant_participant, participant])
         db.flush()
 
+        # The current workflow requires merchant approval of the negotiation
+        # before the merchant can finalize its offer.
+        NegotiationService.approve_negotiation(
+            db,
+            room_id=room.id,
+            merchant_id=merchant.id,
+        )
+
         # ------------------------------------------------------------
         # 6. Merchant finalizes offer.
         #    This must create the Deal + Commission through production
@@ -208,7 +217,7 @@ def test_full_transaction_acceptance_isolation():
         assert commission.deal_id == deal.id
         assert commission.merchant_id == merchant.id
         assert commission.status == CommissionStatus.CALCULATED
-        assert commission.merchant_accepted is False
+        assert commission.merchant_accepted is True
 
         # ------------------------------------------------------------
         # 7. Buyer accepts the final offer through the real service.
@@ -237,7 +246,7 @@ def test_full_transaction_acceptance_isolation():
         assert deal.merchant_id == merchant.id
 
         assert commission.status == CommissionStatus.CALCULATED
-        assert commission.merchant_accepted is False
+        assert commission.merchant_accepted is True
 
         assert listing.status == ListingStatus.SOLD
         assert listing.version == 2

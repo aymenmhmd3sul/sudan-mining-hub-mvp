@@ -251,6 +251,11 @@ def start_listing_negotiation(
     if listing is None or listing.status != ListingStatus.ACTIVE:
         raise HTTPException(status_code=404, detail="Listing not found")
 
+    try:
+        ListingService.require_quantity_classified(listing)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
     if not listing.is_negotiable:
         raise HTTPException(
             status_code=400,
@@ -342,8 +347,8 @@ def start_listing_negotiation(
             category_id=listing.category_id,
             title=listing.title,
             description=listing.description,
-            quantity=1,
-            unit="listing",
+            quantity=None,
+            unit=None,
         )
         db.add(request_item)
         db.flush()

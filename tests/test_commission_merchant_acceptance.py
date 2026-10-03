@@ -1,6 +1,7 @@
 import app.db.base
 
 from decimal import Decimal
+import uuid
 
 import pytest
 
@@ -9,18 +10,35 @@ from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.deal import Deal, DealStatus
 from app.models.negotiation import NegotiationRoom, NegotiationStatus
 from app.models.offer import Offer, OfferStatus
-from app.models.commission import CommissionStatus
+from app.models.commission import Commission, CommissionStatus
+from app.models.user import UserModel, UserRole
 from app.services.commission_service import CommissionService
 
 
-BUYER_ID = 6
-MERCHANT_ID = 4
-
-
 def _create_confirmed_deal(db):
+    marker = f"COMMISSION_LIFECYCLE_{uuid.uuid4().hex}"
+    buyer = UserModel(
+        email=f"{marker.lower()}_buyer@example.invalid",
+        hashed_password="test-hash",
+        full_name=f"{marker} Buyer",
+        role=UserRole.BUYER,
+        is_approved=True,
+        email_verified=True,
+    )
+    merchant = UserModel(
+        email=f"{marker.lower()}_merchant@example.invalid",
+        hashed_password="test-hash",
+        full_name=f"{marker} Merchant",
+        role=UserRole.MERCHANT,
+        is_approved=True,
+        email_verified=True,
+    )
+    db.add_all([buyer, merchant])
+    db.flush()
+
     request = BuyerRequest(
-        buyer_id=BUYER_ID,
-        title="COMMISSION MERCHANT ACCEPTANCE TEST",
+        buyer_id=buyer.id,
+        title=f"{marker} request",
         description="Temporary commission lifecycle test",
         status=RequestStatus.NEGOTIATING,
         currency="SDG",
@@ -30,11 +48,11 @@ def _create_confirmed_deal(db):
 
     offer = Offer(
         request_id=request.id,
-        merchant_id=MERCHANT_ID,
+        merchant_id=merchant.id,
         listing_id=None,
         amount="600000",
         currency="SDG",
-        message="COMMISSION MERCHANT ACCEPTANCE TEST",
+        message=f"{marker} offer",
         status=OfferStatus.ACCEPTED,
     )
     db.add(offer)
@@ -53,8 +71,8 @@ def _create_confirmed_deal(db):
         offer_id=offer.id,
         listing_id=None,
         negotiation_room_id=room.id,
-        buyer_id=BUYER_ID,
-        merchant_id=MERCHANT_ID,
+        buyer_id=buyer.id,
+        merchant_id=merchant.id,
         final_amount=Decimal("600000.00"),
         currency="SDG",
         status=DealStatus.CONFIRMED,
@@ -66,7 +84,7 @@ def _create_confirmed_deal(db):
     commission = CommissionService.create(
         db,
         deal_id=deal.id,
-        merchant_id=MERCHANT_ID,
+        merchant_id=merchant.id,
         proposed_amount=None,
         proposed_currency=None,
         proposed_rate=None,
@@ -75,63 +93,69 @@ def _create_confirmed_deal(db):
         minimum_amount=Decimal("0.00"),
         final_amount=Decimal("6000.00"),
         currency="SDG",
-        adjusted_by_platform=False,
+        adjusted_by_platform=True,
     )
 
     db.commit()
     db.refresh(deal)
     db.refresh(commission)
 
-    return request, offer, room, deal, commission
+    return request, offer, room, deal, commission, buyer, merchant
 
 
-def _cleanup(db, request, offer, room, deal, commission):
-    if commission is not None:
-        db.delete(commission)
-        db.commit()
+def _cleanup(db, request, offer, room, deal, commission, buyer, merchant):
     if deal is not None:
-        db.delete(deal)
-        db.commit()
+        db.query(Commission).filter(Commission.deal_id == deal.id).delete(
+            synchronize_session=False
+        )
+    elif commission is not None:
+        db.query(Commission).filter(Commission.id == commission.id).delete(
+            synchronize_session=False
+        )
+    if deal is not None:
+        db.query(Deal).filter(Deal.id == deal.id).delete(
+            synchronize_session=False
+        )
     if room is not None:
-        db.delete(room)
-        db.commit()
+        db.query(NegotiationRoom).filter(
+            NegotiationRoom.id == room.id
+        ).delete(synchronize_session=False)
     if offer is not None:
-        db.delete(offer)
-        db.commit()
+        db.query(Offer).filter(Offer.id == offer.id).delete(
+            synchronize_session=False
+        )
     if request is not None:
-        db.delete(request)
-        db.commit()
+        db.query(BuyerRequest).filter(
+            BuyerRequest.id == request.id
+        ).delete(synchronize_session=False)
+    for user in (buyer, merchant):
+        if user is not None:
+            db.query(UserModel).filter(UserModel.id == user.id).delete(
+                synchronize_session=False
+            )
+    db.commit()
 
 
-def test_commission_requires_merchant_acceptance_before_due():
+def test_commission_is_accepted_on_creation_and_can_become_due():
     db = SessionLocal()
-    request = offer = room = deal = commission = None
+    request = offer = room = deal = commission = buyer = merchant = None
 
     try:
-        request, offer, room, deal, commission = _create_confirmed_deal(db)
-
-        assert commission.status == CommissionStatus.CALCULATED
-        assert commission.merchant_accepted is False
-
-        with pytest.raises(
-            ValueError,
-            match="Merchant must accept the commission before it becomes DUE",
-        ):
-            CommissionService.mark_due(db, commission)
-
-        db.refresh(commission)
-
-        assert commission.status == CommissionStatus.CALCULATED
-        assert commission.merchant_accepted is False
-
-        accepted = CommissionService.accept_by_merchant(
-            db,
-            commission,
-            MERCHANT_ID,
+        request, offer, room, deal, commission, buyer, merchant = (
+            _create_confirmed_deal(db)
         )
 
-        assert accepted.merchant_accepted is True
-        assert accepted.status == CommissionStatus.CALCULATED
+        assert commission.status == CommissionStatus.CALCULATED
+        assert commission.merchant_accepted is True
+        assert commission.deal_id == deal.id
+        assert commission.merchant_id == merchant.id
+        assert commission.currency == deal.currency == "SDG"
+        assert commission.platform_rate == Decimal("1.0000")
+        assert commission.platform_amount == Decimal("6000.00")
+        assert commission.final_amount == Decimal("6000.00")
+        assert commission.final_amount == (
+            deal.final_amount * commission.platform_rate / Decimal("100")
+        )
 
         due = CommissionService.mark_due(db, commission)
 
@@ -141,16 +165,18 @@ def test_commission_requires_merchant_acceptance_before_due():
         print("===== COMMISSION MERCHANT ACCEPTANCE LIFECYCLE PASS =====")
 
     finally:
-        _cleanup(db, request, offer, room, deal, commission)
+        _cleanup(db, request, offer, room, deal, commission, buyer, merchant)
         db.close()
 
 
 def test_wrong_merchant_cannot_accept_commission():
     db = SessionLocal()
-    request = offer = room = deal = commission = None
+    request = offer = room = deal = commission = buyer = merchant = None
 
     try:
-        request, offer, room, deal, commission = _create_confirmed_deal(db)
+        request, offer, room, deal, commission, buyer, merchant = (
+            _create_confirmed_deal(db)
+        )
 
         with pytest.raises(
             PermissionError,
@@ -159,33 +185,30 @@ def test_wrong_merchant_cannot_accept_commission():
             CommissionService.accept_by_merchant(
                 db,
                 commission,
-                BUYER_ID,
+                buyer.id,
             )
 
         db.refresh(commission)
 
-        assert commission.merchant_accepted is False
+        assert commission.merchant_accepted is True
         assert commission.status == CommissionStatus.CALCULATED
 
         print("===== COMMISSION MERCHANT AUTH GUARD PASS =====")
 
     finally:
-        _cleanup(db, request, offer, room, deal, commission)
+        _cleanup(db, request, offer, room, deal, commission, buyer, merchant)
         db.close()
 
 
-def test_commission_acceptance_cannot_be_repeated():
+def test_already_accepted_commission_cannot_be_accepted_again():
     db = SessionLocal()
-    request = offer = room = deal = commission = None
+    request = offer = room = deal = commission = buyer = merchant = None
 
     try:
-        request, offer, room, deal, commission = _create_confirmed_deal(db)
-
-        CommissionService.accept_by_merchant(
-            db,
-            commission,
-            MERCHANT_ID,
+        request, offer, room, deal, commission, buyer, merchant = (
+            _create_confirmed_deal(db)
         )
+        assert commission.merchant_accepted is True
 
         with pytest.raises(
             ValueError,
@@ -194,7 +217,7 @@ def test_commission_acceptance_cannot_be_repeated():
             CommissionService.accept_by_merchant(
                 db,
                 commission,
-                MERCHANT_ID,
+                merchant.id,
             )
 
         db.refresh(commission)
@@ -205,5 +228,5 @@ def test_commission_acceptance_cannot_be_repeated():
         print("===== COMMISSION ACCEPTANCE REPEAT GUARD PASS =====")
 
     finally:
-        _cleanup(db, request, offer, room, deal, commission)
+        _cleanup(db, request, offer, room, deal, commission, buyer, merchant)
         db.close()

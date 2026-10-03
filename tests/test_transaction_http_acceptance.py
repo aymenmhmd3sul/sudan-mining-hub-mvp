@@ -9,7 +9,7 @@ from app.db.session import SessionLocal
 from app.main import app
 from app.models.user import UserModel, UserRole
 from app.models.listing_category import ListingCategory
-from app.models.listing import Listing, ListingStatus, ListingType
+from app.models.listing import Listing, ListingStatus, ListingType, QuantityMode
 from app.models.subscription import Subscription
 from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.request_item import RequestItem
@@ -103,6 +103,7 @@ def test_full_transaction_http_acceptance_isolation():
             title=f"{marker} Listing",
             description=f"{marker} HTTP acceptance listing",
             listing_type=ListingType.ASSET,
+            quantity_mode=QuantityMode.BULK,
             price=1000.0,
             currency="USD",
             is_negotiable=True,

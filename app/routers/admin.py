@@ -16,7 +16,11 @@ from app.models.negotiation import NegotiationRoom, NegotiationMessage
 from app.models.offer import Offer
 from app.routers.auth import require_role
 from app.db.session import get_db
-from app.schemas.listing import ListingResponse, AdminListingReviewResponse
+from app.schemas.listing import (
+    AdminListingApprovalRequest,
+    AdminListingReviewResponse,
+    ListingResponse,
+)
 from app.schemas.commission_settings import (
     CommissionSettingsCreate,
     CommissionSettingsResponse,
@@ -98,11 +102,16 @@ def list_pending_listings(
 )
 def approve_listing(
     listing_id: int,
+    payload: AdminListingApprovalRequest,
     db: Session = Depends(get_db),
     user=Depends(require_role("ADMIN")),
 ):
     try:
-        return ListingService.approve(db, listing_id)
+        return ListingService.approve(
+            db,
+            listing_id,
+            quantity_mode=payload.quantity_mode,
+        )
     except ValueError as exc:
         detail = str(exc)
 

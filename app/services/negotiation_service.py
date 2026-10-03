@@ -106,6 +106,10 @@ class NegotiationService:
         if listing is None:
             raise ValueError("Listing not found")
 
+        from app.services.listing_service import ListingService
+
+        ListingService.require_quantity_classified(listing)
+
         if listing.status != ListingStatus.ACTIVE:
             raise ValueError("Listing is no longer available")
 
@@ -221,21 +225,25 @@ class NegotiationService:
                 .with_for_update()
                 .first()
             )
-            if listing is None:
-                raise ValueError("Listing not found")
+        if listing is None:
+            raise ValueError("Listing not found")
 
-            if listing.status != ListingStatus.ACTIVE:
-                raise ValueError("Listing is no longer available")
+        from app.services.listing_service import ListingService
 
-            if offer.listing_id != request.listing_id:
-                raise ValueError(
-                    "Offer is not linked to the requested listing"
-                )
+        ListingService.require_quantity_classified(listing)
 
-            if listing.owner_id != merchant_id:
-                raise PermissionError(
-                    "Merchant does not own the requested listing"
-                )
+        if listing.status != ListingStatus.ACTIVE:
+            raise ValueError("Listing is no longer available")
+
+        if offer.listing_id != request.listing_id:
+            raise ValueError(
+                "Offer is not linked to the requested listing"
+            )
+
+        if listing.owner_id != merchant_id:
+            raise PermissionError(
+                "Merchant does not own the requested listing"
+            )
 
         try:
             final_amount = Decimal(str(offer.amount))
@@ -387,13 +395,9 @@ class NegotiationService:
         offer_id: int,
         buyer_id: int,
     ) -> NegotiationRoom:
-        from app.models.listing import Listing, ListingStatus
-        from app.models.deal import Deal, DealStatus
-
         offer = (
             db.query(Offer)
             .filter(Offer.id == offer_id)
-            .with_for_update()
             .first()
         )
         if offer is None:
@@ -410,11 +414,6 @@ class NegotiationService:
         if request.buyer_id != buyer_id:
             raise PermissionError("Only the request owner can accept an offer")
 
-        if offer.status != OfferStatus.FINAL:
-            raise ValueError(
-                "Only final offers can be accepted by the buyer"
-            )
-
         room = (
             db.query(NegotiationRoom)
             .filter(
@@ -426,11 +425,6 @@ class NegotiationService:
         )
         if room is None:
             raise ValueError("Negotiation room for this offer not found")
-
-        if room.status != NegotiationStatus.AGREED:
-            raise ValueError(
-                "This final offer is not awaiting buyer approval"
-            )
 
         participant = (
             db.query(NegotiationParticipant)
@@ -445,41 +439,28 @@ class NegotiationService:
                 "Buyer is not a participant in this negotiation room"
             )
 
-        listing = None
-        if request.listing_id is not None:
-            listing = (
-                db.query(Listing)
-                .filter(Listing.id == request.listing_id)
-                .with_for_update()
-                .first()
-            )
-            if listing is None:
-                raise ValueError("Listing not found")
-
-            if listing.status != ListingStatus.ACTIVE:
-                raise ValueError("Listing is no longer available")
-
-            if offer.listing_id != listing.id:
-                raise ValueError(
-                    "Offer is not linked to the requested listing"
-                )
-
-            if offer.merchant_id != listing.owner_id:
-                raise PermissionError(
-                    "Offer merchant does not own the requested listing"
-                )
+        from app.models.deal import Deal, DealStatus
 
         deal = (
             db.query(Deal)
             .filter(Deal.offer_id == offer.id)
-            .with_for_update()
             .first()
         )
         if deal is None:
             raise ValueError("Deal for this final offer not found")
 
-        if deal.status != DealStatus.PENDING_BUYER_APPROVAL:
-            raise ValueError("Deal is not awaiting buyer approval")
+        repeated_approval = (
+            deal.status == DealStatus.CONFIRMED and deal.buyer_approved
+        )
+        if not repeated_approval:
+            if offer.status != OfferStatus.FINAL:
+                raise ValueError(
+                    "Only final offers can be accepted by the buyer"
+                )
+            if room.status != NegotiationStatus.AGREED:
+                raise ValueError(
+                    "This final offer is not awaiting buyer approval"
+                )
 
         try:
             DealService.approve_by_buyer(
@@ -488,51 +469,8 @@ class NegotiationService:
                 buyer_id=buyer_id,
                 commit=False,
             )
-
-            offer.status = OfferStatus.ACCEPTED
-            room.status = NegotiationStatus.CLOSED
-            request.status = RequestStatus.NEGOTIATING
-
-            if listing is not None:
-                listing.status = ListingStatus.SOLD
-                listing.version += 1
-
-                other_offers = (
-                    db.query(Offer)
-                    .filter(
-                        Offer.listing_id == listing.id,
-                        Offer.id != offer.id,
-                        Offer.status.in_(
-                            (
-                                OfferStatus.SUBMITTED,
-                                OfferStatus.FINAL,
-                            )
-                        ),
-                    )
-                    .all()
-                )
-
-                for other_offer in other_offers:
-                    other_offer.status = OfferStatus.CLOSED
-
-                    other_rooms = (
-                        db.query(NegotiationRoom)
-                        .filter(
-                            NegotiationRoom.offer_id == other_offer.id,
-                            NegotiationRoom.status.in_(
-                                (
-                                    NegotiationStatus.OPEN,
-                                    NegotiationStatus.AGREED,
-                                )
-                            ),
-                        )
-                        .all()
-                    )
-
-                    for other_room in other_rooms:
-                        other_room.status = NegotiationStatus.CLOSED
-
-            db.commit()
+            if not repeated_approval:
+                db.commit()
             db.refresh(room)
             return room
 

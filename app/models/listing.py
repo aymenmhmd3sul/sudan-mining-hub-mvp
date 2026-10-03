@@ -14,6 +14,7 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 
 from sqlalchemy.orm import relationship
 from app.db.session import Base
@@ -32,6 +33,11 @@ class ListingType(str, enum.Enum):
     EQUIPMENT = "EQUIPMENT"
     SERVICE = "SERVICE"
     OPPORTUNITY = "OPPORTUNITY"
+
+
+class QuantityMode(str, enum.Enum):
+    SINGLE = "SINGLE"
+    BULK = "BULK"
 
 
 class Listing(Base):
@@ -61,6 +67,16 @@ class Listing(Base):
         nullable=False,
         default=ListingType.ASSET,
         index=True,
+    )
+
+    quantity_mode = Column(
+        PGEnum(
+            QuantityMode,
+            name="quantitymode",
+            schema="public",
+            create_type=False,
+        ),
+        nullable=True,
     )
 
     price = Column(Float, nullable=True)

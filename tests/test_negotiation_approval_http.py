@@ -8,7 +8,7 @@ from app.core.security import get_password_hash
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.buyer_request import BuyerRequest, RequestStatus
-from app.models.listing import Listing, ListingStatus, ListingType
+from app.models.listing import Listing, ListingStatus, ListingType, QuantityMode
 from app.models.listing_category import ListingCategory
 from app.models.negotiation import (
     NegotiationParticipant,
@@ -92,6 +92,7 @@ def test_merchant_can_approve_open_negotiation_http():
             title=f"{marker} Listing",
             description=f"{marker} negotiation approval listing",
             listing_type=ListingType.ASSET,
+            quantity_mode=QuantityMode.SINGLE,
             price=1000.0,
             currency="USD",
             is_negotiable=True,

@@ -71,6 +71,10 @@ class OfferService:
             if listing is None:
                 raise ValueError("Listing not found")
 
+            from app.services.listing_service import ListingService
+
+            ListingService.require_quantity_classified(listing)
+
             if listing.status != ListingStatus.ACTIVE:
                 raise ValueError("Listing is no longer available")
 
@@ -209,6 +213,10 @@ class OfferService:
             )
             if listing is None:
                 raise ValueError("Listing not found")
+
+            from app.services.listing_service import ListingService
+
+            ListingService.require_quantity_classified(listing)
 
             if listing.status != ListingStatus.ACTIVE:
                 raise ValueError("Listing is no longer available")

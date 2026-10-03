@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.models.buyer_request import BuyerRequest, RequestStatus
+from app.models.listing import Listing
+from app.services.listing_service import ListingService
 
 
 class RequestService:
@@ -38,6 +40,17 @@ class RequestService:
 
     @staticmethod
     def create(db: Session, **data) -> BuyerRequest:
+        listing_id = data.get("listing_id")
+        if listing_id is not None:
+            listing = (
+                db.query(Listing)
+                .filter(Listing.id == listing_id)
+                .first()
+            )
+            if listing is None:
+                raise ValueError("Listing not found")
+            ListingService.require_quantity_classified(listing)
+
         request = BuyerRequest(**data)
         db.add(request)
         db.commit()

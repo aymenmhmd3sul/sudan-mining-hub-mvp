@@ -1182,6 +1182,18 @@ function bindAdminListingReview() {
                 </div>
 
                 <div class="admin-listing-review-actions">
+                    <label class="form-field">
+                        <span>تصنيف الكمية</span>
+                        <select
+                            class="admin-listing-quantity-mode"
+                            required
+                            aria-label="تصنيف كمية الإعلان"
+                        >
+                            <option value="" selected disabled>اختر SINGLE أو BULK</option>
+                            <option value="SINGLE">SINGLE</option>
+                            <option value="BULK">BULK</option>
+                        </select>
+                    </label>
                     <button
                         class="btn btn-primary admin-approve-listing"
                         type="button"
@@ -1229,6 +1241,21 @@ function bindAdminListingReview() {
 
     async function approveListing(button) {
         const listingId = button.dataset.listingId;
+        const card = button.closest(".admin-listing-review-card");
+        const quantityModeSelect = card
+            ? card.querySelector(".admin-listing-quantity-mode")
+            : null;
+        const quantityMode = quantityModeSelect
+            ? quantityModeSelect.value
+            : "";
+
+        if (quantityMode !== "SINGLE" && quantityMode !== "BULK") {
+            status.textContent = "اختر SINGLE أو BULK قبل اعتماد الإعلان.";
+            if (quantityModeSelect) {
+                quantityModeSelect.focus();
+            }
+            return;
+        }
 
         button.disabled = true;
         button.textContent = "جارٍ الاعتماد...";
@@ -1239,7 +1266,13 @@ function bindAdminListingReview() {
                 encodeURIComponent(listingId) +
                 "/approve",
                 {
-                    method: "POST"
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        quantity_mode: quantityMode
+                    })
                 }
             );
 

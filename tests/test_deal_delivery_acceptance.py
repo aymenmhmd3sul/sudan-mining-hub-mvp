@@ -9,7 +9,7 @@ from app.db.session import SessionLocal
 from app.main import app
 from app.models.user import UserModel, UserRole
 from app.models.listing_category import ListingCategory
-from app.models.listing import Listing, ListingStatus, ListingType
+from app.models.listing import Listing, ListingStatus, ListingType, QuantityMode
 from app.models.subscription import Subscription
 from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.request_item import RequestItem
@@ -106,6 +106,7 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
             title=f"{marker} Listing",
             description=f"{marker} delivery acceptance listing",
             listing_type=ListingType.ASSET,
+            quantity_mode=QuantityMode.BULK,
             price=1000.0,
             currency="USD",
             is_negotiable=True,
@@ -438,7 +439,14 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
         except Exception:
             pass
 
-        if commission_id is not None:
+        if deal_id is not None:
+            # Resolve by the parent key so cleanup also covers a failure after
+            # commission creation but before commission_id was captured.
+            db.query(Commission).filter(
+                Commission.deal_id == deal_id
+            ).delete(synchronize_session=False)
+            db.flush()
+        elif commission_id is not None:
             db.query(Commission).filter(
                 Commission.id == commission_id
             ).delete(synchronize_session=False)

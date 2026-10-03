@@ -7,19 +7,20 @@ import pytest
 
 from app.db.session import SessionLocal
 from app.models.buyer_request import BuyerRequest, RequestStatus
+from app.models.commission import Commission, CommissionStatus
 from app.models.deal import Deal, DealStatus
 from app.models.negotiation import NegotiationRoom, NegotiationStatus
 from app.models.offer import Offer, OfferStatus
 from app.services.deal_service import DealService
 
 
-BUYER_ID = 6
-MERCHANT_ID = 4
+BUYER_ID = 28
+MERCHANT_ID = 27
 
 
 def test_buyer_approval_confirms_deal_and_records_timestamp():
     db = SessionLocal()
-    request = offer = room = deal = None
+    request = offer = room = deal = commission = None
 
     try:
         request = BuyerRequest(
@@ -68,6 +69,21 @@ def test_buyer_approval_confirms_deal_and_records_timestamp():
         db.commit()
         db.refresh(deal)
 
+        commission = Commission(
+            deal_id=deal.id,
+            merchant_id=MERCHANT_ID,
+            platform_amount=Decimal("60000.00"),
+            platform_rate=Decimal("10.0000"),
+            final_amount=Decimal("60000.00"),
+            currency="SDG",
+            adjusted_by_platform=True,
+            merchant_accepted=False,
+            status=CommissionStatus.CALCULATED,
+        )
+        db.add(commission)
+        db.commit()
+        db.refresh(commission)
+
         before = datetime.now(timezone.utc)
 
         approved = DealService.approve_by_buyer(
@@ -91,6 +107,9 @@ def test_buyer_approval_confirms_deal_and_records_timestamp():
         print("===== BUYER APPROVAL CONTRACT PASS =====")
 
     finally:
+        if commission is not None:
+            db.delete(commission)
+            db.commit()
         if deal is not None:
             db.delete(deal)
             db.commit()
@@ -241,12 +260,23 @@ def test_approved_deal_cannot_be_approved_again():
         db.commit()
         db.refresh(deal)
 
-        with pytest.raises(ValueError, match="pending buyer approval"):
-            DealService.approve_by_buyer(
-                db,
-                deal,
-                buyer_id=BUYER_ID,
-            )
+        previous_state = (
+            deal.status,
+            deal.buyer_approved,
+            deal.approved_at,
+        )
+        approved = DealService.approve_by_buyer(
+            db,
+            deal,
+            buyer_id=BUYER_ID,
+        )
+
+        assert approved.id == deal.id
+        assert (
+            approved.status,
+            approved.buyer_approved,
+            approved.approved_at,
+        ) == previous_state
 
         db.refresh(deal)
         assert deal.status == DealStatus.CONFIRMED

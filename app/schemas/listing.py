@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models.listing import ListingType
+from app.models.listing import ListingType, QuantityMode
 from app.models.listing_media import MediaType
 
 
@@ -18,6 +18,10 @@ class ListingCreate(BaseModel):
     locality: str | None = None
     address: str | None = None
     specs: str | None = None
+
+
+class AdminListingApprovalRequest(BaseModel):
+    quantity_mode: QuantityMode
 
 
 class ListingMediaResponse(BaseModel):

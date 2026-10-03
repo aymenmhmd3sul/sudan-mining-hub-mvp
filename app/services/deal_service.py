@@ -3,9 +3,13 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
+from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.deal import Deal, DealStatus
+from app.models.listing import Listing, ListingStatus
 from app.models.user import UserModel, UserRole
 from app.models.deal_item import DealItem
+from app.models.negotiation import NegotiationRoom, NegotiationStatus
+from app.models.offer import Offer, OfferStatus
 from app.models.offer_item import OfferItem
 from app.models.request_item import RequestItem
 from app.services.commission_service import CommissionService
@@ -144,36 +148,139 @@ class DealService:
         buyer_id: int,
         commit: bool = True,
     ) -> Deal:
-        if deal.buyer_id != buyer_id:
+        locked_deal = (
+            db.query(Deal)
+            .filter(Deal.id == deal.id)
+            .with_for_update()
+            .first()
+        )
+        if locked_deal is None:
+            raise ValueError("Deal not found")
+
+        if locked_deal.buyer_id != buyer_id:
             raise PermissionError("Only the buyer can approve the deal")
 
-        if deal.status != DealStatus.PENDING_BUYER_APPROVAL:
+        # A retry by the same buyer is a no-op and cannot repeat confirmation
+        # effects or create another commission.
+        if (
+            locked_deal.status == DealStatus.CONFIRMED
+            and locked_deal.buyer_approved
+        ):
+            return locked_deal
+
+        if locked_deal.status != DealStatus.PENDING_BUYER_APPROVAL:
             raise ValueError(
                 "Only deals pending buyer approval can be approved"
             )
+        if locked_deal.buyer_approved:
+            raise ValueError("Deal approval state is inconsistent")
 
-        if deal.buyer_approved:
-            raise ValueError("Deal has already been approved by the buyer")
+        request = (
+            db.query(BuyerRequest)
+            .filter(BuyerRequest.id == locked_deal.request_id)
+            .first()
+        )
+        offer = (
+            db.query(Offer)
+            .filter(Offer.id == locked_deal.offer_id)
+            .with_for_update()
+            .first()
+        )
+        room = (
+            db.query(NegotiationRoom)
+            .filter(NegotiationRoom.id == locked_deal.negotiation_room_id)
+            .with_for_update()
+            .first()
+        )
+        if request is None or offer is None or room is None:
+            raise ValueError("Deal relationships are incomplete")
 
-        from datetime import datetime, timezone
-        from app.services.commission_service import CommissionService
+        if (
+            request.buyer_id != locked_deal.buyer_id
+            or offer.request_id != request.id
+            or offer.merchant_id != locked_deal.merchant_id
+            or offer.listing_id != locked_deal.listing_id
+            or room.request_id != request.id
+            or (room.offer_id is not None and room.offer_id != offer.id)
+            or (
+                request.listing_id is not None
+                and request.listing_id != locked_deal.listing_id
+            )
+        ):
+            raise ValueError("Deal relationships do not match")
 
-        commission = CommissionService.get_for_deal(db, deal.id)
+        listing = None
+        if locked_deal.listing_id is not None:
+            listing = (
+                db.query(Listing)
+                .filter(Listing.id == locked_deal.listing_id)
+                .with_for_update()
+                .first()
+            )
+            if listing is None:
+                raise ValueError("Listing not found")
+            if listing.owner_id != locked_deal.merchant_id:
+                raise PermissionError(
+                    "Deal merchant does not own the linked listing"
+                )
+
+        commission = CommissionService.get_for_deal(db, locked_deal.id)
         if commission is None:
             raise ValueError(
                 "Commission must be calculated before buyer approval"
             )
 
-        deal.buyer_approved = True
-        deal.status = DealStatus.CONFIRMED
-        deal.approved_at = datetime.now(timezone.utc)
+        if offer.status not in (OfferStatus.FINAL, OfferStatus.ACCEPTED):
+            raise ValueError("Offer is not ready for buyer approval")
+        if room.status not in (NegotiationStatus.AGREED, NegotiationStatus.CLOSED):
+            raise ValueError("Negotiation is not awaiting buyer approval")
 
-        if commit:
-            db.commit()
-            db.refresh(deal)
-        else:
-            db.flush()
-        return deal
+        locked_deal.buyer_approved = True
+        locked_deal.status = DealStatus.CONFIRMED
+        locked_deal.approved_at = datetime.now(timezone.utc)
+        offer.status = OfferStatus.ACCEPTED
+        room.status = NegotiationStatus.CLOSED
+        request.status = RequestStatus.NEGOTIATING
+
+        if listing is not None and listing.status != ListingStatus.SOLD:
+            listing.status = ListingStatus.SOLD
+            listing.version += 1
+            other_offers = (
+                db.query(Offer)
+                .filter(
+                    Offer.listing_id == listing.id,
+                    Offer.id != offer.id,
+                    Offer.status.in_((OfferStatus.SUBMITTED, OfferStatus.FINAL)),
+                )
+                .all()
+            )
+            for other_offer in other_offers:
+                other_offer.status = OfferStatus.CLOSED
+                other_rooms = (
+                    db.query(NegotiationRoom)
+                    .filter(
+                        NegotiationRoom.offer_id == other_offer.id,
+                        NegotiationRoom.status.in_(
+                            (NegotiationStatus.OPEN, NegotiationStatus.AGREED)
+                        ),
+                    )
+                    .all()
+                )
+                for other_room in other_rooms:
+                    other_room.status = NegotiationStatus.CLOSED
+
+        try:
+            if commit:
+                db.commit()
+                db.refresh(locked_deal)
+            else:
+                db.flush()
+        except Exception:
+            if commit:
+                db.rollback()
+            raise
+
+        return locked_deal
 
     @staticmethod
     def mark_delivered(
