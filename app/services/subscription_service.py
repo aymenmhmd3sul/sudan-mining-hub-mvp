@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models.subscription import Subscription, SubscriptionStatus
+from app.models.user import UserModel, UserRole
 
 
 class SubscriptionService:
@@ -69,6 +70,13 @@ class SubscriptionService:
             raise ValueError("Subscription plan is required")
 
         now = datetime.now(timezone.utc)
+
+        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if user is None:
+            raise ValueError("User not found")
+
+        if user.role == UserRole.MERCHANT:
+            user.is_approved = True
 
         current = SubscriptionService.get_active_for_user(
             db,
