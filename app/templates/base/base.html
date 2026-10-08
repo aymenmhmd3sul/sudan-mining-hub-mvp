@@ -4,13 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="theme-color" content="#0b1220">
+    <meta name="theme-color" content="#ffffff">
+
+    <script>
+        try {
+            const appearance = JSON.parse(localStorage.getItem("smh_appearance") || "{}");
+            document.documentElement.dataset.theme = appearance.theme === "dark" ? "dark" : "light";
+        } catch (error) {
+            document.documentElement.dataset.theme = "light";
+        }
+    </script>
 
     <title>{{ title | default("Sudan Mining Hub") }}</title>
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', path='css/app.css') }}?v=20260929-appearance-v3"
+        href="{{ url_for('static', path='css/app.css') }}?v=20261004-appearance-light"
     >
 </head>
 
@@ -33,6 +42,14 @@
             aria-label="{{ t('appearance.title') }}"
         >
             <div class="smh-appearance-title">{{ t("appearance.title") }}</div>
+
+            <div class="smh-appearance-group">
+                <div class="smh-appearance-label">{{ t("appearance.theme") }}</div>
+                <div class="smh-appearance-options" role="group" aria-label="{{ t('appearance.theme') }}">
+                    <button type="button" data-appearance-theme="light">{{ t("appearance.theme_light") }}</button>
+                    <button type="button" data-appearance-theme="dark">{{ t("appearance.theme_dark") }}</button>
+                </div>
+            </div>
 
             <div class="smh-appearance-group">
                 <div class="smh-appearance-label">{{ t("appearance.font_size") }}</div>

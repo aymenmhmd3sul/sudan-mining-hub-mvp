@@ -6,7 +6,8 @@
     const DEFAULTS = {
         fontSize: "normal",
         contrast: "normal",
-        font: "system"
+        font: "system",
+        theme: "light"
     };
 
     const FONT_FAMILIES = {
@@ -53,7 +54,12 @@
                     source.font
                 )
                     ? source.font
-                    : DEFAULTS.font
+                    : DEFAULTS.font,
+
+            theme:
+                source.theme === "dark"
+                    ? "dark"
+                    : DEFAULTS.theme
         };
     }
 
@@ -108,6 +114,15 @@
         root.dataset.fontSize = normalized.fontSize;
         root.dataset.contrast = normalized.contrast;
         root.dataset.font = normalized.font;
+        root.dataset.theme = normalized.theme;
+
+        const themeColor = document.querySelector('meta[name="theme-color"]');
+        if (themeColor) {
+            themeColor.setAttribute(
+                "content",
+                normalized.theme === "dark" ? "#05080d" : "#ffffff"
+            );
+        }
 
         return normalized;
     }
@@ -154,6 +169,13 @@
         }
 
         function sync(settings) {
+            document.querySelectorAll("[data-appearance-theme]").forEach(function (button) {
+                button.setAttribute(
+                    "aria-pressed",
+                    button.dataset.appearanceTheme === settings.theme ? "true" : "false"
+                );
+            });
+
             document.querySelectorAll("[data-appearance-font-size]").forEach(function (button) {
                 button.setAttribute(
                     "aria-pressed",
@@ -181,6 +203,14 @@
 
             panel.hidden = !opening;
             toggle.setAttribute("aria-expanded", opening ? "true" : "false");
+        });
+
+        document.querySelectorAll("[data-appearance-theme]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                sync(window.SMHAppearance.set({
+                    theme: button.dataset.appearanceTheme
+                }));
+            });
         });
 
         document.querySelectorAll("[data-appearance-font-size]").forEach(function (button) {

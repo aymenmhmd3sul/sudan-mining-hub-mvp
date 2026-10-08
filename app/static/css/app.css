@@ -3592,3 +3592,366 @@ h1 {
         align-self: flex-start;
     }
 }
+
+
+/* =========================
+   LIGHT APPEARANCE THEME
+   ========================= */
+
+html[data-theme="light"] {
+    color-scheme: light;
+
+    --bg: #ffffff;
+    --bg-2: #f8fafc;
+
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --surface-3: #f3f4f6;
+
+    --gold: #d6a84f;
+    --gold-light: #8a651d;
+    --gold-dim: #9f7934;
+    --gold-soft: rgba(214, 168, 79, 0.12);
+    --gold-line: rgba(159, 121, 52, 0.28);
+
+    --text-primary: #111111;
+    --text-secondary: #333333;
+    --text-muted: #667085;
+    --text: var(--text-primary);
+    --muted: var(--text-muted);
+
+    --line: #e5e7eb;
+}
+
+html[data-theme="light"][data-contrast="high"] {
+    --text-primary: #000000;
+    --text-secondary: #222222;
+    --text-muted: #475467;
+    --contrast-scale: 1.15;
+}
+
+html[data-theme="light"] body {
+    background: #ffffff;
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .gateway-hero {
+    background:
+        radial-gradient(circle at 84% 30%, rgba(214, 168, 79, 0.10), transparent 23%),
+        linear-gradient(135deg, #ffffff 0%, #f8fafc 58%, #f3f4f6 100%);
+    box-shadow: 0 18px 48px rgba(16, 24, 40, 0.08);
+}
+
+html[data-theme="light"] .emblem-core {
+    background:
+        radial-gradient(
+            circle at 35% 25%,
+            rgba(242, 208, 131, 0.34),
+            rgba(214, 168, 79, 0.08) 52%,
+            rgba(243, 244, 246, 0.9)
+        );
+    box-shadow:
+        0 0 36px rgba(214, 168, 79, 0.10),
+        inset 0 1px rgba(255, 255, 255, 0.8);
+}
+
+html[data-theme="light"] .module-card,
+html[data-theme="light"] .marketplace-card,
+html[data-theme="light"] .marketplace-listing-detail-card,
+html[data-theme="light"] .chat-container,
+html[data-theme="light"] #negotiationMessages,
+html[data-theme="light"] .listing-create-page,
+html[data-theme="light"] .listing-create-page .listing-create-section,
+html[data-theme="light"] .listing-create-page .listing-form-card,
+html[data-theme="light"] .listing-create-page .listing-form-footer,
+html[data-theme="light"] .admin-negotiations-card,
+html[data-theme="light"] .admin-report-card,
+html[data-theme="light"] .admin-deal-card,
+html[data-theme="light"] .admin-listing-review-card,
+html[data-theme="light"] .requests-browser,
+html[data-theme="light"] .requests-card,
+html[data-theme="light"] .gold-price-card,
+html[data-theme="light"] .dashboard-whatsapp-card,
+html[data-theme="light"] .marketplace-browser,
+html[data-theme="light"] .gateway-information,
+html[data-theme="light"] .info-card,
+html[data-theme="light"] .smh-appearance-panel,
+html[data-theme="light"] .smh-modal {
+    color: var(--text-primary);
+    border-color: var(--line);
+    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+}
+
+html[data-theme="light"] .module-card,
+html[data-theme="light"] .marketplace-card,
+html[data-theme="light"] .admin-listing-review-card,
+html[data-theme="light"] .info-card,
+html[data-theme="light"] .dashboard-whatsapp-card,
+html[data-theme="light"] .gateway > .marketplace-browser {
+    background: #ffffff;
+}
+
+html[data-theme="light"] .module-card:hover,
+html[data-theme="light"] .module-card:focus-visible,
+html[data-theme="light"] .marketplace-card:hover,
+html[data-theme="light"] .marketplace-card:focus-visible {
+    background: #f8fafc;
+    border-color: var(--gold-line);
+    box-shadow: 0 10px 28px rgba(16, 24, 40, 0.09);
+}
+
+html[data-theme="light"] .marketplace-listing-detail-card,
+html[data-theme="light"] .admin-negotiations-card,
+html[data-theme="light"] .admin-report-card,
+html[data-theme="light"] .admin-deal-card,
+html[data-theme="light"] .gold-price-card,
+html[data-theme="light"] .gateway-information,
+html[data-theme="light"] .smh-modal {
+    background:
+        linear-gradient(145deg, rgba(214, 168, 79, 0.045), transparent 38%),
+        #ffffff;
+}
+
+html[data-theme="light"] .chat-container,
+html[data-theme="light"] #negotiationMessages,
+html[data-theme="light"] .requests-browser {
+    background: #f8fafc;
+}
+
+html[data-theme="light"] .requests-card,
+html[data-theme="light"] .admin-negotiations-meta span,
+html[data-theme="light"] .admin-report-grid > div,
+html[data-theme="light"] .admin-deal-amount,
+html[data-theme="light"] .admin-deal-info,
+html[data-theme="light"] .admin-listing-review-owner,
+html[data-theme="light"] .admin-listing-review-contact-item,
+html[data-theme="light"] .admin-listing-review-grid > div,
+html[data-theme="light"] .negotiation-inbox .marketplace-listing-detail-item,
+html[data-theme="light"] .negotiation-offer {
+    background: #f8fafc;
+    border-color: var(--line);
+}
+
+html[data-theme="light"] .gateway > .marketplace-browser #adminPendingListings .marketplace-card,
+html[data-theme="light"] .gateway > .marketplace-browser #adminPendingListings article,
+html[data-theme="light"] .gateway > .marketplace-browser #adminPendingListings .listing-card {
+    background: #ffffff;
+    border-color: var(--line);
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .gateway > .marketplace-browser::before {
+    background: linear-gradient(120deg, transparent 0 55%, rgba(214, 168, 79, 0.025) 70%, transparent 88%);
+}
+
+html[data-theme="light"] .gateway > .marketplace-browser #adminPendingListings [class*="type"],
+html[data-theme="light"] .gateway > .marketplace-browser #adminPendingListings [class*="price"] {
+    color: var(--text-secondary);
+}
+
+html[data-theme="light"] .listing-create-page .listing-create-footer,
+html[data-theme="light"] .listing-create-page .listing-checkbox,
+html[data-theme="light"] .listing-create-page .listing-upload-zone {
+    background: #f8fafc;
+    border-color: var(--line);
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .listing-create-page .listing-upload-zone:hover {
+    background: #f3f4f6;
+    border-color: var(--gold-line);
+}
+
+html[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+    color-scheme: light;
+    background-color: #ffffff;
+    color: var(--text-primary);
+    border-color: #d0d5dd;
+}
+
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder {
+    color: #667085;
+    opacity: 1;
+}
+
+html[data-theme="light"] input:focus,
+html[data-theme="light"] select:focus,
+html[data-theme="light"] textarea:focus {
+    background-color: #ffffff;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(214, 168, 79, 0.16);
+}
+
+html[data-theme="light"] .marketplace-empty,
+html[data-theme="light"] .marketplace-error,
+html[data-theme="light"] .marketplace-listing-detail-item,
+html[data-theme="light"] .marketplace-listing-detail-section,
+html[data-theme="light"] .gateway-information-summary,
+html[data-theme="light"] .admin-listing-review-description,
+html[data-theme="light"] .admin-deal-amount {
+    background-color: #f8fafc;
+}
+
+html[data-theme="light"] .gateway-information-summary:hover {
+    background: #f8fafc;
+}
+
+html[data-theme="light"] .marketplace-card-type,
+html[data-theme="light"] .module-icon,
+html[data-theme="light"] .negotiation-section-eyebrow,
+html[data-theme="light"] .negotiation-offer-status,
+html[data-theme="light"] .admin-deal-status,
+html[data-theme="light"] .admin-listing-review-id {
+    background: var(--gold-soft);
+    color: #765516;
+    border-color: var(--gold-line);
+}
+
+html[data-theme="light"] .chat-bubble.other {
+    background: #ffffff;
+    border-color: var(--line);
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .chat-bubble.me {
+    background: linear-gradient(135deg, #e8c77f, #d6a84f);
+    color: #111111;
+}
+
+html[data-theme="light"] .admin-negotiations-card h1,
+html[data-theme="light"] .admin-negotiations-card h2,
+html[data-theme="light"] .admin-report-card h1,
+html[data-theme="light"] .admin-report-card h2,
+html[data-theme="light"] .admin-deal-card h2,
+html[data-theme="light"] .marketplace-listing-detail-section h2,
+html[data-theme="light"] .listing-create-page .listing-section-heading h2,
+html[data-theme="light"] .listing-create-page .listing-form-card-header h2 {
+    color: #765516;
+    text-shadow: none;
+}
+
+html[data-theme="light"] .admin-deal-amount strong,
+html[data-theme="light"] .admin-deal-commission strong,
+html[data-theme="light"] .gold-price-main > span:first-child,
+html[data-theme="light"] .gold-price-symbol,
+html[data-theme="light"] .gold-price-heading h2 {
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .gateway-hero h1,
+html[data-theme="light"] .gateway-hero p,
+html[data-theme="light"] .marketplace-card-title,
+html[data-theme="light"] .marketplace-card-description,
+html[data-theme="light"] .admin-listing-review-card,
+html[data-theme="light"] .admin-deal-card,
+html[data-theme="light"] .requests-card,
+html[data-theme="light"] .smh-appearance-panel {
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .admin-listing-review-contact-item > span:first-child,
+html[data-theme="light"] .admin-listing-review-grid span,
+html[data-theme="light"] .admin-listing-review-description > span {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+html[data-theme="light"] .smh-modal-overlay {
+    background: rgba(16, 24, 40, 0.36);
+}
+
+.smh-appearance {
+    position: relative;
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 8px 18px 0;
+}
+
+.smh-appearance-toggle {
+    min-height: 38px;
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.smh-appearance-toggle:hover {
+    border-color: var(--gold-line);
+    background: var(--gold-soft);
+}
+
+.smh-appearance-panel {
+    position: absolute;
+    inset-block-start: calc(100% + 8px);
+    inset-inline-end: 18px;
+    display: grid;
+    gap: 14px;
+    width: min(350px, calc(100vw - 36px));
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: 0 16px 40px rgba(16, 24, 40, 0.16);
+}
+
+.smh-appearance-panel[hidden] {
+    display: none;
+}
+
+.smh-appearance-title {
+    color: var(--text-primary);
+    font-weight: 800;
+}
+
+.smh-appearance-group {
+    display: grid;
+    gap: 7px;
+}
+
+.smh-appearance-label {
+    color: var(--text-secondary);
+    font-size: 0.88em;
+    font-weight: 700;
+}
+
+.smh-appearance-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.smh-appearance-options button,
+.smh-appearance-reset {
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.smh-appearance-options button[aria-pressed="true"] {
+    border-color: var(--gold-line);
+    background: var(--gold-soft);
+    color: var(--text-primary);
+    font-weight: 750;
+}
+
+.smh-appearance-reset {
+    justify-self: start;
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .smh-appearance-panel {
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
+}
