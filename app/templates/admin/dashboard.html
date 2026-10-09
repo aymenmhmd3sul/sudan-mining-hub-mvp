@@ -27,22 +27,22 @@
   </header>
     <section class="gateway-hero">
         <div class="hero-content">
-            <span class="eyebrow">ADMIN CONTROL</span>
+            <span class="eyebrow">{{ t("admin.control") }}</span>
 
-            <h1>لوحة المشرف</h1>
+            <h1>{{ t("admin.dashboard_title") }}</h1>
 
             <p>
-                مرحبًا {{ user.full_name or user.email }}.
-                من هنا تتم مراجعة إعلانات التجار قبل نشرها في السوق.
+                {{ t("admin.dashboard_welcome") }} {{ user.full_name or user.email }}.
+                {{ t("admin.dashboard_intro") }}
             </p>
 
             <div class="hero-actions">
                 <a class="btn btn-secondary" href="/">
-                    العودة إلى البوابة
+                    {{ t("common.back_to_gateway") }}
                 </a>
 
                 <a class="btn btn-primary" href="/marketplace">
-                    فتح السوق
+                    {{ t("admin.open_marketplace") }}
                 </a>
             </div>
         </div>
@@ -50,14 +50,14 @@
 
     <section class="marketplace-browser">
         <div class="marketplace-listing-detail-section">
-            <h2>الصفقات والعمولات</h2>
-            <p>متابعة الصفقات الناتجة عن قبول العروض، بيانات الأطراف، الاتصال، الموقع، وحالة العمولة.</p>
+            <h2>{{ t("admin.deals_commissions_title") }}</h2>
+            <p>{{ t("admin.deals_commissions_description") }}</p>
             <div class="hero-actions">
                 <a class="btn btn-primary" href="/admin/subscriptions">
-                    الاشتراكات
+                    {{ t("admin.subscriptions") }}
                 </a>
                 <a class="btn btn-primary" href="/admin/deals">
-                    فتح الصفقات والعمولات
+                    {{ t("admin.open_deals_commissions") }}
                 </a>
             </div>
         </div>
@@ -65,14 +65,14 @@
 
     <section class="marketplace-browser">
         <div class="marketplace-listing-detail-section">
-            <h2>التفاوض وحل النزاعات</h2>
+            <h2>{{ t("admin.negotiation_disputes_title") }}</h2>
             <p>
-                عرض غرف التفاوض وسجل المحادثات للمراجعة الإدارية والطباعة.
+                {{ t("admin.negotiation_disputes_description") }}
             </p>
 
             <div class="hero-actions">
                 <a class="btn btn-primary" href="/admin/negotiations">
-                    فتح غرف التفاوض
+                    {{ t("admin.open_negotiations") }}
                 </a>
             </div>
         </div>
@@ -80,9 +80,9 @@
 
     <section class="marketplace-browser">
         <div class="marketplace-listing-detail-section">
-            <h2>إعدادات التحويل</h2>
+            <h2>{{ t("admin.transfer_settings_title") }}</h2>
             <p>
-                إدارة حساب التحويل وتعليمات الدفع التي ستظهر عند مطالبة التاجر بسداد العمولة.
+                {{ t("admin.transfer_settings_description") }}
             </p>
 
             <div
@@ -90,7 +90,7 @@
                 class="marketplace-status"
                 role="status"
             >
-                جارٍ تحميل إعدادات التحويل...
+                {{ t("admin.transfer_settings_loading") }}
             </div>
 
             <div
@@ -103,9 +103,9 @@
 
     <section class="marketplace-browser">
         <div class="marketplace-listing-detail-section">
-            <h2>إعلانات قيد المراجعة</h2>
+            <h2>{{ t("admin.pending_listings_title") }}</h2>
             <p>
-                الإعلانات التي أنشأها التجار ولم تعتمد بعد.
+                {{ t("admin.pending_listings_description") }}
             </p>
 
             <div
@@ -113,7 +113,7 @@
                 class="marketplace-status"
                 role="status"
             >
-                جارٍ تحميل الإعلانات...
+                {{ t("admin.pending_listings_loading") }}
             </div>
 
             <div

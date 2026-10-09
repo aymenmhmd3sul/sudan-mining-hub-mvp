@@ -5,7 +5,7 @@
 
     <section class="admin-deals-hero">
         <div class="admin-deals-hero-content">
-            <span class="admin-deals-eyebrow">ADMIN CONTROL</span>
+            <span class="admin-deals-eyebrow">{{ t("admin.control") }}</span>
             <h1>اشتراكات المستخدمين</h1>
             <p>
                 إدارة خطط الاشتراك وحالة الاشتراك للمستخدمين من لوحة المشرف.
@@ -26,7 +26,7 @@
         <div class="admin-deal-card">
             <div class="admin-deal-card-header">
                 <div>
-                    <span class="admin-deal-eyebrow">SUBSCRIPTION PRICING</span>
+                    <span class="admin-deal-eyebrow">{{ t("admin.subscription_pricing") }}</span>
                     <h2>إدارة أسعار الاشتراك</h2>
                     <small>السعر الفعلي يُحفظ حسب الخطة والعملة، ويمكن أن يكون 0 للإعفاء أو العرض المجاني.</small>
                 </div>
@@ -35,7 +35,7 @@
             <div class="admin-deal-info-grid">
                 {% for price in pricing_rows %}
                     <div class="admin-deal-info">
-                        <span>{{ price.plan }} / {{ price.currency }}</span>
+                        <span>{% if price.plan|string|lower == "monthly" %}{{ t("subscription.plan_monthly") }}{% else %}{{ price.plan }}{% endif %} / {{ price.currency }}</span>
                         <strong>
                             {{ price.amount }} {{ price.currency }}
                             — {{ price.billing_period_months }} شهر

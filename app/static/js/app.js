@@ -911,11 +911,11 @@ function bindAdminPaymentSettings() {
         container.innerHTML = "";
 
         if (!settings.length) {
-            status.textContent = "لا توجد إعدادات تحويل مفعلة.";
+            status.textContent = getLanguage() === "en" ? "No active transfer settings." : "لا توجد إعدادات تحويل مفعلة.";
             return;
         }
 
-        status.textContent = "إعدادات التحويل المفعلة.";
+        status.textContent = getLanguage() === "en" ? "Active transfer settings." : "إعدادات التحويل المفعلة.";
 
         settings.forEach(function (item) {
             const card = document.createElement("article");
@@ -1099,12 +1099,12 @@ function bindAdminListingReview() {
         container.innerHTML = "";
 
         if (!listings.length) {
-            status.textContent = "لا توجد إعلانات قيد المراجعة.";
+            status.textContent = getLanguage() === "en" ? "No listings are pending review." : "لا توجد إعلانات قيد المراجعة.";
             return;
         }
 
         status.textContent =
-            "عدد الإعلانات قيد المراجعة: " + listings.length;
+            (getLanguage() === "en" ? "Listings pending review: " : "عدد الإعلانات قيد المراجعة: ") + listings.length;
 
         listings.forEach(function (listing) {
             const card = document.createElement("article");
