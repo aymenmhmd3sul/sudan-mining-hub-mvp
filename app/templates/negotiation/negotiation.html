@@ -9,9 +9,9 @@
             </span>
             <h1>{{ t("pages.negotiation.title") }}</h1>
 {% if request.query_params.get("room_id") is none %}
-<div class="negotiation-active-rooms" aria-label="Active negotiation rooms">
+<div class="negotiation-active-rooms" aria-label="{{ t('negotiation.active_rooms') }}">
     <span class="negotiation-active-rooms-label">
-        الغرف النشطة
+        {{ t("negotiation.active_rooms") }}
     </span>
     <strong class="negotiation-active-rooms-count">
         {{ active_rooms_count }}
@@ -24,12 +24,12 @@
             <div class="marketplace-listing-detail-section negotiation-inbox">
                 <div class="negotiation-inbox-header">
                     <div>
-                        <span class="negotiation-section-eyebrow">الغرف</span>
+                        <span class="negotiation-section-eyebrow">{{ t("negotiation.rooms") }}</span>
                         <h2>{{ t("negotiation.messages") }}</h2>
                     </div>
                     <span class="negotiation-room-count">{{ inbox_rooms|length }}</span>
                 </div>
-                <p class="negotiation-inbox-hint">اختر غرفة لفتح واجهتها ومتابعة التفاوض داخلها.</p>
+                <p class="negotiation-inbox-hint">{{ t("negotiation.choose_room_hint") }}</p>
 
                 {% for item in inbox_rooms %}
                         <a
@@ -46,7 +46,7 @@
                                 {% endif %}
                             </strong>
 
-                            <span>{{ item.room.status.value }}</span>
+                            <span>{{ t("negotiation.room_status_" ~ (item.room.status.value | lower)) }}</span>
 
                             {% if item.is_new %}
                                 <span class="negotiation-new-badge">
@@ -103,15 +103,15 @@
                   and room.status.value == "OPEN"
                   and room.merchant_approved_at is none %}
             <div class="marketplace-listing-detail-section">
-                <h2>اعتماد التفاوض</h2>
-                <p>اعتمد التفاوض للسماح للمشتري بتقديم عرضه.</p>
+                <h2>{{ t("negotiation.approve_title") }}</h2>
+                <p>{{ t("negotiation.approve_description") }}</p>
                 <div class="marketplace-hero-actions">
                     <button
                         type="button"
                         class="marketplace-primary-button approve-negotiation-btn"
                         data-room-id="{{ room.id }}"
                     >
-                        اعتماد التفاوض
+                        {{ t("negotiation.approve_action") }}
                     </button>
                 </div>
                 <p id="approveNegotiationError" hidden></p>
@@ -181,7 +181,7 @@
                   and room.merchant_approved_at is not none
                   and not offers %}
             <div class="marketplace-listing-detail-section">
-                <h2>تقديم عرض</h2>
+                <h2>{{ t("negotiation.submit_offer_title") }}</h2>
 
                 <form id="buyerOfferForm">
                     {% for item in request_obj.items %}
@@ -196,13 +196,13 @@
                         {% endif %}
 
                         <p>
-                            الكمية المطلوبة:
+                            {{ t("negotiation.required_quantity") }}
                             <strong>{{ item.quantity or 1 }}</strong>
                             {% if item.unit %}{{ item.unit }}{% endif %}
                         </p>
 
                         <label for="offerUnitPrice{{ item.id }}">
-                            سعر الوحدة
+                            {{ t("negotiation.unit_price") }}
                         </label>
                         <input
                             id="offerUnitPrice{{ item.id }}"
@@ -215,25 +215,25 @@
                     </div>
                     {% endfor %}
 
-                    <label for="buyerOfferCurrency">العملة</label>
+                    <label for="buyerOfferCurrency">{{ t("negotiation.currency") }}</label>
                     <input
                         id="buyerOfferCurrency"
                         type="text"
                         value="{{ request_obj.currency or '' }}"
-                        placeholder="USD أو SDG"
+                        placeholder="{{ t('negotiation.currency_placeholder') }}"
                         maxlength="10"
                         required
                     >
 
-                    <label for="buyerOfferMessage">رسالة اختيارية</label>
+                    <label for="buyerOfferMessage">{{ t("negotiation.optional_message") }}</label>
                     <textarea
                         id="buyerOfferMessage"
                         rows="4"
-                        placeholder="أضف ملاحظتك حول العرض"
+                        placeholder="{{ t('negotiation.offer_message_placeholder') }}"
                     ></textarea>
 
                     <div class="marketplace-listing-detail-item">
-                        <strong>إجمالي العرض</strong>
+                        <strong>{{ t("negotiation.offer_total") }}</strong>
                         <span id="buyerOfferTotal">0.00</span>
                     </div>
 
@@ -243,7 +243,7 @@
                             class="marketplace-primary-button"
                             id="submitBuyerOffer"
                         >
-                            تقديم العرض
+                            {{ t("negotiation.submit_offer") }}
                         </button>
                     </div>
 
@@ -257,7 +257,7 @@
 
                 {% for offer in offers %}
                 <div class="marketplace-listing-detail-item">
-                    <span>{{ offer.status.value }}</span>
+                    <span>{{ t("negotiation.offer_status_" ~ (offer.status.value | lower)) }}</span>
                     <strong>
                         {{ offer.amount or "-" }}
                         {{ offer.currency or "" }}
@@ -272,13 +272,13 @@
                     <div class="marketplace-listing-detail-item">
 
 
-                        <strong>العرض النهائي</strong>
+                        <strong>{{ t("negotiation.final_offer") }}</strong>
 
 
                         <p>
 
 
-                            مبلغ الصفقة:
+                            {{ t("negotiation.deal_amount") }}
 
 
                             {{ offer.amount or "-" }}
@@ -297,7 +297,7 @@
                         <p>
 
 
-                            المبلغ النهائي:
+                            {{ t("negotiation.final_amount") }}
 
 
                             {{ deal.final_amount }}
@@ -319,7 +319,7 @@
                         <p>
 
 
-                            عمولة المنصة:
+                            {{ t("negotiation.platform_commission") }}
 
 
                             {{ commission.final_amount }}
@@ -334,10 +334,10 @@
                         <p>
 
 
-                            حالة العمولة:
+                            {{ t("negotiation.commission_status") }}
 
 
-                            {{ commission.status.value }}
+                            {{ t("negotiation.commission_status_" ~ (commission.status.value | lower)) }}
 
 
                         </p>
@@ -350,7 +350,7 @@
                         <p>
 
 
-                            بانتظار موافقة المشتري لإتمام البيع.
+                            {{ t("negotiation.awaiting_buyer_approval_sale") }}
 
 
                         </p>
@@ -367,13 +367,13 @@
                         class="marketplace-primary-button finalize-offer-btn"
                         data-offer-id="{{ offer.id }}"
                     >
-                        إرسال العرض النهائي
+                        {{ t("negotiation.send_final_offer") }}
                     </button>
                     {% endif %}
 
                     {% if current_user.role.value == "BUYER" and offer.status.value == "FINAL" %}
                     <div class="marketplace-listing-detail-item">
-                        <strong>العرض النهائي من التاجر</strong>
+                        <strong>{{ t("negotiation.merchant_final_offer") }}</strong>
                         <p>
                             {{ offer.amount or "-" }}
                             {{ offer.currency or "" }}
@@ -384,7 +384,7 @@
                         class="marketplace-primary-button accept-offer-btn"
                         data-offer-id="{{ offer.id }}"
                     >
-                        قبول العرض النهائي
+                        {{ t("negotiation.accept_final_offer") }}
                     </button>
                     {% endif %}
                 </div>
@@ -395,41 +395,41 @@
 
             {% if deal is not none %}
             <div class="marketplace-listing-detail-section negotiation-deal-panel">
-                <h2>الصفقة داخل هذه الغرفة</h2>
+                <h2>{{ t("negotiation.deal_section_title") }}</h2>
 
                 <p>
-                    <strong>حالة الصفقة:</strong>
-                    {{ deal.status.value }}
+                    <strong>{{ t("negotiation.deal_status") }}</strong>
+                    {{ t("negotiation.deal_status_" ~ (deal.status.value | lower)) }}
                 </p>
 
                 <p>
-                    <strong>المبلغ النهائي:</strong>
+                    <strong>{{ t("negotiation.final_amount") }}</strong>
                     {{ deal.final_amount }}
                     {{ deal.currency }}
                 </p>
 
                 {% if commission is not none %}
                 <p>
-                    <strong>عمولة المنصة:</strong>
+                    <strong>{{ t("negotiation.platform_commission") }}</strong>
                     {{ commission.final_amount }}
                     {{ commission.currency }}
                 </p>
 
                 <p>
-                    <strong>حالة العمولة:</strong>
-                    {{ commission.status.value }}
+                    <strong>{{ t("negotiation.commission_status") }}</strong>
+                    {{ t("negotiation.commission_status_" ~ (commission.status.value | lower)) }}
                 </p>
                 {% endif %}
 
                 {% if deal.status.value == "PENDING_BUYER_APPROVAL" %}
                 <p>
-                    بانتظار موافقة المشتري لإتمام الصفقة.
+                    {{ t("negotiation.awaiting_buyer_approval_deal") }}
                 </p>
 
                 {% elif deal.status.value == "CONFIRMED"
                       and current_user.role.value == "MERCHANT" %}
                 <p>
-                    تم تأكيد الصفقة. يمكنك الآن تسليمها للمشتري.
+                    {{ t("negotiation.deal_confirmed_deliver") }}
                 </p>
 
                 <button
@@ -437,14 +437,14 @@
                     class="marketplace-primary-button deliver-deal-btn"
                     data-deal-id="{{ deal.id }}"
                 >
-                    تسليم للمشتري
+                    {{ t("negotiation.deliver_to_buyer") }}
                 </button>
 
                 {% elif deal.status.value == "CONFIRMED"
                       and current_user.role.value == "AGENT"
                       and deal.agent_id == current_user.id %}
                 <p>
-                    تم تأكيد الصفقة. يمكنك الآن تنفيذ التسليم.
+                    {{ t("negotiation.deal_confirmed_execute_delivery") }}
                 </p>
 
                 <button
@@ -452,18 +452,18 @@
                     class="marketplace-primary-button deliver-deal-btn"
                     data-deal-id="{{ deal.id }}"
                 >
-                    تسليم للمشتري
+                    {{ t("negotiation.deliver_to_buyer") }}
                 </button>
 
                 {% elif deal.status.value == "CONFIRMED" %}
                 <p>
-                    تم تأكيد الصفقة، وبانتظار تنفيذ التسليم.
+                    {{ t("negotiation.deal_confirmed_awaiting_delivery") }}
                 </p>
 
                 {% elif deal.status.value == "DELIVERED"
                       and deal.buyer_id == current_user.id %}
                 <p>
-                    تم تسجيل التسليم. يرجى تأكيد استلام الصفقة.
+                    {{ t("negotiation.delivery_recorded_confirm_receipt") }}
                 </p>
 
                 <button
@@ -471,17 +471,17 @@
                     class="marketplace-primary-button receive-deal-btn"
                     data-deal-id="{{ deal.id }}"
                 >
-                    تأكيد استلام الصفقة
+                    {{ t("negotiation.confirm_receipt") }}
                 </button>
 
                 {% elif deal.status.value == "DELIVERED" %}
                 <p>
-                    تم تسليم الصفقة، وبانتظار تأكيد استلام المشتري.
+                    {{ t("negotiation.delivered_awaiting_buyer_receipt") }}
                 </p>
 
                 {% elif deal.status.value == "COMPLETED" %}
                 <p>
-                    اكتملت الصفقة بنجاح.
+                    {{ t("negotiation.deal_completed_success") }}
                 </p>
                 {% endif %}
 
@@ -490,7 +490,7 @@
                       and commission is not none
                       and commission.status.value == "DUE" %}
                 <p>
-                    عمولة المنصة أصبحت مستحقة على هذه الصفقة بعد استلام المشتري.
+                    {{ t("negotiation.commission_due_after_receipt") }}
                 </p>
                 {% endif %}
             </div>
@@ -569,7 +569,7 @@
 
                 if (!response.ok) {
                     throw new Error(
-                        data.detail || "تعذر اعتماد التفاوض."
+                        data.detail || {{ t("negotiation.approve_failed") | tojson }}
                     );
                 }
 
@@ -579,11 +579,11 @@
 
                 if (errorElement) {
                     errorElement.textContent =
-                        error.message || "تعذر اعتماد التفاوض.";
+                        error.message || {{ t("negotiation.approve_failed") | tojson }};
                     errorElement.hidden = false;
                 } else {
                     showNegotiationModal(
-                        error.message || "تعذر اعتماد التفاوض."
+                        error.message || {{ t("negotiation.approve_failed") | tojson }}
                     );
                 }
 
@@ -638,11 +638,11 @@
                     const unitPrice = Number(input.value);
 
                     if (!Number.isInteger(quantity) || quantity <= 0) {
-                        throw new Error("الكمية المطلوبة غير صالحة.");
+                        throw new Error({{ t("negotiation.quantity_invalid") | tojson }});
                     }
 
                     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-                        throw new Error("أدخل سعر وحدة صالحًا.");
+                        throw new Error({{ t("negotiation.unit_price_invalid") | tojson }});
                     }
 
                     return {
@@ -654,13 +654,13 @@
                 });
 
                 if (!items.length) {
-                    throw new Error("لا توجد عناصر يمكن تقديم عرض عليها.");
+                    throw new Error({{ t("negotiation.no_items_to_offer") | tojson }});
                 }
 
                 const currency = currencyInput.value.trim();
 
                 if (!currency) {
-                    throw new Error("أدخل العملة.");
+                    throw new Error({{ t("negotiation.currency_required") | tojson }});
                 }
 
                 const response = await fetch("/api/v1/offers", {
@@ -682,13 +682,13 @@
 
                 if (!response.ok) {
                     throw new Error(
-                        data.detail || "تعذر إرسال العرض."
+                        data.detail || {{ t("negotiation.submit_offer_failed") | tojson }}
                     );
                 }
 
                 window.location.reload();
             } catch (error) {
-                errorElement.textContent = error.message || "تعذر إرسال العرض.";
+                errorElement.textContent = error.message || {{ t("negotiation.submit_offer_failed") | tojson }};
                 errorElement.hidden = false;
                 submitButton.disabled = false;
             }
@@ -726,7 +726,7 @@
 
                 if (!response.ok) {
                     throw new Error(
-                        data.detail || "تعذر إرسال العرض النهائي"
+                        data.detail || {{ t("negotiation.submit_final_offer_failed") | tojson }}
                     );
                 }
 
@@ -822,7 +822,7 @@
             handleDealAction(
                 button,
                 "/deals/" + encodeURIComponent(dealId) + "/deliver",
-                "تعذر تسجيل تسليم الصفقة"
+                {{ t("negotiation.deliver_failed") | tojson }}
             );
         });
     });
@@ -835,7 +835,7 @@
             handleDealAction(
                 button,
                 "/deals/" + encodeURIComponent(dealId) + "/receive",
-                "تعذر تسجيل استلام الصفقة"
+                {{ t("negotiation.receive_failed") | tojson }}
             );
         });
     });
