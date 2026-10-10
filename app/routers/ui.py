@@ -80,6 +80,24 @@ def login_page(request: Request):
     )
 
 
+@router.get("/forgot-password")
+def forgot_password_page(request: Request):
+    return render(
+        request,
+        "auth/forgot_password.html",
+        "pages.forgot_password.title",
+    )
+
+
+@router.get("/reset-password")
+def reset_password_page(request: Request):
+    return render(
+        request,
+        "auth/reset_password.html",
+        "pages.reset_password.title",
+    )
+
+
 @router.get("/merchant")
 def merchant_dashboard(
     request: Request,

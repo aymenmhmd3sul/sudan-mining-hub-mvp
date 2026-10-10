@@ -102,13 +102,37 @@
     "have_account": "Already have an account? Sign in",
     "registering": "Creating account...",
     "registration_failed": "Registration failed",
-    "registration_success": "Account created successfully"
+    "registration_success": "Account created successfully",
+    "forgot_password": "Forgot password?",
+    "forgot_password_description": "Enter your email address to request a password reset code.",
+    "request_reset_code": "Send reset code",
+    "sending_reset_code": "Sending request...",
+    "reset_request_generic_success": "If an account exists for that email, a reset code has been sent. Please check your email.",
+    "reset_request_error": "The request could not be completed right now. Please try again later.",
+    "reset_code": "6-digit reset code",
+    "reset_code_instructions": "Enter the code sent to your email. It expires in 15 minutes.",
+    "new_password": "New password",
+    "confirm_password": "Confirm new password",
+    "reset_password": "Reset password",
+    "resetting_password": "Updating password...",
+    "reset_success": "Your password has been changed. You can now log in.",
+    "reset_error": "The password could not be changed.",
+    "invalid_or_expired_code": "The code is invalid or expired. Check it and try again.",
+    "back_to_login": "Back to login"
   },
   "pages": {
     "register": {
       "eyebrow": "Create account",
       "title": "Create your Sudan Mining Hub account",
       "description": "Create an account to access mining market services and products."
+    },
+    "forgot_password": {
+      "title": "Forgot password",
+      "description": "Request a password reset code."
+    },
+    "reset_password": {
+      "title": "Set a new password",
+      "description": "Enter your reset code and new password."
     }
   },
   "gateway.register": "Create account",

@@ -1,3 +1,4 @@
+import hmac
 from datetime import datetime, timedelta, timezone
 import time
 from collections import defaultdict, deque
@@ -12,13 +13,17 @@ from app.schemas.user import (
     UserOut,
     UserLogin,
     PasswordChange,
+    PasswordResetRequest,
+    PasswordResetConfirm,
     Token,
 )
 from app.services.subscription_service import SubscriptionService
 from app.services.email_service import (
     generate_verification_token,
     hash_verification_token,
+    hash_password_reset_token,
     send_verification_email,
+    send_password_reset_email,
 )
 from app.core.config import settings
 from app.core.security import (
@@ -207,6 +212,7 @@ def login(
         data={
             "sub": user.email,
             "role": user.role.value,
+            "ver": user.auth_token_version,
         }
     )
 
@@ -304,6 +310,12 @@ def get_current_user(
             detail="User not found",
         )
 
+    if payload.get("ver", 0) != user.auth_token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired; please log in again",
+        )
+
     return user
 
 
@@ -343,11 +355,14 @@ def get_optional_current_user(
     if not email:
         return None
 
-    return (
+    user = (
         db.query(UserModel)
         .filter(UserModel.email == email)
         .first()
     )
+    if user and payload.get("ver", 0) != user.auth_token_version:
+        return None
+    return user
 
 def require_role(*allowed_roles):
     def role_guard(
@@ -373,6 +388,139 @@ def require_role(*allowed_roles):
     return role_guard
 
 
+
+
+# Password reset throttling for the current single-instance MVP.
+PASSWORD_RESET_RATE_WINDOW_SECONDS = 900
+PASSWORD_RESET_RATE_MAX_REQUESTS = 5
+PASSWORD_RESET_COOLDOWN_SECONDS = 60
+PASSWORD_RESET_MAX_CODE_ATTEMPTS = 5
+
+_password_reset_requests = defaultdict(deque)
+
+
+def _password_reset_rate_limited(request: Request, email: str) -> bool:
+    host = request.client.host if request.client else "unknown"
+    key = f"{host}:{email.strip().lower()}"
+    now = time.monotonic()
+    attempts = _password_reset_requests[key]
+
+    while attempts and now - attempts[0] >= PASSWORD_RESET_RATE_WINDOW_SECONDS:
+        attempts.popleft()
+
+    if len(attempts) >= PASSWORD_RESET_RATE_MAX_REQUESTS:
+        return True
+
+    attempts.append(now)
+    return False
+
+
+def _reset_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _clear_password_reset(user: UserModel) -> None:
+    user.password_reset_token_hash = None
+    user.password_reset_expires_at = None
+    user.password_reset_attempts = 0
+
+
+@router.post("/password-reset/request")
+def request_password_reset(
+    data: PasswordResetRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    message = "If an account exists for that email, a reset code has been sent."
+    email = str(data.email).strip().lower()
+
+    if _password_reset_rate_limited(request, email):
+        return {"message": message}
+
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    if user is None:
+        return {"message": message}
+
+    now = datetime.now(timezone.utc)
+    requested_at = user.password_reset_requested_at
+    if requested_at is not None:
+        requested_at = _reset_utc(requested_at)
+        if (now - requested_at).total_seconds() < PASSWORD_RESET_COOLDOWN_SECONDS:
+            return {"message": message}
+
+    code = generate_verification_token()
+    user.password_reset_token_hash = hash_password_reset_token(code)
+    user.password_reset_expires_at = (
+        now + timedelta(minutes=settings.PASSWORD_RESET_EXPIRE_MINUTES)
+    )
+    user.password_reset_attempts = 0
+    user.password_reset_requested_at = now
+
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        return {"message": message}
+
+    try:
+        send_password_reset_email(email, code)
+    except Exception:
+        try:
+            db.refresh(user)
+            user.password_reset_token_hash = None
+            user.password_reset_expires_at = None
+            user.password_reset_requested_at = None
+            user.password_reset_attempts = 0
+            db.commit()
+        except Exception:
+            db.rollback()
+        return {"message": message}
+
+    return {"message": message}
+
+
+@router.post("/password-reset/confirm")
+def confirm_password_reset(
+    data: PasswordResetConfirm,
+    db: Session = Depends(get_db),
+):
+    invalid = "Invalid or expired reset code."
+    email = str(data.email).strip().lower()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+
+    if user is None or not user.password_reset_token_hash:
+        raise HTTPException(status_code=400, detail=invalid)
+
+    if user.password_reset_attempts >= PASSWORD_RESET_MAX_CODE_ATTEMPTS:
+        _clear_password_reset(user)
+        db.commit()
+        raise HTTPException(status_code=400, detail=invalid)
+
+    expires_at = user.password_reset_expires_at
+    if expires_at is None or _reset_utc(expires_at) <= datetime.now(timezone.utc):
+        _clear_password_reset(user)
+        db.commit()
+        raise HTTPException(status_code=400, detail=invalid)
+
+    supplied_hash = hash_password_reset_token(data.code)
+    if not hmac.compare_digest(supplied_hash, user.password_reset_token_hash):
+        user.password_reset_attempts += 1
+        if user.password_reset_attempts >= PASSWORD_RESET_MAX_CODE_ATTEMPTS:
+            _clear_password_reset(user)
+        db.commit()
+        raise HTTPException(status_code=400, detail=invalid)
+
+    user.hashed_password = get_password_hash(data.new_password)
+    user.auth_token_version += 1
+    _clear_password_reset(user)
+    user.password_reset_requested_at = None
+    db.commit()
+
+    return {"message": "Password reset successful. Please log in again."}
+
+
 @router.post("/change-password")
 def change_password(
     password_data: PasswordChange,
@@ -390,6 +538,7 @@ def change_password(
         )
 
     user.hashed_password = get_password_hash(password_data.new_password)
+    user.auth_token_version += 1
     db.commit()
     _delete_auth_cookie(response)
 

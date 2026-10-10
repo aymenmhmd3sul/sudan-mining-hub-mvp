@@ -30,6 +30,11 @@ class UserModel(Base):
     email_verified = Column(Boolean, nullable=False, default=False)
     email_verification_token_hash = Column(String, nullable=True)
     email_verification_expires_at = Column(DateTime(timezone=True), nullable=True)
+    password_reset_token_hash = Column(String, nullable=True)
+    password_reset_expires_at = Column(DateTime(timezone=True), nullable=True)
+    password_reset_attempts = Column(Integer, nullable=False, default=0, server_default="0")
+    password_reset_requested_at = Column(DateTime(timezone=True), nullable=True)
+    auth_token_version = Column(Integer, nullable=False, default=0, server_default="0")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

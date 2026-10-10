@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     SENDER_NAME: str = "Sudan Mining Hub"
 
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = 24
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 15
 
     model_config = SettingsConfigDict(
         env_file=".env",

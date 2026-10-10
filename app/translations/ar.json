@@ -102,13 +102,37 @@
     "have_account": "لديك حساب بالفعل؟ تسجيل الدخول",
     "registering": "جارٍ إنشاء الحساب...",
     "registration_failed": "فشل إنشاء الحساب",
-    "registration_success": "تم إنشاء الحساب بنجاح"
+    "registration_success": "تم إنشاء الحساب بنجاح",
+    "forgot_password": "هل نسيت كلمة المرور؟",
+    "forgot_password_description": "أدخل بريدك الإلكتروني إذا أردت طلب رمز لإعادة تعيين كلمة المرور.",
+    "request_reset_code": "إرسال رمز الاستعادة",
+    "sending_reset_code": "جارٍ إرسال الطلب...",
+    "reset_request_generic_success": "إذا كان البريد مسجلاً، فسيُرسل إليه رمز الاستعادة. تحقق من بريدك.",
+    "reset_request_error": "تعذر إكمال الطلب الآن. حاول مرة أخرى لاحقًا.",
+    "reset_code": "رمز الاستعادة المكوّن من 6 أرقام",
+    "reset_code_instructions": "أدخل الرمز الذي وصلك بالبريد. تنتهي صلاحيته خلال 15 دقيقة.",
+    "new_password": "كلمة المرور الجديدة",
+    "confirm_password": "تأكيد كلمة المرور الجديدة",
+    "reset_password": "إعادة تعيين كلمة المرور",
+    "resetting_password": "جارٍ تحديث كلمة المرور...",
+    "reset_success": "تم تغيير كلمة المرور. يمكنك تسجيل الدخول الآن.",
+    "reset_error": "تعذر تغيير كلمة المرور.",
+    "invalid_or_expired_code": "الرمز غير صحيح أو منتهي الصلاحية. تحقق منه وحاول مجددًا.",
+    "back_to_login": "العودة إلى تسجيل الدخول"
   },
   "pages": {
     "register": {
       "eyebrow": "إنشاء حساب",
       "title": "أنشئ حسابك في Sudan Mining Hub",
       "description": "أنشئ حسابك للوصول إلى خدمات ومنتجات سوق التعدين."
+    },
+    "forgot_password": {
+      "title": "استعادة كلمة المرور",
+      "description": "اطلب رمزًا لإعادة تعيين كلمة المرور."
+    },
+    "reset_password": {
+      "title": "تعيين كلمة مرور جديدة",
+      "description": "أدخل رمز الاستعادة وكلمة المرور الجديدة."
     }
   },
   "gateway.register": "إنشاء حساب",
