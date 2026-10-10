@@ -6,6 +6,9 @@
 
     <meta name="theme-color" content="#ffffff">
 
+    <link rel="manifest" href="{{ url_for('static', path='manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', path='icons/icon-192.png') }}">
+
     <script>
         try {
             const appearance = JSON.parse(localStorage.getItem("smh_appearance") || "{}");
