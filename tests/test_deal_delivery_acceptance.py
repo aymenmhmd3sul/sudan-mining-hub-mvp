@@ -24,10 +24,12 @@ from app.models.deal import Deal, DealStatus
 from app.models.deal_item import DealItem
 from app.models.commission import Commission, CommissionStatus
 from app.models.notification import Notification
+from app.models.commission_payment_settings import CommissionPaymentSettings
 from app.services.subscription_service import SubscriptionService
+from app.services.notification_service import NotificationService
 
 
-def test_deal_delivery_receipt_commission_http_acceptance_isolation():
+def test_deal_delivery_receipt_commission_http_acceptance_isolation(monkeypatch):
     marker = f"DELIVERY_HTTP_{uuid.uuid4().hex}"
     password = "delivery-http-test"
 
@@ -44,8 +46,33 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
     offer_id = None
     deal_id = None
     commission_id = None
+    payment_settings_id = None
 
     try:
+        # Use temporary USD settings only when no active settings exist.
+        active_usd = (
+            db.query(CommissionPaymentSettings)
+            .filter(
+                CommissionPaymentSettings.currency == "USD",
+                CommissionPaymentSettings.is_active.is_(True),
+            )
+            .first()
+        )
+        if active_usd is not None:
+            assert active_usd.account_number
+            assert active_usd.account_name
+            assert active_usd.payment_instructions
+        else:
+            temporary_settings = CommissionPaymentSettings(
+                currency="USD",
+                account_number="TEST-USD-ACCOUNT",
+                account_name="Temporary Test Account",
+                payment_instructions="Temporary USD test instructions",
+                is_active=True,
+            )
+            db.add(temporary_settings)
+            db.commit()
+            payment_settings_id = temporary_settings.id
         # ------------------------------------------------------------
         # 1. Isolated users.
         # ------------------------------------------------------------
@@ -338,9 +365,26 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
         # ------------------------------------------------------------
         # 14. Buyer marks the delivered deal as received.
         # ------------------------------------------------------------
+        push_calls = []
+
+        def failing_web_push(db, **kwargs):
+            push_calls.append(kwargs)
+            raise RuntimeError("Simulated Web Push delivery failure")
+
+        monkeypatch.setattr(
+            NotificationService,
+            "send_web_push",
+            staticmethod(failing_web_push),
+        )
+
         receive = buyer_client.post(
             f"/deals/{deal_id}/receive"
         )
+
+        assert len(push_calls) == 1
+        assert push_calls[0]["recipient_user_id"] == merchant.id
+        assert push_calls[0]["title"] == "العمولة مستحقة بعد استلام الصفقة"
+        assert push_calls[0]["url"] == "/merchant/"
 
         assert receive.status_code == 200, receive.text
 
@@ -439,25 +483,120 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
         except Exception:
             pass
 
-        if deal_id is not None:
-            # Resolve by the parent key so cleanup also covers a failure after
-            # commission creation but before commission_id was captured.
+        # Recover test-owned request and child IDs after an early failure.
+        if request_id is None and buyer is not None:
+            request_id = (
+                db.query(BuyerRequest.id)
+                .filter(
+                    BuyerRequest.buyer_id == buyer.id,
+                    BuyerRequest.title == f"{marker} Listing",
+                )
+                .order_by(BuyerRequest.id.desc())
+                .scalar()
+            )
+
+        if request_id is not None and request_item_id is None:
+            request_item_id = (
+                db.query(RequestItem.id)
+                .filter(RequestItem.request_id == request_id)
+                .order_by(RequestItem.id.desc())
+                .scalar()
+            )
+
+        if request_id is not None and room_id is None:
+            room_id = (
+                db.query(NegotiationRoom.id)
+                .filter(NegotiationRoom.request_id == request_id)
+                .order_by(NegotiationRoom.id.desc())
+                .scalar()
+            )
+
+        # Recover a persisted offer if the test failed before capturing its ID.
+        if offer_id is None and request_id is not None:
+            offer_id = (
+                db.query(Offer.id)
+                .filter(Offer.request_id == request_id)
+                .order_by(Offer.id.desc())
+                .scalar()
+            )
+
+        if offer_id is None and room_id is not None:
+            offer_id = (
+                db.query(NegotiationRoom.offer_id)
+                .filter(
+                    NegotiationRoom.id == room_id,
+                    NegotiationRoom.offer_id.is_not(None),
+                )
+                .scalar()
+            )
+
+        if payment_settings_id is not None:
+            db.query(CommissionPaymentSettings).filter(
+                CommissionPaymentSettings.id == payment_settings_id,
+                CommissionPaymentSettings.currency == "USD",
+            ).delete(synchronize_session=False)
+            db.flush()
+
+        # Recover the test deal even if the main flow did not capture its ID.
+        cleanup_deal_id = deal_id
+        if cleanup_deal_id is None and offer_id is not None:
+            cleanup_deal_id = (
+                db.query(Deal.id)
+                .filter(Deal.offer_id == offer_id)
+                .scalar()
+            )
+        if cleanup_deal_id is None and request_id is not None:
+            cleanup_deal_id = (
+                db.query(Deal.id)
+                .filter(Deal.request_id == request_id)
+                .scalar()
+            )
+
+        # Save commission IDs before deleting commission rows.
+        commission_ids_for_cleanup = []
+        if cleanup_deal_id is not None:
+            commission_ids_for_cleanup = [
+                row[0]
+                for row in db.query(Commission.id).filter(
+                    Commission.deal_id == cleanup_deal_id
+                ).all()
+            ]
+        if commission_id is not None and commission_id not in commission_ids_for_cleanup:
+            commission_ids_for_cleanup.append(commission_id)
+
+        if commission_ids_for_cleanup:
+            db.query(Notification).filter(
+                Notification.related_type == "commission",
+                Notification.related_id.in_(commission_ids_for_cleanup),
+            ).delete(synchronize_session=False)
+
+            db.query(Notification).filter(
+                Notification.event_key.in_([
+                    f"commission_due:{cid}"
+                    for cid in commission_ids_for_cleanup
+                ])
+            ).delete(synchronize_session=False)
+
+        if cleanup_deal_id is not None:
             db.query(Commission).filter(
-                Commission.deal_id == deal_id
+                Commission.deal_id == cleanup_deal_id
             ).delete(synchronize_session=False)
             db.flush()
         elif commission_id is not None:
+            db.query(Notification).filter(
+                Notification.event_key == f"commission_due:{commission_id}"
+            ).delete(synchronize_session=False)
             db.query(Commission).filter(
                 Commission.id == commission_id
             ).delete(synchronize_session=False)
 
-        if deal_id is not None:
+        if cleanup_deal_id is not None:
             db.query(DealItem).filter(
-                DealItem.deal_id == deal_id
+                DealItem.deal_id == cleanup_deal_id
             ).delete(synchronize_session=False)
 
             db.query(Deal).filter(
-                Deal.id == deal_id
+                Deal.id == cleanup_deal_id
             ).delete(synchronize_session=False)
 
         if offer_id is not None:
@@ -465,10 +604,6 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
                 OfferItem.offer_id == offer_id
             ).delete(synchronize_session=False)
 
-            db.query(Notification).filter(
-                Notification.related_type == "commission",
-                Notification.related_id == commission_id,
-            ).delete(synchronize_session=False)
 
             db.query(Notification).filter(
                 Notification.related_type == "offer",
@@ -488,7 +623,11 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
                 NegotiationRoom.id == room_id
             ).delete(synchronize_session=False)
 
-        if request_item_id is not None:
+        if request_id is not None:
+            db.query(RequestItem).filter(
+                RequestItem.request_id == request_id
+            ).delete(synchronize_session=False)
+        elif request_item_id is not None:
             db.query(RequestItem).filter(
                 RequestItem.id == request_item_id
             ).delete(synchronize_session=False)
@@ -558,6 +697,48 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
             else 0
         )
 
+        # Verify child rows and subscriptions belonging to this test run.
+        remaining_deal_items = (
+            db.query(DealItem)
+            .filter(DealItem.deal_id == cleanup_deal_id)
+            .count()
+            if cleanup_deal_id is not None
+            else 0
+        )
+
+        remaining_offer_items = (
+            db.query(OfferItem)
+            .filter(OfferItem.offer_id == offer_id)
+            .count()
+            if offer_id is not None
+            else 0
+        )
+
+        remaining_request_items = (
+            db.query(RequestItem)
+            .filter(RequestItem.request_id == request_id)
+            .count()
+            if request_id is not None
+            else (
+                db.query(RequestItem)
+                .filter(RequestItem.id == request_item_id)
+                .count()
+                if request_item_id is not None
+                else 0
+            )
+        )
+
+        remaining_subscriptions = (
+            db.query(Subscription)
+            .filter(
+                Subscription.plan.in_([
+                    f"{marker}-buyer",
+                    f"{marker}-merchant",
+                ])
+            )
+            .count()
+        )
+
         remaining_offers = (
             db.query(Offer)
             .filter(Offer.id == offer_id)
@@ -576,37 +757,88 @@ def test_deal_delivery_receipt_commission_http_acceptance_isolation():
 
         remaining_deals = (
             db.query(Deal)
-            .filter(Deal.id == deal_id)
+            .filter(Deal.id == cleanup_deal_id)
             .count()
-            if deal_id is not None
+            if cleanup_deal_id is not None
             else 0
         )
 
-        remaining_commissions = (
-            db.query(Commission)
-            .filter(Commission.id == commission_id)
+        remaining_commissions = 0
+        if cleanup_deal_id is not None:
+            remaining_commissions = (
+                db.query(Commission)
+                .filter(Commission.deal_id == cleanup_deal_id)
+                .count()
+            )
+        elif commission_ids_for_cleanup:
+            remaining_commissions = (
+                db.query(Commission)
+                .filter(Commission.id.in_(commission_ids_for_cleanup))
+                .count()
+            )
+
+        remaining_commission_notifications = 0
+        if commission_ids_for_cleanup:
+            remaining_commission_notifications += (
+                db.query(Notification)
+                .filter(
+                    Notification.related_type == "commission",
+                    Notification.related_id.in_(commission_ids_for_cleanup),
+                )
+                .count()
+            )
+            remaining_commission_notifications += (
+                db.query(Notification)
+                .filter(
+                    Notification.event_key.in_([
+                        f"commission_due:{cid}"
+                        for cid in commission_ids_for_cleanup
+                    ])
+                )
+                .count()
+            )
+
+        remaining_payment_settings = (
+            db.query(CommissionPaymentSettings)
+            .filter(
+                CommissionPaymentSettings.id == payment_settings_id,
+                CommissionPaymentSettings.currency == "USD",
+                CommissionPaymentSettings.account_number == "TEST-USD-ACCOUNT",
+                CommissionPaymentSettings.account_name == "Temporary Test Account",
+            )
             .count()
-            if commission_id is not None
+            if payment_settings_id is not None
             else 0
         )
-
         print("===== CLEANUP VERIFICATION =====")
         print("TEST USERS REMAINING:", remaining_users)
         print("TEST CATEGORIES REMAINING:", remaining_categories)
         print("TEST LISTINGS REMAINING:", remaining_listings)
         print("TEST REQUESTS REMAINING:", remaining_requests)
+        print("TEST DEAL ITEMS REMAINING:", remaining_deal_items)
+        print("TEST OFFER ITEMS REMAINING:", remaining_offer_items)
+        print("TEST REQUEST ITEMS REMAINING:", remaining_request_items)
+        print("TEST SUBSCRIPTIONS REMAINING:", remaining_subscriptions)
         print("TEST OFFERS REMAINING:", remaining_offers)
         print("TEST ROOMS REMAINING:", remaining_rooms)
         print("TEST DEALS REMAINING:", remaining_deals)
         print("TEST COMMISSIONS REMAINING:", remaining_commissions)
+        print("TEST COMMISSION NOTIFICATIONS REMAINING:", remaining_commission_notifications)
+        print("TEMP PAYMENT SETTINGS REMAINING:", remaining_payment_settings)
 
         assert remaining_users == 0
         assert remaining_categories == 0
         assert remaining_listings == 0
         assert remaining_requests == 0
+        assert remaining_deal_items == 0
+        assert remaining_offer_items == 0
+        assert remaining_request_items == 0
+        assert remaining_subscriptions == 0
         assert remaining_offers == 0
         assert remaining_rooms == 0
         assert remaining_deals == 0
         assert remaining_commissions == 0
+        assert remaining_commission_notifications == 0
+        assert remaining_payment_settings == 0
 
         db.close()
