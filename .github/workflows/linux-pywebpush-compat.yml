@@ -1,11 +1,23 @@
-name: Linux pywebpush Compatibility
+name: Linux Web Push Service Isolated Test
 
 on:
   push:
     branches:
       - test/linux-pywebpush-compat
+      - test/linux-web-push-service
     paths:
       - .github/workflows/linux-pywebpush-compat.yml
+      - app/core/config.py
+      - app/db/base.py
+      - app/models/push_subscription.py
+      - app/routers/ui.py
+      - app/services/notification_service.py
+      - migrations/env.py
+      - migrations/versions/push_subscriptions_20261011.py
+      - migrations/versions/notification_read_state_20261012.py
+      - requirements.txt
+      - tests/test_negotiation_message_notifications_isolated.py
+      - tests/test_web_push_service_isolated.py
   workflow_dispatch:
 
 permissions:
@@ -13,9 +25,12 @@ permissions:
 
 jobs:
   compatibility:
-    name: Verify pywebpush and cryptography on Linux
+    name: Verify Isolated Web Push and Negotiation Notifications
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DATABASE_URL: postgresql://test:test@127.0.0.1:5432/testdb
+      SECRET_KEY: isolated-test-only-not-a-real-secret
 
     steps:
       - name: Checkout repository
@@ -26,12 +41,12 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install test dependencies
+      - name: Install project and test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pywebpush
+          python -m pip install -r requirements.txt pytest
 
-      - name: Verify imports and P-256 cryptography
+      - name: Verify P-256 cryptography
         run: |
           python - <<'PY'
           import cryptography
@@ -56,3 +71,9 @@ jobs:
           print("P256_KEY_GENERATION=PASS")
           print("ECDSA_SIGN_VERIFY=PASS")
           PY
+
+      - name: Test isolated negotiation notifications
+        run: python -m pytest -q tests/test_negotiation_message_notifications_isolated.py
+
+      - name: Test isolated Web Push service
+        run: python -m pytest -q tests/test_web_push_service_isolated.py

@@ -35,6 +35,7 @@ CANONICAL_TABLES = {
     "deals",
     "commissions",
     "commission_settings",
+    "push_subscriptions",
 }
 
 

@@ -1,8 +1,11 @@
+import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Depends, HTTPException, Cookie
 from app.db.session import get_db
 from app.services.listing_service import ListingService
 from app.services.negotiation_service import NegotiationService
+from app.services.notification_service import NotificationService
+from app.models.notification import NotificationChannel
 from app.models.listing import ListingStatus
 from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.request_item import RequestItem
@@ -23,6 +26,7 @@ from fastapi.templating import Jinja2Templates
 from app.translations.templates import template_context
 
 router = APIRouter(tags=["UI"])
+logger = logging.getLogger(__name__)
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -836,6 +840,61 @@ def send_negotiation_message(
         sender_id=user.id,
         body=message_body,
     )
+
+    # The message is already committed. Notification failures must not
+    # change the successful result of sending it.
+    try:
+        recipient_ids = [
+            row.user_id
+            for row in (
+                db.query(NegotiationParticipant.user_id)
+                .filter(
+                    NegotiationParticipant.room_id == room.id,
+                    NegotiationParticipant.user_id != user.id,
+                )
+                .all()
+            )
+        ]
+
+        notification_title = "رسالة تفاوض جديدة"
+        notification_message = "لديك رسالة جديدة في غرفة التفاوض."
+
+        for recipient_id in recipient_ids:
+            NotificationService.create(
+                db,
+                recipient_user_id=recipient_id,
+                event_type="NEGOTIATION_MESSAGE",
+                title=notification_title,
+                message=notification_message,
+                channel=NotificationChannel.IN_APP,
+                related_type="negotiation_message",
+                related_id=message.id,
+                event_key=f"negotiation_message:{message.id}:{recipient_id}",
+            )
+
+        if recipient_ids:
+            db.commit()
+
+            for recipient_id in recipient_ids:
+                try:
+                    NotificationService.send_web_push(
+                        db,
+                        recipient_user_id=recipient_id,
+                        title=notification_title,
+                        message=notification_message,
+                        url=f"/negotiation?room_id={room.id}",
+                    )
+                except Exception:
+                    logger.exception(
+                        "Negotiation message push failed for recipient %s",
+                        recipient_id,
+                    )
+    except Exception:
+        db.rollback()
+        logger.exception(
+            "Could not create notifications for negotiation message %s",
+            message.id,
+        )
 
     return {
         "id": message.id,

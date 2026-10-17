@@ -1,4 +1,12 @@
 from datetime import datetime, timezone
+import json
+import logging
+
+from app.core.config import settings
+from app.models.push_subscription import PushSubscription
+
+logger = logging.getLogger(__name__)
+
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -60,3 +68,61 @@ class NotificationService:
         db.flush()
 
         return notification
+
+    @staticmethod
+    def send_web_push(
+        db: Session,
+        *,
+        recipient_user_id: int,
+        title: str,
+        message: str,
+        url: str = "/",
+    ) -> None:
+        """Send best-effort Web Push without affecting the main operation."""
+        if not settings.VAPID_PUBLIC_KEY or not settings.VAPID_PRIVATE_KEY:
+            return
+
+        try:
+            from pywebpush import webpush
+        except Exception:
+            logger.exception("Web Push library could not be loaded")
+            return
+
+        try:
+            subscriptions = db.query(PushSubscription).filter(
+                PushSubscription.user_id == recipient_user_id
+            ).all()
+        except Exception:
+            logger.exception(
+                "Could not load push subscriptions for user %s",
+                recipient_user_id,
+            )
+            return
+
+        payload = json.dumps({
+            "title": title,
+            "body": message,
+            "url": url,
+        })
+
+        for subscription in subscriptions:
+            try:
+                webpush(
+                    subscription_info={
+                        "endpoint": subscription.endpoint,
+                        "keys": {
+                            "p256dh": subscription.p256dh,
+                            "auth": subscription.auth,
+                        },
+                    },
+                    data=payload,
+                    vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                    vapid_claims={
+                        "sub": settings.VAPID_CLAIMS_EMAIL,
+                    },
+                )
+            except Exception:
+                logger.exception(
+                    "Web Push delivery failed for user %s",
+                    recipient_user_id,
+                )
