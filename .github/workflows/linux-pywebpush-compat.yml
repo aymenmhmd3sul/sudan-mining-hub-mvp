@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - test/linux-pywebpush-compat
-    paths:
-      - .github/workflows/linux-pywebpush-compat.yml
   workflow_dispatch:
 
 permissions:
