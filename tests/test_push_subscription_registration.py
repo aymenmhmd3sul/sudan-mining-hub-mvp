@@ -20,6 +20,32 @@ def _install_test_dependencies(db, user):
     app.dependency_overrides[get_current_user] = lambda: user
 
 
+def test_unsafe_push_subscription_is_rejected_before_database_query():
+    user = SimpleNamespace(id=705)
+    db = MagicMock()
+
+    _install_test_dependencies(db, user)
+    try:
+        with TestClient(app) as client:
+            response = client.post(
+                "/api/notifications/push-subscription",
+                json={
+                    "endpoint": "http://127.0.0.1/internal",
+                    "keys": {
+                        "p256dh": "public-key-705",
+                        "auth": "auth-key-705",
+                    },
+                },
+            )
+
+        assert response.status_code == 422, response.text
+        db.query.assert_not_called()
+        db.add.assert_not_called()
+        db.commit.assert_not_called()
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_new_push_subscription_is_registered_for_current_user():
     user = SimpleNamespace(id=701)
     db = MagicMock()

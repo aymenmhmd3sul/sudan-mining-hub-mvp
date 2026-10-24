@@ -10,6 +10,7 @@ from app.models.notification import Notification
 from app.models.push_subscription import PushSubscription
 from app.models.user import UserModel
 from app.routers.auth import get_current_user
+from app.services.push_endpoint import is_safe_push_endpoint
 
 router = APIRouter(
     prefix="/api/notifications",
@@ -152,10 +153,10 @@ def register_push_subscription(
     db: Session = Depends(get_db),
     user: UserModel = Depends(get_current_user),
 ):
-    if not payload.endpoint.startswith("https://"):
+    if not is_safe_push_endpoint(payload.endpoint):
         raise HTTPException(
             status_code=422,
-            detail="Push subscription endpoint must use HTTPS",
+            detail="Invalid or unsafe push subscription endpoint",
         )
 
     subscription = (

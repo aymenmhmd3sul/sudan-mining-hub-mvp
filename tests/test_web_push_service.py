@@ -41,6 +41,11 @@ def test_web_push_continues_after_one_subscription_fails(monkeypatch):
             auth="first-auth",
         ),
         SimpleNamespace(
+            endpoint="http://127.0.0.1/internal",
+            p256dh="unsafe-p256dh",
+            auth="unsafe-auth",
+        ),
+        SimpleNamespace(
             endpoint="https://push.example.test/second",
             p256dh="second-p256dh",
             auth="second-auth",

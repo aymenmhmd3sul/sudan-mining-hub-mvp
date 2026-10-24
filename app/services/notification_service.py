@@ -17,6 +17,7 @@ from app.models.notification import (
     NotificationStatus,
 )
 from app.models.user import UserModel, UserRole
+from app.services.push_endpoint import is_safe_push_endpoint
 
 
 class NotificationService:
@@ -160,6 +161,13 @@ class NotificationService:
         })
 
         for subscription in subscriptions:
+            if not is_safe_push_endpoint(subscription.endpoint):
+                logger.warning(
+                    "Skipping unsafe Web Push endpoint for user %s",
+                    recipient_user_id,
+                )
+                continue
+
             try:
                 webpush(
                     subscription_info={
