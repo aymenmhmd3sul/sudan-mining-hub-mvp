@@ -281,5 +281,19 @@
   "negotiation.commission_status_calculated": "محتسبة",
   "negotiation.commission_status_due": "مستحقة",
   "negotiation.commission_status_settled": "مسددة",
-  "negotiation.commission_status_waived": "معفاة"
+  "negotiation.commission_status_waived": "معفاة",
+  "notifications.button": "الإشعارات",
+  "notifications.title": "مركز الإشعارات",
+  "notifications.unread": "إشعارات غير مقروءة",
+  "notifications.empty": "لا توجد إشعارات",
+  "notifications.read_all": "تحديد الكل كمقروء",
+  "notifications.error": "تعذر تحميل الإشعارات",
+  "notifications.close": "إغلاق الإشعارات",
+  "notifications.enable_push": "تفعيل الإشعارات",
+  "notifications.push_enabled": "تم تفعيل الإشعارات",
+  "notifications.push_denied": "لم يُمنح إذن الإشعارات",
+  "notifications.push_blocked": "إشعارات المتصفح محظورة",
+  "notifications.push_blocked_help": "افتح إعدادات أذونات هذا الموقع في المتصفح، واسمح بالإشعارات، ثم أعد تحميل الصفحة",
+  "notifications.push_unavailable": "تعذر تفعيل الإشعارات؛ تحقق من إعدادات الخادم",
+  "notifications.push_unsupported": "هذا المتصفح لا يدعم الإشعارات"
 }

@@ -83,6 +83,20 @@ def create_offer(
         db.rollback()
         raise
 
+    try:
+        NotificationService.send_web_push(
+            db,
+            recipient_user_id=offer.merchant_id,
+            title="New buyer offer received",
+            message=(
+                f"A buyer submitted an offer for your negotiation "
+                f"#{room.id}."
+            ),
+            url="/merchant/",
+        )
+    except Exception:
+        pass
+
     return {
         "id": offer.id,
         "room_id": room.id,

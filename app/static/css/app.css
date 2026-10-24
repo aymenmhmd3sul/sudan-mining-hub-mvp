@@ -4111,3 +4111,8 @@ html[data-theme="light"] .marketplace-card:hover,
 html[data-theme="light"] .marketplace-card:focus-visible {
     border-color: #000;
 }
+
+/* Keep appearance control opposite the notification button in RTL. */
+html[dir="rtl"] .smh-appearance {
+    justify-content: flex-start;
+}

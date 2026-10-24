@@ -22,11 +22,60 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', path='css/app.css') }}?v=20261009-typography"
+        href="{{ url_for('static', path='css/app.css') }}?v=20261019-appearance-position"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/notifications.css') }}?v=20261020-notifications-layer"
     >
 </head>
 
 <body>
+    <div
+        id="smh-notifications"
+        data-unread="{{ t('notifications.unread') }}"
+        data-empty="{{ t('notifications.empty') }}"
+        data-read-all="{{ t('notifications.read_all') }}"
+        data-error="{{ t('notifications.error') }}"
+        data-close="{{ t('notifications.close') }}"
+        data-push-enable="{{ t('notifications.enable_push') }}"
+        data-push-enabled="{{ t('notifications.push_enabled') }}"
+        data-push-denied="{{ t('notifications.push_denied') }}"
+        data-push-blocked="{{ t('notifications.push_blocked') }}"
+        data-push-blocked-help="{{ t('notifications.push_blocked_help') }}"
+        data-push-unavailable="{{ t('notifications.push_unavailable') }}"
+        data-push-unsupported="{{ t('notifications.push_unsupported') }}"
+        hidden
+    >
+        <button
+            type="button"
+            id="smh-notifications-toggle"
+            aria-expanded="false"
+            aria-controls="smh-notifications-panel"
+        >
+            {{ t("notifications.button") }}
+            <span id="smh-notifications-count" aria-live="polite"></span>
+        </button>
+
+        <section id="smh-notifications-panel" hidden>
+            <div class="smh-notifications-heading">
+                <h2>{{ t("notifications.title") }}</h2>
+                <button type="button" id="smh-notifications-read-all">
+                    {{ t("notifications.read_all") }}
+                </button>
+            </div>
+            <button type="button" id="smh-notifications-enable-push">
+                {{ t("notifications.enable_push") }}
+            </button>
+            <div id="smh-notifications-list"></div>
+            <p id="smh-notifications-empty" hidden>{{ t("notifications.empty") }}</p>
+        </section>
+    </div>
+
+    <div id="smh-notification-toast" role="status" aria-live="polite" hidden>
+        <strong id="smh-notification-toast-title"></strong>
+        <span id="smh-notification-toast-message"></span>
+    </div>
     <div id="smh-appearance-root" class="smh-appearance">
         <button
             type="button"
@@ -101,6 +150,11 @@
 
     <script
         src="{{ url_for('static', path='js/app.js') }}"
+        defer
+    ></script>
+
+    <script
+        src="{{ url_for('static', path='js/notifications.js') }}?v=20261020-visitor-button"
         defer
     ></script>
 

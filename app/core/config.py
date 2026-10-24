@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
     APP_BASE_URL: str = "http://127.0.0.1:8001"
+    VAPID_PUBLIC_KEY: str | None = None
+    VAPID_PRIVATE_KEY: str | None = None
+    VAPID_CLAIMS_EMAIL: str = "mailto:notifications@sudanmininghub.com"
 
     BREVO_API_KEY: str | None = None
     SENDER_EMAIL: str = "notifications@sudanmininghub.com"

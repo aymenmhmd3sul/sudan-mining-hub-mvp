@@ -1,0 +1,246 @@
+#smh-notifications {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10000;
+    direction: inherit;
+    font-family: inherit;
+    color: var(--text-primary, #20252b);
+}
+
+#smh-notifications[hidden],
+#smh-notification-toast[hidden] {
+    display: none !important;
+}
+
+#smh-notifications-toggle {
+    position: relative;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border-color, #d5d9de);
+    border-radius: 12px;
+    background: var(--surface, #ffffff);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    box-shadow: 0 3px 14px rgb(0 0 0 / 10%);
+}
+
+#smh-notifications-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    min-height: 1.25rem;
+    margin-inline-start: 0.35rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: #b42318;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+#smh-notifications-count:empty {
+    display: none;
+}
+
+#smh-notifications-panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    width: min(360px, calc(100vw - 2rem));
+    max-height: min(70vh, 560px);
+    overflow: auto;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #d5d9de);
+    border-radius: 14px;
+    background: var(--surface, #ffffff);
+    color: inherit;
+    box-shadow: 0 10px 32px rgb(0 0 0 / 18%);
+}
+
+#smh-notifications-panel[hidden] {
+    display: none !important;
+}
+
+.smh-notifications-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.smh-notifications-heading h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+#smh-notifications-read-all,
+#smh-notifications-enable-push {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-decoration: underline;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+#smh-notifications-enable-push {
+    margin-bottom: 0.75rem;
+}
+
+#smh-notifications-enable-push:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+
+#smh-notifications-list {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.smh-notification-item {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color, #d5d9de);
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    text-align: start;
+    font: inherit;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.smh-notification-item.is-unread {
+    border-inline-start: 4px solid var(--accent, #287a52);
+    background: var(--surface-muted, #f3f5f6);
+}
+
+.smh-notification-item strong,
+.smh-notification-item span,
+.smh-notification-item time {
+    display: block;
+}
+
+.smh-notification-item strong {
+    margin-bottom: 0.3rem;
+}
+
+.smh-notification-item span {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.smh-notification-item time {
+    margin-top: 0.4rem;
+    opacity: 0.7;
+    font-size: 0.75rem;
+}
+
+#smh-notifications-empty {
+    margin: 0.5rem 0;
+    opacity: 0.75;
+    font-size: 0.9rem;
+}
+
+#smh-notification-toast {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 10001;
+    width: min(360px, calc(100vw - 2rem));
+    padding: 1rem;
+    border: 1px solid var(--border-color, #d5d9de);
+    border-radius: 12px;
+    background: var(--surface, #ffffff);
+    color: var(--text-primary, #20252b);
+    box-shadow: 0 8px 28px rgb(0 0 0 / 20%);
+    overflow-wrap: anywhere;
+}
+
+#smh-notification-toast strong,
+#smh-notification-toast span {
+    display: block;
+}
+
+#smh-notification-toast span {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+    #smh-notifications {
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+
+    #smh-notifications-panel {
+        position: fixed;
+        top: 4rem;
+        left: 0.5rem;
+        right: 0.5rem;
+        width: auto;
+        max-height: 70vh;
+    }
+}
+
+/* NOTIFICATION LAYOUT AND READABILITY — 20261019 */
+#smh-notifications {
+    top: 1rem;
+    left: 1rem;
+    right: auto;
+    z-index: 10000;
+}
+
+#smh-notifications-toggle {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+#smh-notifications-panel {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.smh-notification-item strong {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.smh-notification-item span {
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.smh-notification-item time {
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+    #smh-notifications {
+        top: 0.5rem;
+        left: 0.5rem;
+        right: auto;
+    }
+
+    #smh-notifications-panel {
+        top: 3.75rem;
+        left: 0.5rem;
+        right: 0.5rem;
+        width: auto;
+        max-height: 70vh;
+        font-size: 1rem;
+    }
+
+    #smh-notifications-toggle {
+        min-height: 44px;
+        font-size: 1rem;
+    }
+}

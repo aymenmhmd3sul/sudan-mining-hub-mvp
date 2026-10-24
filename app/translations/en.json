@@ -281,5 +281,19 @@
   "negotiation.commission_status_calculated": "Calculated",
   "negotiation.commission_status_due": "Due",
   "negotiation.commission_status_settled": "Settled",
-  "negotiation.commission_status_waived": "Waived"
+  "negotiation.commission_status_waived": "Waived",
+  "notifications.button": "Notifications",
+  "notifications.title": "Notification Center",
+  "notifications.unread": "Unread notifications",
+  "notifications.empty": "No notifications",
+  "notifications.read_all": "Mark all as read",
+  "notifications.error": "Could not load notifications",
+  "notifications.close": "Close notifications",
+  "notifications.enable_push": "Enable notifications",
+  "notifications.push_enabled": "Notifications enabled",
+  "notifications.push_denied": "Notification permission was not granted",
+  "notifications.push_blocked": "Notifications are blocked in browser settings",
+  "notifications.push_blocked_help": "Open this site's browser permissions and allow notifications, then reload the page.",
+  "notifications.push_unavailable": "Could not enable notifications; check server configuration",
+  "notifications.push_unsupported": "This browser does not support notifications"
 }

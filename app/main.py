@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.routers import auth, ui, admin, deals, offers, requests, negotiation
 from app.routers import marketplace
+from app.routers import notifications
 from app.translations.middleware import LanguageMiddleware
 from app.translations.templates import template_context
 
@@ -61,3 +62,15 @@ app.include_router(offers.router)
 app.include_router(negotiation.router)
 app.include_router(requests.router)
 app.include_router(marketplace.router)
+app.include_router(notifications.router)
+
+
+@app.get("/service-worker.js", include_in_schema=False, name="service_worker_webpush_route")
+def service_worker_webpush_route():
+    from fastapi.responses import FileResponse
+
+    return FileResponse(
+        "app/static/service-worker.js",
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/"},
+    )

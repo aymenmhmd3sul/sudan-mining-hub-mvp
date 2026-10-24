@@ -1,4 +1,5 @@
 import hmac
+import logging
 from datetime import datetime, timedelta, timezone
 import time
 from collections import defaultdict, deque
@@ -18,6 +19,7 @@ from app.schemas.user import (
     Token,
 )
 from app.services.subscription_service import SubscriptionService
+from app.services.notification_service import NotificationService
 from app.services.email_service import (
     generate_verification_token,
     hash_verification_token,
@@ -115,6 +117,20 @@ def register_user(
         )
 
     db.refresh(new_user)
+
+    # Admin alerts are best-effort and must never block successful registration.
+    try:
+        NotificationService.notify_admins_of_registration(
+            db,
+            registered_user_id=new_user.id,
+            registered_user_email=new_user.email,
+        )
+    except Exception:
+        logging.getLogger(__name__).exception(
+            "Admin registration notification failed for user %s",
+            new_user.id,
+        )
+
     return new_user
 
 

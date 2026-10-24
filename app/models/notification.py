@@ -100,6 +100,11 @@ class Notification(Base):
         nullable=False,
     )
 
+    read_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
     __table_args__ = (
         Index(
             "ix_notifications_recipient_created",
@@ -110,6 +115,12 @@ class Notification(Base):
             "ix_notifications_related",
             "related_type",
             "related_id",
+        ),
+        Index(
+            "ix_notifications_recipient_read_created",
+            "recipient_user_id",
+            "read_at",
+            "created_at",
         ),
         UniqueConstraint(
             "event_key",

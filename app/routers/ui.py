@@ -16,6 +16,11 @@ from app.models.offer import Offer
 from app.models.deal import Deal, DealStatus
 from app.services.commission_service import CommissionService
 from app.models.user import UserModel
+from app.models.notification import NotificationChannel
+from app.services.notification_service import NotificationService
+import logging
+
+logger = logging.getLogger(__name__)
 from app.routers.auth import get_current_user, get_optional_current_user, require_role, require_active_subscription
 from sqlalchemy.orm import Session
 from fastapi.templating import Jinja2Templates
@@ -836,6 +841,66 @@ def send_negotiation_message(
         sender_id=user.id,
         body=message_body,
     )
+
+    # The message has already been committed by NegotiationService.
+    # Notification failure must not affect the saved message.
+    notification_recipient_ids = []
+    notifications_committed = False
+
+    try:
+        recipients = (
+            db.query(NegotiationParticipant.user_id)
+            .filter(
+                NegotiationParticipant.room_id == room.id,
+                NegotiationParticipant.user_id != user.id,
+            )
+            .all()
+        )
+
+        notification_recipient_ids = [
+            recipient_user_id
+            for (recipient_user_id,) in recipients
+        ]
+
+        for recipient_user_id in notification_recipient_ids:
+            NotificationService.create(
+                db,
+                recipient_user_id=recipient_user_id,
+                event_type="NEGOTIATION_MESSAGE",
+                title="New negotiation message",
+                message=f"A new message was sent in negotiation room #{room.id}.",
+                channel=NotificationChannel.IN_APP,
+                related_type="NEGOTIATION_ROOM",
+                related_id=room.id,
+                event_key=f"negotiation_message:{message.id}:{recipient_user_id}",
+            )
+
+        db.commit()
+        notifications_committed = True
+    except Exception:
+        db.rollback()
+        logger.exception(
+            "Failed to create notifications for negotiation room %s; "
+            "the message itself was already saved",
+            room.id,
+        )
+
+    if notifications_committed:
+        for recipient_user_id in notification_recipient_ids:
+            try:
+                NotificationService.send_web_push(
+                    db,
+                    recipient_user_id=recipient_user_id,
+                    title="New negotiation message",
+                    message=f"A new message was sent in negotiation room #{room.id}.",
+                    url=f"/negotiation?room_id={room.id}",
+                )
+            except Exception:
+                logger.exception(
+                    "Web Push failed for negotiation room %s and recipient %s",
+                    room.id,
+                    recipient_user_id,
+                )
 
     return {
         "id": message.id,

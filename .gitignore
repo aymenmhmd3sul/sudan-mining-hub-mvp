@@ -22,3 +22,10 @@ venv/
 # Local development artifacts
 .sqla211-test/
 backups/
+
+.isolated_neon_url
+
+# Local private test data and backups
+/.backup/
+/.neon/
+/.isolated_neon_test_url

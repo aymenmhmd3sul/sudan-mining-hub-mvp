@@ -378,6 +378,21 @@ class DealService:
         db.commit()
         db.refresh(deal)
 
+        if commission is not None:
+            try:
+                NotificationService.send_web_push(
+                    db,
+                    recipient_user_id=deal.merchant_id,
+                    title="العمولة مستحقة بعد استلام الصفقة",
+                    message=(
+                        f"العمولة المستحقة للصفقة رقم #{deal.id}: "
+                        f"{commission.final_amount} {commission.currency}."
+                    ),
+                    url="/merchant/",
+                )
+            except Exception:
+                pass
+
         return deal
 
     @staticmethod

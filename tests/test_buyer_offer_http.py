@@ -21,9 +21,22 @@ from app.models.request_item import RequestItem
 from app.models.subscription import Subscription
 from app.models.user import UserModel, UserRole
 from app.services.subscription_service import SubscriptionService
+from app.services.notification_service import NotificationService
 
 
-def test_buyer_can_submit_offer_after_merchant_approval_http():
+def test_buyer_can_submit_offer_after_merchant_approval_http(monkeypatch):
+    push_calls = []
+
+    def failing_web_push(db, **kwargs):
+        push_calls.append(kwargs)
+        raise RuntimeError("Simulated Web Push delivery failure")
+
+    monkeypatch.setattr(
+        NotificationService,
+        "send_web_push",
+        staticmethod(failing_web_push),
+    )
+
     marker = f"BUYER_OFFER_{uuid.uuid4().hex}"
     password = "buyer-offer-test"
 
@@ -218,6 +231,11 @@ def test_buyer_can_submit_offer_after_merchant_approval_http():
         )
 
         assert buyer_offer.status_code == 201, buyer_offer.text
+
+        assert len(push_calls) == 1
+        assert push_calls[0]["recipient_user_id"] == merchant.id
+        assert push_calls[0]["title"] == "New buyer offer received"
+        assert push_calls[0]["url"] == "/merchant/"
 
         offer_data = buyer_offer.json()
 
