@@ -295,5 +295,7 @@
   "notifications.push_blocked": "إشعارات المتصفح محظورة",
   "notifications.push_blocked_help": "افتح إعدادات أذونات هذا الموقع في المتصفح، واسمح بالإشعارات، ثم أعد تحميل الصفحة",
   "notifications.push_unavailable": "تعذر تفعيل الإشعارات؛ تحقق من إعدادات الخادم",
+  "notifications.negotiation_message_title": "رسالة جديدة",
+  "notifications.unknown_sender": "مستخدم",
   "notifications.push_unsupported": "هذا المتصفح لا يدعم الإشعارات"
 }

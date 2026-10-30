@@ -295,5 +295,7 @@
   "notifications.push_blocked": "Notifications are blocked in browser settings",
   "notifications.push_blocked_help": "Open this site's browser permissions and allow notifications, then reload the page.",
   "notifications.push_unavailable": "Could not enable notifications; check server configuration",
+  "notifications.negotiation_message_title": "New message",
+  "notifications.unknown_sender": "User",
   "notifications.push_unsupported": "This browser does not support notifications"
 }

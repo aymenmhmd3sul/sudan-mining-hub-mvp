@@ -88,10 +88,99 @@ def test_message_creates_notifications_for_other_participants(
 def test_notification_failure_does_not_fail_message_response(
     message_route, monkeypatch
 ):
+    db = message_route["db"]
+    message = message_route["message"]
+
+    def persist_message(db, room_id, sender_id, body):
+        db.add(message)
+        db.commit()
+        db.refresh(message)
+        return message
+
+    monkeypatch.setattr(
+        ui.NegotiationService,
+        "add_message",
+        persist_message,
+    )
     monkeypatch.setattr(
         ui.NotificationService,
         "create",
         MagicMock(side_effect=RuntimeError("simulated notification failure")),
+    )
+
+    result = ui.send_negotiation_message(
+        room_id=message_route["room_id"],
+        body="Test message",
+        db=db,
+        user=SimpleNamespace(id=message_route["sender_id"]),
+        _subscription_user=None,
+    )
+
+    assert result["id"] == message.id
+    assert result["body"] == "Test message"
+
+    transaction_events = [
+        item for item in db.method_calls
+        if item[0] in ("commit", "rollback")
+    ]
+    assert transaction_events == [call.commit(), call.rollback()]
+
+def test_message_sends_web_push_to_other_participants(
+    message_route, monkeypatch
+):
+    monkeypatch.setattr(
+        ui.NotificationService, "create", MagicMock()
+    )
+    send_push = MagicMock()
+    monkeypatch.setattr(
+        ui.NotificationService, "send_web_push", send_push
+    )
+
+    result = ui.send_negotiation_message(
+        room_id=message_route["room_id"],
+        body="Test message",
+        db=message_route["db"],
+        user=SimpleNamespace(id=message_route["sender_id"]),
+        _subscription_user=None,
+    )
+
+    assert result["id"] == message_route["message"].id
+    assert [item.kwargs["recipient_user_id"] for item in send_push.call_args_list] == [
+        202,
+        303,
+    ]
+    assert all(
+        item.kwargs["url"] == "/negotiation?room_id=701"
+        for item in send_push.call_args_list
+    )
+
+    for item in send_push.call_args_list:
+        assert item.kwargs["title"] == {
+            "ar": "رسالة جديدة",
+            "en": "New message",
+        }
+        assert item.kwargs["message"] == {
+            "ar": "رسالة جديدة",
+            "en": "New message",
+        }
+        assert "Test message" not in str(item.kwargs["title"])
+        assert "Test message" not in str(item.kwargs["message"])
+        assert "101" not in str(item.kwargs["title"])
+        assert "101" not in str(item.kwargs["message"])
+
+    assert message_route["db"].commit.call_count == 1
+
+
+def test_web_push_failure_does_not_fail_saved_message(
+    message_route, monkeypatch
+):
+    monkeypatch.setattr(
+        ui.NotificationService, "create", MagicMock()
+    )
+    monkeypatch.setattr(
+        ui.NotificationService,
+        "send_web_push",
+        MagicMock(side_effect=RuntimeError("simulated Web Push failure")),
     )
 
     result = ui.send_negotiation_message(
@@ -104,4 +193,4 @@ def test_notification_failure_does_not_fail_message_response(
 
     assert result["id"] == message_route["message"].id
     assert result["body"] == "Test message"
-    message_route["db"].rollback.assert_called_once()
+    assert message_route["db"].commit.call_count == 1

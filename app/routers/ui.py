@@ -637,20 +637,6 @@ def negotiation_page(
         offers = locals().get("offers", [])
 
     context = template_context(request)
-    print(
-        "NEGOTIATION_DEBUG:",
-        {
-            "room_id": getattr(room, "id", None),
-            "user_id": getattr(user, "id", None),
-            "user_role": getattr(getattr(user, "role", None), "value", None),
-            "deal_id": getattr(deal, "id", None),
-            "deal_room_id": getattr(deal, "negotiation_room_id", None),
-            "deal_buyer_id": getattr(deal, "buyer_id", None),
-            "deal_merchant_id": getattr(deal, "merchant_id", None),
-            "deal_agent_id": getattr(deal, "agent_id", None),
-            "deal_status": getattr(getattr(deal, "status", None), "value", None),
-        },
-    )
 
     context.update(
         {
@@ -861,8 +847,14 @@ def send_negotiation_message(
                 NotificationService.send_web_push(
                     db,
                     recipient_user_id=recipient_user_id,
-                    title="New negotiation message",
-                    message=f"A new message was sent in negotiation room #{room.id}.",
+                    title={
+                        "ar": "رسالة جديدة",
+                        "en": "New message",
+                    },
+                    message={
+                        "ar": "رسالة جديدة",
+                        "en": "New message",
+                    },
                     url=f"/negotiation?room_id={room.id}",
                 )
             except Exception:

@@ -4,6 +4,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    String,
     Text,
     UniqueConstraint,
     func,
@@ -24,6 +25,7 @@ class PushSubscription(Base):
     endpoint = Column(Text, nullable=False)
     p256dh = Column(Text, nullable=False)
     auth = Column(Text, nullable=False)
+    language = Column(String(2), nullable=False, server_default="ar")
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
