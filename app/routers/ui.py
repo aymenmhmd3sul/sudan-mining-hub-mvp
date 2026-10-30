@@ -566,16 +566,6 @@ def negotiation_page(
                 .first()
             )
 
-            latest_message = (
-                db.query(NegotiationMessage)
-                .filter(NegotiationMessage.room_id == candidate.id)
-                .order_by(
-                    NegotiationMessage.created_at.desc(),
-                    NegotiationMessage.id.desc(),
-                )
-                .first()
-            )
-
             unread_query = db.query(NegotiationMessage).filter(
                 NegotiationMessage.room_id == candidate.id,
                 NegotiationMessage.sender_id != user.id,
@@ -592,30 +582,10 @@ def negotiation_page(
 
             unread_count = unread_query.count()
 
-            other_participant = (
-                db.query(NegotiationParticipant)
-                .join(UserModel, UserModel.id == NegotiationParticipant.user_id)
-                .filter(
-                    NegotiationParticipant.room_id == candidate.id,
-                    NegotiationParticipant.user_id != user.id,
-                )
-                .first()
-            )
-
             inbox_rooms.append(
                 {
                     "room": candidate,
-                    "latest_message": latest_message,
-                    "other_user": (
-                        other_participant.user
-                        if other_participant
-                        else None
-                    ),
                     "unread_count": unread_count,
-                    "is_new": (
-                        candidate_participant is not None
-                        and candidate_participant.last_read_at is None
-                    ),
                 }
             )
 
