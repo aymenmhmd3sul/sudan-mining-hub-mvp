@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from typing import Literal
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -11,6 +12,7 @@ from app.models.push_subscription import PushSubscription
 from app.models.user import UserModel
 from app.routers.auth import get_current_user
 from app.services.push_endpoint import is_safe_push_endpoint
+from app.translations.service import normalize_language, translate
 
 router = APIRouter(
     prefix="/api/notifications",
@@ -26,6 +28,7 @@ class PushSubscriptionKeys(BaseModel):
 class PushSubscriptionPayload(BaseModel):
     endpoint: str = Field(min_length=10, max_length=4096)
     keys: PushSubscriptionKeys
+    language: Literal["ar", "en"] = "ar"
 
 
 def _notification_payload(notification: Notification) -> dict:
@@ -50,8 +53,30 @@ def _notification_payload(notification: Notification) -> dict:
     }
 
 
+def _localized_notification_payload(
+    notification: Notification,
+    language: str,
+) -> dict:
+    payload = _notification_payload(notification)
+
+    if (
+        getattr(notification, "event_type", None) == "NEGOTIATION_MESSAGE"
+        or getattr(notification, "related_type", None) == "NEGOTIATION_ROOM"
+    ):
+        language = normalize_language(language)
+        generic_message = translate(
+            "notifications.negotiation_message_title",
+            language,
+        )
+        payload["title"] = generic_message
+        payload["message"] = generic_message
+
+    return payload
+
+
 @router.get("")
 def list_notifications(
+    request: Request,
     limit: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
     user: UserModel = Depends(get_current_user),
@@ -76,13 +101,20 @@ def list_notifications(
 
     return {
         "unread_count": unread_count,
-        "items": [_notification_payload(item) for item in notifications],
+        "items": [
+            _localized_notification_payload(
+                item,
+                request.cookies.get("language") or getattr(request.state, "lang", None) or "ar",
+            )
+            for item in notifications
+        ],
     }
 
 
 @router.patch("/{notification_id}/read")
 def mark_notification_read(
     notification_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     user: UserModel = Depends(get_current_user),
 ):
@@ -105,7 +137,12 @@ def mark_notification_read(
 
     return {
         "ok": True,
-        "notification": _notification_payload(notification),
+        "notification": _localized_notification_payload(
+            notification,
+            request.cookies.get("language")
+            or getattr(request.state, "lang", None)
+            or "ar",
+        ),
     }
 
 
@@ -171,6 +208,7 @@ def register_push_subscription(
             endpoint=payload.endpoint,
             p256dh=payload.keys.p256dh,
             auth=payload.keys.auth,
+            language=payload.language,
         )
         db.add(subscription)
     else:
@@ -181,6 +219,7 @@ def register_push_subscription(
             )
         subscription.p256dh = payload.keys.p256dh
         subscription.auth = payload.keys.auth
+        subscription.language = payload.language
         subscription.updated_at = datetime.now(timezone.utc)
 
     db.commit()

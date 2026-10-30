@@ -277,7 +277,10 @@
                         Accept: "application/json",
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(subscription)
+                    body: JSON.stringify({
+            ...subscription.toJSON(),
+            language: document.documentElement.lang === "en" ? "en" : "ar",
+        })
                 }
             );
 

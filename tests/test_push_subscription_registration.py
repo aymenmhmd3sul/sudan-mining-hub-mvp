@@ -61,6 +61,7 @@ def test_new_push_subscription_is_registered_for_current_user():
                 json={
                     "endpoint": "https://push.example.invalid/subscription-701",
                     "keys": {"p256dh": "public-key-701", "auth": "auth-key-701"},
+                    "language": "en",
                 },
             )
 
@@ -71,6 +72,7 @@ def test_new_push_subscription_is_registered_for_current_user():
         assert created.endpoint == "https://push.example.invalid/subscription-701"
         assert created.p256dh == "public-key-701"
         assert created.auth == "auth-key-701"
+        assert created.language == "en"
         db.commit.assert_called_once()
     finally:
         app.dependency_overrides.clear()
@@ -82,6 +84,7 @@ def test_existing_push_subscription_can_be_updated_by_its_owner():
         id=22,
         user_id=user.id,
         endpoint="https://push.example.invalid/subscription-702",
+        language="ar",
         p256dh="old-public-key",
         auth="old-auth-key",
         updated_at=None,
@@ -99,6 +102,7 @@ def test_existing_push_subscription_can_be_updated_by_its_owner():
                 json={
                     "endpoint": existing.endpoint,
                     "keys": {"p256dh": "new-public-key", "auth": "new-auth-key"},
+                    "language": "en",
                 },
             )
 
@@ -106,6 +110,7 @@ def test_existing_push_subscription_can_be_updated_by_its_owner():
         assert existing.user_id == user.id
         assert existing.p256dh == "new-public-key"
         assert existing.auth == "new-auth-key"
+        assert existing.language == "en"
         db.add.assert_not_called()
         db.commit.assert_called_once()
     finally:
@@ -147,5 +152,126 @@ def test_push_subscription_cannot_be_reassigned_to_another_user():
         assert existing.p256dh == "owner-public-key"
         assert existing.auth == "owner-auth-key"
         db.commit.assert_not_called()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_mark_notification_read_hides_negotiation_sender_and_message():
+    from datetime import datetime, timezone
+
+    user = SimpleNamespace(id=701)
+    notification = SimpleNamespace(
+        id=81,
+        recipient_user_id=user.id,
+        event_type="NEGOTIATION_MESSAGE",
+        title="Private sender name",
+        message="Confidential negotiation text",
+        related_type="NEGOTIATION_ROOM",
+        related_id=900,
+        event_key="malformed-event-key",
+        created_at=datetime.now(timezone.utc),
+        read_at=None,
+    )
+    db = MagicMock()
+    notification_query = MagicMock()
+    notification_query.filter.return_value = notification_query
+    notification_query.first.return_value = notification
+    db.query.return_value = notification_query
+
+    _install_test_dependencies(db, user)
+    try:
+        with TestClient(app) as client:
+            response = client.patch(
+                "/api/notifications/81/read",
+                cookies={"language": "en"},
+            )
+
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["ok"] is True
+        payload = body["notification"]
+
+        assert payload["title"] == "New message"
+        assert payload["message"] == "New message"
+        assert "Private sender name" not in response.text
+        assert "Confidential negotiation text" not in response.text
+        assert notification.read_at is not None
+        db.commit.assert_called_once()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_localized_notification_hides_negotiation_room_with_unexpected_event_type():
+    from datetime import datetime, timezone
+
+    from app.routers.notifications import _localized_notification_payload
+
+    notification = SimpleNamespace(
+        id=83,
+        event_type="UNEXPECTED_EVENT_TYPE",
+        title="Private sender name",
+        message="Confidential negotiation text",
+        related_type="NEGOTIATION_ROOM",
+        related_id=900,
+        created_at=datetime.now(timezone.utc),
+        read_at=None,
+    )
+
+    payload = _localized_notification_payload(notification, "en")
+
+    assert payload["title"] == "New message"
+    assert payload["message"] == "New message"
+    assert "Private sender name" not in str(payload)
+    assert "Confidential negotiation text" not in str(payload)
+
+def test_list_notifications_hides_negotiation_sender_and_message_with_malformed_event_key():
+    from datetime import datetime, timezone
+
+    user = SimpleNamespace(id=701)
+    notification = SimpleNamespace(
+        id=82,
+        recipient_user_id=user.id,
+        event_type="NEGOTIATION_MESSAGE",
+        title="Private sender name",
+        message="Confidential negotiation text",
+        related_type="UNEXPECTED_TYPE",
+        related_id=900,
+        event_key="malformed-event-key",
+        created_at=datetime.now(timezone.utc),
+        read_at=None,
+    )
+
+    db = MagicMock()
+    count_query = MagicMock()
+    notification_query = MagicMock()
+
+    count_query.filter.return_value = count_query
+    count_query.scalar.return_value = 1
+
+    notification_query.filter.return_value = notification_query
+    notification_query.order_by.return_value = notification_query
+    notification_query.limit.return_value = notification_query
+    notification_query.all.return_value = [notification]
+
+    db.query.side_effect = [count_query, notification_query]
+
+    _install_test_dependencies(db, user)
+    try:
+        with TestClient(app) as client:
+            response = client.get(
+                "/api/notifications",
+                cookies={"language": "en"},
+            )
+
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["unread_count"] == 1
+        assert len(body["items"]) == 1
+
+        payload = body["items"][0]
+        assert payload["title"] == "New message"
+        assert payload["message"] == "New message"
+        assert "Private sender name" not in response.text
+        assert "Confidential negotiation text" not in response.text
     finally:
         app.dependency_overrides.clear()

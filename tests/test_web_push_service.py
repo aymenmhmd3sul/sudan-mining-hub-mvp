@@ -151,3 +151,95 @@ def test_web_push_forwards_vapid_subscription_and_payload(monkeypatch, tmp_path)
         "url": "/buyer/",
     }
     db.query.assert_called_once()
+
+def test_negotiation_web_push_payload_is_generic_in_each_language(
+    monkeypatch, tmp_path
+):
+    import json
+    import sys
+    from types import SimpleNamespace
+
+    private_key = tmp_path / "vapid-private.pem"
+    private_key.write_text("test-private-key")
+
+    monkeypatch.setattr(settings, "VAPID_PUBLIC_KEY", "test-public-key")
+    monkeypatch.setattr(settings, "VAPID_PRIVATE_KEY", str(private_key))
+    monkeypatch.setattr(
+        settings,
+        "VAPID_CLAIMS_EMAIL",
+        "mailto:test@example.com",
+    )
+
+    subscriptions = [
+        SimpleNamespace(
+            endpoint="https://push.example.test/arabic",
+            p256dh="arabic-p256dh",
+            auth="arabic-auth",
+            language="ar",
+        ),
+        SimpleNamespace(
+            endpoint="https://push.example.test/english",
+            p256dh="english-p256dh",
+            auth="english-auth",
+            language="en",
+        ),
+    ]
+
+    db = MagicMock()
+    db.query.return_value.filter.return_value.all.return_value = subscriptions
+    captured = []
+
+    def fake_webpush(*, subscription_info, data, **kwargs):
+        captured.append({
+            "endpoint": subscription_info["endpoint"],
+            "payload": json.loads(data),
+        })
+
+    monkeypatch.setitem(
+        sys.modules,
+        "pywebpush",
+        SimpleNamespace(webpush=fake_webpush),
+    )
+
+    NotificationService.send_web_push(
+        db,
+        recipient_user_id=202,
+        title={
+            "ar": "رسالة جديدة",
+            "en": "New message",
+        },
+        message={
+            "ar": "رسالة جديدة",
+            "en": "New message",
+        },
+        url="/negotiation?room_id=701",
+    )
+
+    assert captured == [
+        {
+            "endpoint": "https://push.example.test/arabic",
+            "payload": {
+                "title": "رسالة جديدة",
+                "body": "رسالة جديدة",
+                "url": "/negotiation?room_id=701",
+            },
+        },
+        {
+            "endpoint": "https://push.example.test/english",
+            "payload": {
+                "title": "New message",
+                "body": "New message",
+                "url": "/negotiation?room_id=701",
+            },
+        },
+    ]
+
+    for item in captured:
+        payload = item["payload"]
+        payload_text = json.dumps(payload, ensure_ascii=False)
+        assert set(payload) == {"title", "body", "url"}
+        assert "Test message" not in payload_text
+        assert "Private sender name" not in payload_text
+        assert "Confidential negotiation text" not in payload_text
+
+    db.query.assert_called_once()

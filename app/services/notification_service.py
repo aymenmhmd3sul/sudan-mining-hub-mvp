@@ -18,6 +18,7 @@ from app.models.notification import (
 )
 from app.models.user import UserModel, UserRole
 from app.services.push_endpoint import is_safe_push_endpoint
+from app.translations.service import normalize_language
 
 
 class NotificationService:
@@ -129,8 +130,8 @@ class NotificationService:
         db: Session,
         *,
         recipient_user_id: int,
-        title: str,
-        message: str,
+        title: str | dict,
+        message: str | dict,
         url: str = "/",
     ) -> None:
         """Send best-effort Web Push without affecting the main operation."""
@@ -154,12 +155,6 @@ class NotificationService:
             )
             return
 
-        payload = json.dumps({
-            "title": title,
-            "body": message,
-            "url": url,
-        })
-
         for subscription in subscriptions:
             if not is_safe_push_endpoint(subscription.endpoint):
                 logger.warning(
@@ -168,6 +163,14 @@ class NotificationService:
                 )
                 continue
 
+            language = normalize_language(getattr(subscription, "language", "ar"))
+            localized_title = title.get(language, title.get("ar", "")) if isinstance(title, dict) else title
+            localized_message = message.get(language, message.get("ar", "")) if isinstance(message, dict) else message
+            payload = json.dumps({
+                "title": localized_title,
+                "body": localized_message,
+                "url": url,
+            }, ensure_ascii=False)
             try:
                 webpush(
                     subscription_info={
