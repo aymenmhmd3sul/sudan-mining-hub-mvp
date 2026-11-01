@@ -676,7 +676,18 @@ function bindModuleCards() {
             bindInteractions();
         }
     );
+    window.getLanguage = getLanguage;
 })();
+
+function getLanguage() {
+    const match = document.cookie.match(
+        /(?:^|;\s*)language=([^;]+)/
+    );
+    const value = match
+        ? decodeURIComponent(match[1])
+        : "ar";
+    return value === "en" ? "en" : "ar";
+}
 
 /* MERCHANT LISTING CREATE */
 function bindListingCreate() {

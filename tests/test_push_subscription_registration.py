@@ -275,3 +275,64 @@ def test_list_notifications_hides_negotiation_sender_and_message_with_malformed_
         assert "Confidential negotiation text" not in response.text
     finally:
         app.dependency_overrides.clear()
+
+
+def test_logout_deletes_only_current_users_device_subscription():
+    user = SimpleNamespace(id=801)
+    existing = SimpleNamespace(
+        id=31,
+        user_id=user.id,
+        endpoint="https://push.example.invalid/device-801",
+    )
+    db = MagicMock()
+    query = db.query.return_value
+    query.filter.return_value = query
+    query.first.return_value = existing
+
+    _install_test_dependencies(db, user)
+    try:
+        with TestClient(app) as client:
+            response = client.request(
+                "DELETE",
+                "/api/notifications/push-subscription",
+                json={"endpoint": existing.endpoint},
+            )
+
+        assert response.status_code == 200, response.text
+        assert response.json() == {"ok": True, "deleted": True}
+        assert db.query.call_args.args == (PushSubscription,)
+        filters = query.filter.call_args.args
+        assert len(filters) == 2
+        assert "push_subscriptions.endpoint" in str(filters[0])
+        assert "push_subscriptions.user_id" in str(filters[1])
+        db.delete.assert_called_once_with(existing)
+        db.commit.assert_called_once()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_logout_does_not_delete_subscription_not_owned_by_current_user():
+    user = SimpleNamespace(id=802)
+    db = MagicMock()
+    query = db.query.return_value
+    query.filter.return_value = query
+    query.first.return_value = None
+
+    _install_test_dependencies(db, user)
+    try:
+        with TestClient(app) as client:
+            response = client.request(
+                "DELETE",
+                "/api/notifications/push-subscription",
+                json={
+                    "endpoint": "https://push.example.invalid/another-device"
+                },
+            )
+
+        assert response.status_code == 200, response.text
+        assert response.json() == {"ok": True, "deleted": False}
+        assert len(query.filter.call_args.args) == 2
+        db.delete.assert_not_called()
+        db.commit.assert_not_called()
+    finally:
+        app.dependency_overrides.clear()

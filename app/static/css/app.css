@@ -3884,6 +3884,7 @@ html[data-theme="light"] .smh-modal-overlay {
     z-index: 1000;
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
     width: min(1180px, 100%);
     margin: 0 auto;
     padding: 8px 18px 0;

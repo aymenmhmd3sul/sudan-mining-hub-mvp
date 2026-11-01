@@ -297,5 +297,8 @@
   "notifications.push_unavailable": "Could not enable notifications; check server configuration",
   "notifications.negotiation_message_title": "New message",
   "notifications.unknown_sender": "User",
-  "notifications.push_unsupported": "This browser does not support notifications"
+  "notifications.push_unsupported": "This browser does not support notifications",
+  "logout.button": "Log out",
+  "logout.in_progress": "Logging out...",
+  "logout.failed": "Could not log out. Check your connection and try again."
 }

@@ -229,3 +229,29 @@ def register_push_subscription(
         "ok": True,
         "subscription_id": subscription.id,
     }
+
+class PushSubscriptionDeletePayload(BaseModel):
+    endpoint: str = Field(min_length=10, max_length=4096)
+
+
+@router.delete("/push-subscription")
+def delete_push_subscription(
+    payload: PushSubscriptionDeletePayload,
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
+):
+    subscription = (
+        db.query(PushSubscription)
+        .filter(
+            PushSubscription.endpoint == payload.endpoint,
+            PushSubscription.user_id == user.id,
+        )
+        .first()
+    )
+
+    if subscription is None:
+        return {"ok": True, "deleted": False}
+
+    db.delete(subscription)
+    db.commit()
+    return {"ok": True, "deleted": True}

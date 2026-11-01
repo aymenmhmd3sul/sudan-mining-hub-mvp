@@ -354,13 +354,6 @@
         pushEnable.textContent = labels.pushBlocked;
     }
 
-    enablePushForGrantedPermission().then(enabled => {
-        if (enabled) {
-            pushEnable.textContent = labels.pushEnabled;
-            pushEnable.disabled = true;
-        }
-    });
-
     refresh(false);
     window.setInterval(() => refresh(true), 30000);
 })();

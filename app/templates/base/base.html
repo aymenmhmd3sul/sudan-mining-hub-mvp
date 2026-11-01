@@ -86,6 +86,16 @@
         >
             {{ t("appearance.button") }}
         </button>
+        <button
+            type="button"
+            id="smh-logout-button"
+            class="smh-appearance-toggle"
+            data-in-progress="{{ t('logout.in_progress') }}"
+            data-failed="{{ t('logout.failed') }}"
+            hidden
+        >
+            {{ t("logout.button") }}
+        </button>
 
         <section
             id="smh-appearance-panel"
@@ -157,6 +167,8 @@
         src="{{ url_for('static', path='js/notifications.js') }}?v=20261020-visitor-button"
         defer
     ></script>
+
+    <script src="{{ url_for('static', path='js/logout.js') }}?v=20261101-device-logout" defer></script>
 
     {% block scripts %}{% endblock %}
 </body>

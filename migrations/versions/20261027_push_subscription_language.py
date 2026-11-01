@@ -3,7 +3,7 @@
 from alembic import op
 import sqlalchemy as sa
 
-revision: str = "20261027_push_subscription_language"
+revision: str = "20261027_push_lang"
 down_revision: str = "notification_read_state_20261012"
 branch_labels = None
 depends_on = None
