@@ -266,7 +266,7 @@ def marketplace_listing_detail(
 def start_listing_negotiation(
     listing_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
+    user=Depends(require_role("BUYER")),
     _subscription_user=Depends(require_active_subscription),
 ):
     listing = ListingService.get_by_id(db, listing_id)
