@@ -28,6 +28,9 @@
         rel="stylesheet"
         href="{{ url_for('static', path='css/notifications.css') }}?v=20261020-notifications-layer"
     >
+
+    <link rel="stylesheet" href="{{ url_for('static', path='css/cinematic-experience.css') }}?v=20261110-cinematic-complete-1">
+    {% block page_styles %}{% endblock %}
 </head>
 
 <body>
@@ -85,6 +88,16 @@
             aria-controls="smh-appearance-panel"
         >
             {{ t("appearance.button") }}
+        </button>
+        <button
+            type="button"
+            id="smh-logout-button"
+            class="smh-appearance-toggle"
+            data-in-progress="{{ t('logout.in_progress') }}"
+            data-failed="{{ t('logout.failed') }}"
+            hidden
+        >
+            {{ t("logout.button") }}
         </button>
 
         <section
@@ -157,6 +170,8 @@
         src="{{ url_for('static', path='js/notifications.js') }}?v=20261020-visitor-button"
         defer
     ></script>
+
+    <script src="{{ url_for('static', path='js/logout.js') }}?v=20261110-cinematic-complete-1" defer></script>
 
     {% block scripts %}{% endblock %}
 </body>

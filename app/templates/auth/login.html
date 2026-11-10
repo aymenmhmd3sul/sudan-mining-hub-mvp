@@ -1,7 +1,11 @@
 {% extends "base/base.html" %}
 
+{% block page_styles %}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/cinematic-login.css') }}?v=20261109-login-split-1">
+{% endblock %}
+
 {% block content %}
-<main class="gateway">
+<main class="gateway gateway-login-cinematic">
     <header class="gateway-header">
         <div class="brand">
             <div class="brand-mark">SMH</div>

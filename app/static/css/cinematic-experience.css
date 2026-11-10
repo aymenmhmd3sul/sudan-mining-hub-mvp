@@ -1,0 +1,488 @@
+/* SMH Cinematic Experience — scoped to gateway and login */
+
+.gateway-login-cinematic .gateway-hero {
+    isolation: isolate;
+    background:
+        radial-gradient(circle at 82% 28%, rgba(214,168,79,.17), transparent 27%),
+        radial-gradient(circle at 15% 88%, rgba(214,168,79,.075), transparent 32%),
+        linear-gradient(135deg, #111b28 0%, #0b131e 54%, #080f18 100%);
+}
+
+.gateway-login-cinematic .gateway-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: .42;
+    background:
+        linear-gradient(115deg, transparent 25%, rgba(255,255,255,.035) 48%, transparent 70%);
+    transform: translateX(-100%);
+    animation: smh-cinematic-light 2.2s ease-out .35s both;
+}
+
+.gateway-login-cinematic .hero-orbit {
+    position: absolute;
+    z-index: 1;
+    width: 390px;
+    height: 390px;
+    right: 3%;
+    top: 50%;
+    border: 1px solid rgba(214,168,79,.12);
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translateY(-50%);
+    animation: smh-orbit-appear 1.5s ease-out both;
+}
+
+.gateway-login-cinematic .hero-orbit::before,
+.gateway-login-cinematic .hero-orbit::after {
+    content: "";
+    position: absolute;
+    inset: 13%;
+    border: 1px solid rgba(242,208,131,.10);
+    border-radius: 50%;
+}
+
+.gateway-login-cinematic .hero-orbit::after {
+    inset: 27%;
+    border-color: rgba(214,168,79,.12);
+}
+
+.gateway-login-cinematic .hero-orbit-one {
+    animation: smh-orbit-appear 1.5s ease-out both, smh-orbit-rotate 38s linear 1.5s infinite;
+}
+
+.gateway-login-cinematic .hero-orbit-two {
+    width: 330px;
+    height: 330px;
+    right: calc(3% + 30px);
+    border-style: dashed;
+    border-color: rgba(242,208,131,.16);
+    animation: smh-orbit-appear 1.8s ease-out .15s both, smh-orbit-rotate-reverse 52s linear 1.8s infinite;
+}
+
+.gateway-login-cinematic .hero-content {
+    animation: smh-content-enter .9s cubic-bezier(.2,.75,.25,1) .12s both;
+}
+
+.gateway-login-cinematic .hero-kicker {
+    animation: smh-content-enter .8s ease-out .22s both;
+}
+
+.gateway-login-cinematic .hero-content h1 {
+    animation: smh-content-enter .9s cubic-bezier(.2,.75,.25,1) .3s both;
+}
+
+.gateway-login-cinematic .hero-content > p {
+    animation: smh-content-enter .9s ease-out .42s both;
+}
+
+.gateway-login-cinematic .hero-emblem {
+    filter: drop-shadow(0 0 24px rgba(214,168,79,.12));
+    animation: smh-emblem-enter 1.35s cubic-bezier(.16,.8,.25,1) .15s both;
+}
+
+.gateway-login-cinematic .emblem-ring-outer {
+    animation: smh-orbit-rotate 65s linear infinite;
+}
+
+.gateway-login-cinematic .emblem-ring-inner {
+    animation: smh-orbit-rotate-reverse 42s linear infinite;
+}
+
+.gateway-login-cinematic .emblem-core {
+    box-shadow:
+        0 0 28px rgba(214,168,79,.12),
+        inset 0 0 24px rgba(214,168,79,.08);
+    animation: smh-core-glow 4s ease-in-out 1.5s infinite;
+}
+
+.gateway-login-cinematic .login-form {
+    animation: smh-content-enter .9s ease-out .48s both;
+}
+
+.gateway-login-cinematic .hero-actions .btn,
+.gateway-login-cinematic .login-form > button[type="submit"] {
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.gateway-login-cinematic .hero-actions .btn:hover,
+.gateway-login-cinematic .login-form > button[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(214,168,79,.16);
+}
+
+.gateway-login-cinematic .hero-actions .btn:focus-visible,
+.gateway-login-cinematic .login-form button:focus-visible,
+.gateway-login-cinematic .login-form input:focus-visible {
+    outline: 2px solid var(--gold-light);
+    outline-offset: 3px;
+}
+
+html[data-theme="light"] .gateway-login-cinematic .gateway-hero {
+    background:
+        radial-gradient(circle at 82% 28%, rgba(214,168,79,.20), transparent 28%),
+        linear-gradient(135deg, #263444 0%, #172434 58%, #101b29 100%);
+}
+
+@keyframes smh-content-enter {
+    from { opacity: 0; transform: translateY(19px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes smh-emblem-enter {
+    from { opacity: 0; }
+    to { opacity: .92; }
+}
+
+@keyframes smh-orbit-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes smh-orbit-rotate {
+    from { rotate: 0deg; }
+    to { rotate: 360deg; }
+}
+
+@keyframes smh-orbit-rotate-reverse {
+    from { rotate: 360deg; }
+    to { rotate: 0deg; }
+}
+
+@keyframes smh-core-glow {
+    0%, 100% { box-shadow: 0 0 22px rgba(214,168,79,.10), inset 0 0 18px rgba(214,168,79,.06); }
+    50% { box-shadow: 0 0 34px rgba(214,168,79,.22), inset 0 0 26px rgba(214,168,79,.12); }
+}
+
+@keyframes smh-cinematic-light {
+    to { transform: translateX(100%); }
+}
+
+@media (max-width: 760px) {
+    .gateway-login-cinematic .hero-orbit {
+        width: 285px;
+        height: 285px;
+        right: 50%;
+        top: 22%;
+        transform: translate(50%, -50%);
+    }
+
+    .gateway-login-cinematic .hero-orbit-two {
+        width: 245px;
+        height: 245px;
+        right: calc(50% - 122px);
+    }
+
+    .gateway-login-cinematic .hero-emblem {
+        filter: drop-shadow(0 0 17px rgba(214,168,79,.10));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gateway-login-cinematic .gateway-hero::before,
+    .gateway-login-cinematic .hero-orbit,
+    .gateway-login-cinematic .hero-orbit-one,
+    .gateway-login-cinematic .hero-orbit-two,
+    .gateway-login-cinematic .hero-content,
+    .gateway-login-cinematic .hero-kicker,
+    .gateway-login-cinematic .hero-content h1,
+    .gateway-login-cinematic .hero-content > p,
+    .gateway-login-cinematic .hero-emblem,
+    .gateway-login-cinematic .emblem-ring-outer,
+    .gateway-login-cinematic .emblem-ring-inner,
+    .gateway-login-cinematic .emblem-core,
+    .gateway-login-cinematic .login-form {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+
+/* SMH cinematic logout scene */
+#smh-logout-scene {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background:
+        radial-gradient(circle at 50% 45%,
+            rgba(34, 75, 58, .96),
+            rgba(5, 17, 14, .99) 72%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .65s ease, visibility .65s ease;
+}
+
+#smh-logout-scene.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.smh-logout-frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    color: #f2d083;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(36px) scale(.90);
+    transition:
+        transform .95s cubic-bezier(.2,.75,.25,1),
+        opacity .75s ease;
+}
+
+#smh-logout-scene.is-visible .smh-logout-frame {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.smh-logout-emblem {
+    width: 116px;
+    height: 116px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(242,208,131,.65);
+    border-radius: 50%;
+    outline: 1px solid rgba(214,168,79,.20);
+    outline-offset: 12px;
+    box-shadow: 0 0 42px rgba(214,168,79,.16),
+                inset 0 0 28px rgba(214,168,79,.10);
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    animation: smh-logout-pulse 2.8s ease-in-out infinite;
+}
+
+.smh-logout-title {
+    font-size: clamp(20px, 4vw, 30px);
+    font-weight: 800;
+}
+
+.smh-logout-status {
+    color: rgba(242,208,131,.72);
+    font-size: 14px;
+}
+
+@keyframes smh-logout-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 28px rgba(214,168,79,.12),
+                    inset 0 0 20px rgba(214,168,79,.07);
+    }
+    50% {
+        transform: scale(1.09);
+        box-shadow: 0 0 58px rgba(214,168,79,.30),
+                    inset 0 0 34px rgba(214,168,79,.16);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #smh-logout-scene,
+    .smh-logout-frame {
+        transition: none !important;
+    }
+
+    .smh-logout-emblem {
+        animation: none !important;
+    }
+}
+
+/* SMH — Expanded cinematic orbital atmosphere */
+.gateway-login-cinematic .hero-orbit-one {
+    width: min(76vw, 720px);
+    height: min(76vw, 720px);
+    right: -12%;
+    top: 50%;
+    border-color: rgba(214, 168, 79, .24);
+    background:
+        radial-gradient(circle at 17% 25%, rgba(242,208,131,.85) 0 2px, transparent 4px),
+        radial-gradient(circle at 78% 72%, rgba(214,168,79,.65) 0 2px, transparent 4px),
+        radial-gradient(circle at 48% 8%, rgba(242,208,131,.45) 0 1.5px, transparent 4px);
+    box-shadow:
+        inset 0 0 42px rgba(214,168,79,.035),
+        0 0 30px rgba(214,168,79,.055);
+    animation:
+        smh-orbit-appear 1.5s ease-out both,
+        smh-orbit-rotate 38s linear 1.5s infinite,
+        smh-backdrop-orbit-glow 8s ease-in-out 1.5s infinite;
+}
+
+.gateway-login-cinematic .hero-orbit-two {
+    width: min(62vw, 580px);
+    height: min(62vw, 580px);
+    right: -3%;
+    top: 50%;
+    border-color: rgba(242,208,131,.25);
+    background:
+        radial-gradient(circle at 12% 65%, rgba(242,208,131,.65) 0 2px, transparent 4px),
+        radial-gradient(circle at 85% 28%, rgba(214,168,79,.7) 0 2px, transparent 4px);
+    box-shadow:
+        inset 0 0 34px rgba(214,168,79,.045),
+        0 0 24px rgba(214,168,79,.045);
+    animation:
+        smh-orbit-appear 1.8s ease-out .15s both,
+        smh-orbit-rotate-reverse 52s linear 1.8s infinite,
+        smh-backdrop-orbit-glow 10s ease-in-out 1.8s infinite reverse;
+}
+
+.gateway-login-cinematic .hero-orbit-one::before,
+.gateway-login-cinematic .hero-orbit-one::after,
+.gateway-login-cinematic .hero-orbit-two::before,
+.gateway-login-cinematic .hero-orbit-two::after {
+    border-color: rgba(242,208,131,.16);
+}
+
+.gateway-login-cinematic .hero-emblem {
+    filter: drop-shadow(0 0 30px rgba(214,168,79,.22));
+}
+
+.gateway-login-cinematic .emblem-ring-outer {
+    border-color: rgba(242,208,131,.24);
+    box-shadow:
+        0 0 0 28px rgba(214,168,79,.035),
+        0 0 0 56px rgba(214,168,79,.022),
+        0 0 28px rgba(214,168,79,.10);
+}
+
+.gateway-login-cinematic .emblem-ring-inner {
+    border-color: rgba(242,208,131,.30);
+    border-top-color: rgba(242,208,131,.85);
+    border-bottom-color: rgba(242,208,131,.55);
+    box-shadow: 0 0 18px rgba(214,168,79,.10);
+}
+
+@keyframes smh-backdrop-orbit-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 5px rgba(214,168,79,.10));
+        opacity: .72;
+    }
+    50% {
+        filter: drop-shadow(0 0 15px rgba(242,208,131,.25));
+        opacity: 1;
+    }
+}
+
+@media (max-width: 760px) {
+    .gateway-login-cinematic .hero-orbit-one {
+        width: 116vw;
+        height: 116vw;
+        right: -38vw;
+        top: 35%;
+    }
+
+    .gateway-login-cinematic .hero-orbit-two {
+        width: 94vw;
+        height: 94vw;
+        right: -20vw;
+        top: 35%;
+    }
+
+    .gateway-login-cinematic .hero-emblem {
+        filter: drop-shadow(0 0 23px rgba(214,168,79,.20));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gateway-login-cinematic .hero-orbit-one,
+    .gateway-login-cinematic .hero-orbit-two {
+        animation: none !important;
+        filter: none !important;
+    }
+}
+
+
+
+/* SMH — Enhanced gold emblem glow (approved preview design) */
+.gateway-login-cinematic .hero-emblem {
+    opacity: .92;
+    filter:
+        drop-shadow(0 0 12px rgba(242,208,131,.42))
+        drop-shadow(0 0 30px rgba(214,168,79,.38))
+        drop-shadow(0 0 55px rgba(214,168,79,.18));
+}
+
+.gateway-login-cinematic .emblem-core {
+    border-color: rgba(255,222,151,.85);
+    animation: smh-core-glow-enhanced 3.6s ease-in-out infinite;
+}
+
+.gateway-login-cinematic .emblem-ring-outer {
+    box-shadow:
+        0 0 0 28px rgba(214,168,79,.055),
+        0 0 0 56px rgba(214,168,79,.035),
+        0 0 22px rgba(242,208,131,.28),
+        0 0 42px rgba(214,168,79,.18);
+}
+
+.gateway-login-cinematic .emblem-ring-inner {
+    box-shadow:
+        0 0 18px rgba(242,208,131,.28),
+        inset 0 0 14px rgba(214,168,79,.12);
+}
+
+@keyframes smh-core-glow-enhanced {
+    0%, 100% {
+        box-shadow:
+            0 0 28px rgba(214,168,79,.32),
+            0 0 48px rgba(214,168,79,.16),
+            inset 0 0 22px rgba(242,208,131,.14);
+    }
+    50% {
+        box-shadow:
+            0 0 42px rgba(242,208,131,.62),
+            0 0 72px rgba(214,168,79,.32),
+            inset 0 0 32px rgba(242,208,131,.25);
+    }
+}
+
+
+/* SMH cinematic logout — complete farewell and full-scene exit */
+.smh-logout-farewell {
+    margin-top: 8px;
+    color: #d9c18a;
+    text-align: center;
+    font-size: 1rem;
+    letter-spacing: .08em;
+    opacity: .85;
+}
+
+.smh-logout-english {
+    display: block;
+    margin-top: 7px;
+    direction: ltr;
+    font-size: .78rem;
+    letter-spacing: .16em;
+    opacity: .65;
+}
+
+#smh-logout-scene.is-closing {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 1.7s ease,
+        visibility 0s linear 1.7s;
+}
+
+#smh-logout-scene.is-closing .smh-logout-frame {
+    opacity: 0;
+    transform: translateY(-28px) scale(.88);
+    filter: blur(8px);
+    transition:
+        opacity 1.4s ease,
+        transform 1.4s cubic-bezier(.4,0,.8,.3),
+        filter 1.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #smh-logout-scene.is-closing,
+    #smh-logout-scene.is-closing .smh-logout-frame {
+        transition: none !important;
+        filter: none !important;
+    }
+}
