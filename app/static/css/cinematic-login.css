@@ -1,0 +1,240 @@
+/* SMH CINEMATIC LOGIN REVEAL — INSTALLED */
+.gateway-login-cinematic {
+    position: relative;
+    isolation: isolate;
+}
+
+.gateway-login-cinematic::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 50% 45%, rgba(18,48,37,.30), transparent 55%),
+        linear-gradient(135deg, #030a08, #07140f 55%, #030907);
+    animation: smh-login-curtain 2.15s cubic-bezier(.72,0,.25,1) .15s both;
+}
+
+.gateway-login-cinematic .gateway-header {
+    animation: smh-login-header 1.1s cubic-bezier(.16,.8,.25,1) .65s both;
+}
+
+.gateway-login-cinematic .gateway-hero {
+    animation: smh-login-stage 1.5s cubic-bezier(.16,.8,.25,1) .25s both;
+}
+
+.gateway-login-cinematic .hero-orbit-one {
+    animation:
+        smh-login-orbit-arrive 1.8s ease-out .65s both,
+        smh-orbit-rotate 38s linear 2.45s infinite,
+        smh-backdrop-orbit-glow 8s ease-in-out 2.45s infinite;
+}
+
+.gateway-login-cinematic .hero-orbit-two {
+    animation:
+        smh-login-orbit-arrive 2s ease-out .9s both,
+        smh-orbit-rotate-reverse 52s linear 2.9s infinite,
+        smh-backdrop-orbit-glow 10s ease-in-out 2.9s infinite reverse;
+}
+
+.gateway-login-cinematic .hero-emblem {
+    animation: smh-login-emblem 1.7s cubic-bezier(.16,.8,.25,1) .75s both;
+}
+
+.gateway-login-cinematic .emblem-ring-outer {
+    animation: smh-orbit-rotate 65s linear 2.45s infinite;
+}
+
+.gateway-login-cinematic .emblem-ring-inner {
+    animation: smh-orbit-rotate-reverse 42s linear 2.45s infinite;
+}
+
+.gateway-login-cinematic .hero-content {
+    animation: smh-login-content 1.15s cubic-bezier(.16,.8,.25,1) 1s both;
+}
+
+.gateway-login-cinematic .hero-kicker {
+    animation: smh-login-content .8s ease-out 1.2s both;
+}
+
+.gateway-login-cinematic .hero-content h1 {
+    animation: smh-login-content 1s cubic-bezier(.16,.8,.25,1) 1.4s both;
+}
+
+.gateway-login-cinematic .hero-content > p {
+    animation: smh-login-content .9s ease-out 1.65s both;
+}
+
+.gateway-login-cinematic .login-form > label:nth-of-type(1) {
+    animation: smh-login-field .7s ease-out 1.85s both;
+}
+
+.gateway-login-cinematic .login-form > input {
+    animation: smh-login-field .8s ease-out 2s both;
+}
+
+.gateway-login-cinematic .login-form > label:nth-of-type(2) {
+    animation: smh-login-field .7s ease-out 2.15s both;
+}
+
+.gateway-login-cinematic .login-form .password-field {
+    animation: smh-login-field .8s ease-out 2.3s both;
+}
+
+.gateway-login-cinematic .login-form .auth-help {
+    animation: smh-login-field .7s ease-out 2.45s both;
+}
+
+.gateway-login-cinematic .login-form .login-status {
+    animation: smh-login-field .7s ease-out 2.55s both;
+}
+
+.gateway-login-cinematic .login-form > button[type="submit"] {
+    animation: smh-login-button .9s cubic-bezier(.16,.8,.25,1) 2.65s both;
+}
+
+.gateway-login-cinematic .hero-actions {
+    animation: smh-login-content .9s ease-out 2.9s both;
+}
+
+@keyframes smh-login-curtain {
+    0% { opacity: 1; }
+    65% { opacity: .82; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes smh-login-header {
+    from { opacity: 0; transform: translateY(-22px); filter: blur(5px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes smh-login-stage {
+    from { opacity: .25; transform: scale(1.035); filter: brightness(.35); }
+    to { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes smh-login-orbit-arrive {
+    from { opacity: 0; scale: .72; filter: blur(8px); }
+    to { opacity: 1; scale: 1; filter: blur(0); }
+}
+
+@keyframes smh-login-emblem {
+    0% { opacity: 0; transform: scale(.48) rotate(-18deg); filter: blur(10px); }
+    70% { opacity: 1; transform: scale(1.08) rotate(4deg); filter: blur(0); }
+    100% { opacity: .96; transform: scale(1) rotate(0); }
+}
+
+@keyframes smh-login-content {
+    from { opacity: 0; transform: translateY(25px); filter: blur(4px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes smh-login-field {
+    from { opacity: 0; transform: translateY(15px) translateX(-5px); }
+    to { opacity: 1; transform: translateY(0) translateX(0); }
+}
+
+@keyframes smh-login-button {
+    0% { opacity: 0; transform: translateY(18px) scale(.96); }
+    75% { opacity: 1; transform: translateY(-2px) scale(1.015); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 760px) {
+    .gateway-login-cinematic::after {
+        background: radial-gradient(circle at 50% 35%, #10271e, #030a08 75%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gateway-login-cinematic::after,
+    .gateway-login-cinematic .gateway-header,
+    .gateway-login-cinematic .gateway-hero,
+    .gateway-login-cinematic .hero-orbit-one,
+    .gateway-login-cinematic .hero-orbit-two,
+    .gateway-login-cinematic .hero-emblem,
+    .gateway-login-cinematic .emblem-core,
+    .gateway-login-cinematic .emblem-ring-outer,
+    .gateway-login-cinematic .emblem-ring-inner,
+    .gateway-login-cinematic .hero-content,
+    .gateway-login-cinematic .hero-kicker,
+    .gateway-login-cinematic .hero-content h1,
+    .gateway-login-cinematic .hero-content > p,
+    .gateway-login-cinematic .login-form > *,
+    .gateway-login-cinematic .hero-actions {
+        animation: none !important;
+        filter: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+}
+
+/* Login-only mobile layout and contrast corrections */
+@media (max-width: 600px) {
+    .gateway-login-cinematic {
+        min-height: 100vh;
+        min-height: 100svh;
+    }
+
+    .gateway-login-cinematic .gateway-hero {
+        height: auto;
+        min-height: 0;
+        align-items: flex-start;
+        padding: 24px 18px;
+    }
+
+    .gateway-login-cinematic .hero-content {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .gateway-login-cinematic .hero-content h1 {
+        line-height: 1.2;
+    }
+
+    .gateway-login-cinematic .hero-emblem {
+        top: 12px;
+        right: auto;
+        inset-inline-end: 12px;
+        width: clamp(120px, 38vw, 164px);
+        height: clamp(120px, 38vw, 164px);
+        transform: none;
+        opacity: .12;
+        animation: none;
+        filter: drop-shadow(0 0 12px rgba(214,168,79,.08));
+    }
+
+    .gateway-login-cinematic .login-form .auth-help a {
+        color: #f2d083;
+        font-weight: 700;
+        text-decoration: underline;
+        text-decoration-color: rgba(242,208,131,.65);
+        text-underline-offset: .22em;
+    }
+
+    .gateway-login-cinematic .login-form .auth-help a:hover,
+    .gateway-login-cinematic .login-form .auth-help a:focus-visible {
+        color: #fff2cc;
+        text-decoration-color: currentColor;
+    }
+
+    .gateway-login-cinematic .login-form .auth-help a:focus-visible {
+        outline: 2px solid #f2d083;
+        outline-offset: 3px;
+        border-radius: 2px;
+    }
+
+    .gateway-login-cinematic .login-form > button[type="submit"] {
+        min-height: 50px;
+        flex: 0 0 auto;
+    }
+}
+
+/* The reduced-motion rule above disables animation; hide its static curtain too. */
+@media (prefers-reduced-motion: reduce) {
+    .gateway-login-cinematic::after {
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+}
