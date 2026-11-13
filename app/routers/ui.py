@@ -789,7 +789,7 @@ def send_negotiation_message(
         .first()
     )
 
-    if room.offer_id is None and request_obj is None:
+    if request_obj is None:
         raise HTTPException(
             status_code=404,
             detail="Negotiation request not found",
@@ -803,6 +803,11 @@ def send_negotiation_message(
         )
         if offer is None:
             raise HTTPException(status_code=404, detail="Negotiation offer not found")
+        if offer.request_id != request_obj.id:
+            raise HTTPException(
+                status_code=404,
+                detail="Negotiation offer does not belong to this request",
+            )
         seller_id = offer.merchant_id
     elif request_obj is not None and request_obj.listing_id is not None:
         listing = (

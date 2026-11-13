@@ -179,9 +179,14 @@ def test_unapproved_agent_can_send_message_as_buyer_in_offer_room(
 ):
     ctx = agent_message_route
     ctx["room"].offer_id = 902
-    ctx["request_query"].first.return_value = None
+    ctx["request_query"].first.return_value = SimpleNamespace(
+        id=801,
+        buyer_id=ctx["agent_id"],
+        listing_id=None,
+    )
     ctx["offer_query"].first.return_value = SimpleNamespace(
         id=902,
+        request_id=801,
         merchant_id=202,
     )
 
@@ -206,9 +211,14 @@ def test_unapproved_agent_cannot_send_message_as_offer_merchant(
 ):
     ctx = agent_message_route
     ctx["room"].offer_id = 902
-    ctx["request_query"].first.return_value = None
+    ctx["request_query"].first.return_value = SimpleNamespace(
+        id=801,
+        buyer_id=202,
+        listing_id=None,
+    )
     ctx["offer_query"].first.return_value = SimpleNamespace(
         id=902,
+        request_id=801,
         merchant_id=ctx["agent_id"],
     )
 
@@ -249,4 +259,36 @@ def test_missing_request_blocks_message_sending(agent_message_route):
 
     assert exc.value.status_code == 404
     assert exc.value.detail == "Negotiation request not found"
+    ctx["add_message"].assert_not_called()
+
+
+def test_offer_request_mismatch_blocks_message_sending(agent_message_route):
+    ctx = agent_message_route
+    ctx["room"].offer_id = 902
+    ctx["request_query"].first.return_value = SimpleNamespace(
+        id=801,
+        buyer_id=ctx["agent_id"],
+        listing_id=None,
+    )
+    ctx["offer_query"].first.return_value = SimpleNamespace(
+        id=902,
+        request_id=999,
+        merchant_id=202,
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        ui.send_negotiation_message(
+            room_id=ctx["room"].id,
+            body="Test message",
+            db=ctx["db"],
+            user=SimpleNamespace(
+                id=ctx["agent_id"],
+                role="AGENT",
+                is_approved=False,
+            ),
+            _subscription_user=None,
+        )
+
+    assert exc.value.status_code == 404
+    assert exc.value.detail == "Negotiation offer does not belong to this request"
     ctx["add_message"].assert_not_called()
