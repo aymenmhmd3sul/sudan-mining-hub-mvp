@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException, Cookie
 from app.db.session import get_db
 from app.services.listing_service import ListingService
 from app.services.negotiation_service import NegotiationService
-from app.models.listing import ListingStatus
+from app.models.listing import Listing, ListingStatus
 from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.request_item import RequestItem
 from app.models.negotiation import (
@@ -30,6 +30,23 @@ from app.translations.templates import template_context
 router = APIRouter(tags=["UI"])
 
 templates = Jinja2Templates(directory="app/templates")
+
+
+def _require_agent_seller_approval(user, listing_owner_id):
+    role = getattr(user, "role", None)
+    role_value = getattr(role, "value", role)
+
+    if (
+        role_value == "AGENT"
+        and user.id == listing_owner_id
+        and not getattr(user, "is_approved", False)
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Seller approval required",
+        )
+
+    return user
 
 
 def get_optional_current_user(
@@ -765,6 +782,44 @@ def send_negotiation_message(
 
     if participant is None:
         raise HTTPException(status_code=403, detail="You are not a participant in this negotiation")
+
+    request_obj = (
+        db.query(BuyerRequest)
+        .filter(BuyerRequest.id == room.request_id)
+        .first()
+    )
+
+    if room.offer_id is None and request_obj is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Negotiation request not found",
+        )
+
+    if room.offer_id is not None:
+        offer = (
+            db.query(Offer)
+            .filter(Offer.id == room.offer_id)
+            .first()
+        )
+        if offer is None:
+            raise HTTPException(status_code=404, detail="Negotiation offer not found")
+        seller_id = offer.merchant_id
+    elif request_obj is not None and request_obj.listing_id is not None:
+        listing = (
+            db.query(Listing)
+            .filter(Listing.id == request_obj.listing_id)
+            .first()
+        )
+        if listing is None:
+            raise HTTPException(status_code=404, detail="Negotiation listing not found")
+        seller_id = listing.owner_id
+    elif request_obj is not None and user.id != request_obj.buyer_id:
+        seller_id = user.id
+    else:
+        seller_id = None
+
+    if seller_id is not None:
+        _require_agent_seller_approval(user, seller_id)
 
     message_body = body.strip()
 

@@ -15,6 +15,8 @@ def message_route(monkeypatch):
 
     room = SimpleNamespace(
         id=room_id,
+        request_id=801,
+        offer_id=None,
         status=NegotiationStatus.OPEN,
     )
     participant = SimpleNamespace(user_id=sender_id)
@@ -36,7 +38,19 @@ def message_route(monkeypatch):
     recipients_query.filter.return_value = recipients_query
     recipients_query.all.return_value = [(202,), (303,)]
 
-    db.query.side_effect = [participant_query, recipients_query]
+    request_query = MagicMock()
+    request_query.filter.return_value = request_query
+    request_query.first.return_value = SimpleNamespace(
+        id=801,
+        buyer_id=sender_id,
+        listing_id=None,
+    )
+
+    db.query.side_effect = [
+        participant_query,
+        request_query,
+        recipients_query,
+    ]
 
     monkeypatch.setattr(
         ui.NegotiationService,

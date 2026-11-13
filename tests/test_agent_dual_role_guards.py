@@ -135,3 +135,39 @@ def test_agent_negotiation_route_role_contracts(
     path, expected_guard, expected_roles
 ):
     assert _route_role_guard(path) == (expected_guard, expected_roles)
+
+from app.routers.ui import _require_agent_seller_approval
+
+
+def test_agent_message_approval_depends_on_seller_identity():
+    unapproved_agent = SimpleNamespace(
+        id=13,
+        role=UserRole.AGENT,
+        is_approved=False,
+    )
+
+    # Agent acting as buyer: seller approval is not required.
+    assert _require_agent_seller_approval(
+        unapproved_agent, listing_owner_id=27
+    ) is unapproved_agent
+
+    # Agent acting as listing owner: approval is mandatory.
+    with pytest.raises(HTTPException) as exc:
+        _require_agent_seller_approval(
+            unapproved_agent, listing_owner_id=13
+        )
+
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "Seller approval required"
+
+
+def test_approved_agent_can_message_as_listing_owner():
+    approved_agent = SimpleNamespace(
+        id=13,
+        role=UserRole.AGENT,
+        is_approved=True,
+    )
+
+    assert _require_agent_seller_approval(
+        approved_agent, listing_owner_id=13
+    ) is approved_agent
