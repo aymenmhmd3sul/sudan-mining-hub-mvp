@@ -110,8 +110,9 @@ def _active_listing():
     )
 
 
-def test_buyer_can_start_eligible_negotiation_without_database():
-    buyer = SimpleNamespace(id=13, role=UserRole.BUYER)
+@pytest.mark.parametrize("role", [UserRole.BUYER, UserRole.AGENT])
+def test_buyer_and_agent_can_start_eligible_negotiation_without_database(role):
+    buyer = SimpleNamespace(id=13, role=role)
     client, db = _client_for_authenticated_user(buyer)
 
     with (
@@ -130,7 +131,7 @@ def test_buyer_can_start_eligible_negotiation_without_database():
     assert db.commits == 1
 
 
-@pytest.mark.parametrize("role", [UserRole.MERCHANT, UserRole.AGENT])
+@pytest.mark.parametrize("role", [UserRole.MERCHANT])
 def test_non_buyer_cannot_start_negotiation_or_create_records(role):
     client, db = _client_for_authenticated_user(SimpleNamespace(id=13, role=role))
 

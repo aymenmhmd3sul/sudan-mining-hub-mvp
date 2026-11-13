@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.user import UserModel
-from app.routers.auth import require_active_subscription, require_role
+from app.routers.auth import require_active_subscription, require_seller_role
 from app.services.negotiation_service import NegotiationService
 
 
@@ -17,7 +17,7 @@ router = APIRouter(
 def approve_negotiation(
     room_id: int,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("MERCHANT")),
+    user: UserModel = Depends(require_seller_role("MERCHANT", "AGENT")),
     _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     try:

@@ -75,7 +75,7 @@ class SubscriptionService:
         if user is None:
             raise ValueError("User not found")
 
-        if user.role == UserRole.MERCHANT:
+        if user.role in (UserRole.MERCHANT, UserRole.AGENT):
             user.is_approved = True
 
         current = SubscriptionService.get_active_for_user(

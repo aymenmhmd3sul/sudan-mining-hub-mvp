@@ -1,10 +1,30 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.user import UserModel
-from app.routers.auth import require_role
+from app.models.user import UserModel, UserRole
+from app.routers.auth import (
+    get_current_user,
+    require_role,
+    require_seller_role,
+)
 from app.services.request_service import RequestService
+from app.services.subscription_service import SubscriptionService
+
+
+def require_agent_active_subscription(
+    db: Session = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
+):
+    if (
+        user.role == UserRole.AGENT
+        and not SubscriptionService.is_active(db, user.id)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Active subscription required",
+        )
+    return user
 
 router = APIRouter(
     prefix="/api/v1/requests",
@@ -16,7 +36,7 @@ router = APIRouter(
 def list_my_requests(
     limit: int = 100,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("BUYER")),
+    user: UserModel = Depends(require_role("BUYER", "AGENT")),
 ):
     requests = RequestService.list_for_buyer(
         db,
@@ -56,7 +76,8 @@ def list_my_requests(
 def list_requests(
     limit: int = 100,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("MERCHANT", "ADMIN")),
+    user: UserModel = Depends(require_seller_role("MERCHANT", "AGENT", "ADMIN")),
+    _agent_subscription_user: UserModel = Depends(require_agent_active_subscription),
 ):
     requests = RequestService.list_open(db, limit=limit)
 

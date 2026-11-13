@@ -50,7 +50,7 @@
                 {% if role == "MERCHANT" %}
                     {{ t("dashboard.merchant_description") }}
                     {% elif role == "AGENT" %}
-                        {{ t("modules.services.description") }}
+                        {{ t("dashboard.agent_description") }}
                 {% else %}
                     {{ t("dashboard.buyer_description") }}
                 {% endif %}
@@ -99,15 +99,15 @@
             </span>
         </a>
 
-        {% if role == "MERCHANT" %}
+        {% if role in ("MERCHANT", "AGENT") %}
         <a class="module-card dashboard-listing-create-card" href="/merchant/listings/new">
             <span class="module-top">
                 <span class="module-icon">01+</span>
                 <span class="module-arrow">↗</span>
             </span>
             <span class="module-content">
-                <strong>إضافة سلعة</strong>
-                <span>أنشئ إعلان سلعة جديدة لعرضها في السوق.</span>
+                <strong>{{ t("dashboard.add_listing_title") }}</strong>
+                <span>{{ t("dashboard.add_listing_description") }}</span>
             </span>
         </a>
 
@@ -128,12 +128,10 @@
         </a>
         {% endif %}
 
-        {% if role != "AGENT" %}
-
         <a class="module-card" href="/negotiation">
             <span class="module-top">
                 <span class="module-icon">
-                    {% if role == "MERCHANT" %}04{% else %}03{% endif %}
+                    {% if role in ("MERCHANT", "AGENT") %}04{% else %}03{% endif %}
                 </span>
                 <span class="module-arrow">↗</span>
             </span>
@@ -143,13 +141,11 @@
             </span>
         </a>
 
-        {% endif %}
-
         {% if role in ("BUYER", "AGENT") %}
         <a class="module-card" href="/services">
             <span class="module-top">
                 <span class="module-icon">
-                    {% if role == "AGENT" %}03{% else %}04{% endif %}
+                    {% if role == "AGENT" %}05{% else %}04{% endif %}
                 </span>
                 <span class="module-arrow">↗</span>
             </span>

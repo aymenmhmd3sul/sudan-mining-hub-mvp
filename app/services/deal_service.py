@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.buyer_request import BuyerRequest, RequestStatus
 from app.models.deal import Deal, DealStatus
 from app.models.listing import Listing, ListingStatus
-from app.models.user import UserModel, UserRole
 from app.models.deal_item import DealItem
 from app.models.negotiation import NegotiationRoom, NegotiationStatus
 from app.models.offer import Offer, OfferStatus
@@ -40,7 +40,7 @@ class DealService:
     ) -> list[Deal]:
         return (
             db.query(Deal)
-            .filter(Deal.agent_id == agent_id)
+            .filter(or_(Deal.buyer_id == agent_id, Deal.merchant_id == agent_id))
             .order_by(Deal.id.desc())
             .all()
         )
@@ -111,34 +111,6 @@ class DealService:
         else:
             db.flush()
 
-        return deal
-
-    @staticmethod
-    def assign_agent(
-        db: Session,
-        deal: Deal,
-        agent_id: int,
-    ) -> Deal:
-        agent = (
-            db.query(UserModel)
-            .filter(UserModel.id == agent_id)
-            .first()
-        )
-        if agent is None:
-            raise ValueError("Agent not found")
-
-        if agent.role != UserRole.AGENT:
-            raise ValueError("Selected user is not an agent")
-
-        if deal.status in (
-            DealStatus.COMPLETED,
-            DealStatus.CANCELLED,
-        ):
-            raise ValueError("Cannot assign agent to a closed deal")
-
-        deal.agent_id = agent.id
-        db.commit()
-        db.refresh(deal)
         return deal
 
     @staticmethod
@@ -288,10 +260,8 @@ class DealService:
         deal: Deal,
         actor_id: int,
     ) -> Deal:
-        if actor_id not in (deal.merchant_id, deal.agent_id):
-            raise PermissionError(
-                "Only the merchant or assigned agent can mark the deal as delivered"
-            )
+        if actor_id != deal.merchant_id:
+            raise PermissionError("Only the deal merchant can mark it as delivered")
 
         if deal.status != DealStatus.CONFIRMED:
             raise ValueError("Only CONFIRMED deals can be marked as delivered")

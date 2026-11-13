@@ -404,6 +404,30 @@ def require_role(*allowed_roles):
     return role_guard
 
 
+def require_seller_role(*allowed_roles):
+    def seller_guard(
+        user: UserModel = Depends(get_current_user),
+    ):
+        if user.role.value not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+
+        if (
+            user.role in (UserRole.MERCHANT, UserRole.AGENT)
+            and not user.is_approved
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Seller approval required",
+            )
+
+        return user
+
+    return seller_guard
+
+
 
 
 # Password reset throttling for the current single-instance MVP.

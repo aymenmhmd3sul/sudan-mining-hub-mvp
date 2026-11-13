@@ -7,7 +7,7 @@ from app.services.deal_service import DealService
 from app.services.deal_access_service import DealAccessService
 from app.services.commission_service import CommissionService
 from app.models.user import UserModel, UserRole
-from app.routers.auth import get_current_user, require_role, require_active_subscription
+from app.routers.auth import get_current_user, require_role, require_seller_role, require_active_subscription
 
 router = APIRouter(prefix="/deals", tags=["Deals"])
 
@@ -103,7 +103,7 @@ def get_deal_contacts(
 def approve_deal(
     deal_id: int,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("BUYER")),
+    user: UserModel = Depends(require_role("BUYER", "AGENT")),
         _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
@@ -127,14 +127,9 @@ def approve_deal(
 def deliver_deal(
     deal_id: int,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(get_current_user),
+    user: UserModel = Depends(require_seller_role("MERCHANT", "AGENT")),
     _subscription_user: UserModel = Depends(require_active_subscription),
 ):
-    if user.role not in (UserRole.MERCHANT, UserRole.AGENT):
-        raise HTTPException(
-            status_code=403,
-            detail="Only the merchant or assigned agent can mark the deal as delivered",
-        )
 
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
 
@@ -157,7 +152,7 @@ def deliver_deal(
 def receive_deal(
     deal_id: int,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("BUYER")),
+    user: UserModel = Depends(require_role("BUYER", "AGENT")),
         _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
@@ -209,7 +204,7 @@ def cancel_deal(
 def accept_deal_commission(
     deal_id: int,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("MERCHANT")),
+    user: UserModel = Depends(require_seller_role("MERCHANT", "AGENT")),
         _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()

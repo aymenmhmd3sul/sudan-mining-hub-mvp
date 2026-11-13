@@ -36,7 +36,7 @@ class OfferCreatePayload(BaseModel):
 def create_offer(
     payload: OfferCreatePayload,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("BUYER")),
+    user: UserModel = Depends(require_role("BUYER", "AGENT")),
     _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     try:

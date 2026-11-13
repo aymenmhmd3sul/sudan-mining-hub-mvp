@@ -421,7 +421,7 @@
 
                 {% elif deal.status.value == "CONFIRMED"
                       and current_user.role.value == "AGENT"
-                      and deal.agent_id == current_user.id %}
+                      and deal.merchant_id == current_user.id %}
                 <p>
                     {{ t("negotiation.deal_confirmed_execute_delivery") }}
                 </p>

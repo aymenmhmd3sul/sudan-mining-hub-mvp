@@ -21,7 +21,7 @@ from app.services.notification_service import NotificationService
 import logging
 
 logger = logging.getLogger(__name__)
-from app.routers.auth import get_current_user, get_optional_current_user, require_role, require_active_subscription
+from app.routers.auth import get_current_user, get_optional_current_user, require_role, require_seller_role, require_active_subscription
 from sqlalchemy.orm import Session
 from fastapi.templating import Jinja2Templates
 
@@ -181,26 +181,15 @@ def agent_dashboard(
     db: Session = Depends(get_db),
     user=Depends(require_role("AGENT")),
 ):
-    from app.services.deal_service import DealService
-
-    agent_deals = DealService.get_for_agent(db, user.id)
-
-    status_counts = {
-        "PENDING_BUYER_APPROVAL": 0,
-        "CONFIRMED": 0,
-        "DELIVERED": 0,
-        "COMPLETED": 0,
-        "CANCELLED": 0,
-    }
-
-    for deal in agent_deals:
-        status_value = (
-            deal.status.value
-            if hasattr(deal.status, "value")
-            else str(deal.status)
+    pending_offers_count = (
+        db.query(Offer)
+        .filter(
+            Offer.merchant_id == user.id,
+            Offer.status == "SUBMITTED",
         )
-        if status_value in status_counts:
-            status_counts[status_value] += 1
+        .count()
+    )
+
 
     context = template_context(request)
     context.update(
@@ -208,15 +197,13 @@ def agent_dashboard(
             "title": context["t"]("auth.role_agent"),
             "current_user": user,
             "role": "AGENT",
-            "agent_deals": agent_deals,
-            "agent_deal_count": len(agent_deals),
-            "agent_status_counts": status_counts,
+            "pending_offers_count": pending_offers_count,
         }
     )
 
     return templates.TemplateResponse(
         request=request,
-        name="agent/dashboard.html",
+        name="dashboard/dashboard.html",
         context=context,
     )
 
@@ -224,7 +211,7 @@ def agent_dashboard(
 @router.get("/merchant/listings/new")
 def merchant_listing_create_page(
     request: Request,
-    user=Depends(require_role("MERCHANT")),
+    user=Depends(require_seller_role("MERCHANT", "AGENT")),
     _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     context = template_context(request)
@@ -232,7 +219,7 @@ def merchant_listing_create_page(
     context.update({
         "title": "إضافة سلعة",
         "current_user": user,
-        "role": "MERCHANT",
+        "role": user.role.value,
     })
     return templates.TemplateResponse(
         request=request,
@@ -266,7 +253,7 @@ def marketplace_listing_detail(
 def start_listing_negotiation(
     listing_id: int,
     db: Session = Depends(get_db),
-    user=Depends(require_role("BUYER")),
+    user=Depends(require_role("BUYER", "AGENT")),
     _subscription_user=Depends(require_active_subscription),
 ):
     listing = ListingService.get_by_id(db, listing_id)

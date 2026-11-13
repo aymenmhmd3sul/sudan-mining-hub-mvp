@@ -19,7 +19,6 @@ class DealAccessService:
         return user.id in {
             deal.buyer_id,
             deal.merchant_id,
-            deal.agent_id,
         }
 
     @staticmethod
@@ -33,7 +32,6 @@ class DealAccessService:
         return user.id in {
             deal.buyer_id,
             deal.merchant_id,
-            deal.agent_id,
         }
 
     @staticmethod
