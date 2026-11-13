@@ -652,7 +652,7 @@ def negotiation_page(
 def finalize_negotiation_offer(
     offer_id: int,
     db: Session = Depends(get_db),
-    user=Depends(require_role("MERCHANT")),
+    user=Depends(require_seller_role("MERCHANT", "AGENT")),
     _subscription_user=Depends(require_active_subscription),
 ):
     try:
@@ -709,7 +709,7 @@ def finalize_negotiation_offer(
 def accept_negotiation_offer(
     offer_id: int,
     db: Session = Depends(get_db),
-    user=Depends(require_role("BUYER")),
+    user=Depends(require_role("BUYER", "AGENT")),
     _subscription_user=Depends(require_active_subscription),
 ):
     try:
@@ -746,7 +746,7 @@ def send_negotiation_message(
     room_id: int,
     body: str,
     db: Session = Depends(get_db),
-    user=Depends(require_role("BUYER", "MERCHANT")),
+    user=Depends(require_role("BUYER", "MERCHANT", "AGENT")),
     _subscription_user=Depends(require_active_subscription),
 ):
     room = NegotiationService.get_room(db, room_id)

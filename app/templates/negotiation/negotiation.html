@@ -77,7 +77,10 @@
             </div>
             {% endif %}
 
-            {% if current_user.role.value == "MERCHANT"
+            {% if (current_user.role.value == "MERCHANT"
+                    or (current_user.role.value == "AGENT"
+                        and listing
+                        and listing.owner_id == current_user.id))
                   and room
                   and room.status.value == "OPEN"
                   and room.merchant_approved_at is none %}
@@ -154,7 +157,9 @@
             </div>
             </div>
 
-            {% if current_user.role.value == "BUYER"
+            {% if (current_user.role.value == "BUYER"
+                    or (current_user.role.value == "AGENT"
+                        and request_obj.buyer_id == current_user.id))
                   and room
                   and room.status.value == "OPEN"
                   and room.merchant_approved_at is not none
@@ -340,7 +345,10 @@
 
                     {% endif %}
 
-                    {% if current_user.role.value == "MERCHANT" and offer.status.value == "SUBMITTED" %}
+                    {% if (current_user.role.value == "MERCHANT"
+                      or (current_user.role.value == "AGENT"
+                          and offer.merchant_id == current_user.id))
+                      and offer.status.value == "SUBMITTED" %}
                     <button
                         type="button"
                         class="marketplace-primary-button finalize-offer-btn"
@@ -350,7 +358,10 @@
                     </button>
                     {% endif %}
 
-                    {% if current_user.role.value == "BUYER" and offer.status.value == "FINAL" %}
+                    {% if (current_user.role.value == "BUYER"
+                      or (current_user.role.value == "AGENT"
+                          and request_obj.buyer_id == current_user.id))
+                      and offer.status.value == "FINAL" %}
                     <div class="marketplace-listing-detail-item">
                         <strong>{{ t("negotiation.merchant_final_offer") }}</strong>
                         <p>
@@ -465,7 +476,9 @@
                 {% endif %}
 
                 {% if deal.status.value == "COMPLETED"
-                      and current_user.role.value == "MERCHANT"
+                      and (current_user.role.value == "MERCHANT"
+                           or (current_user.role.value == "AGENT"
+                               and deal.merchant_id == current_user.id))
                       and commission is not none
                       and commission.status.value == "DUE" %}
                 <p>

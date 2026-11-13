@@ -74,3 +74,64 @@ def test_merchant_subscription_behavior_is_unchanged():
         assert require_agent_active_subscription(db, user) is user
 
     subscription_check.assert_not_called()
+
+from fastapi.routing import APIRoute
+from app.routers import ui
+
+
+def _route_role_guard(path):
+    route = next(
+        (
+            item for item in ui.router.routes
+            if isinstance(item, APIRoute) and item.path == path
+        ),
+        None,
+    )
+    assert route is not None, f"Route not found: {path}"
+
+    for dependency in route.dependant.dependencies:
+        guard = dependency.call
+        if getattr(guard, "__name__", "") not in {
+            "role_guard", "seller_guard"
+        }:
+            continue
+
+        allowed_roles = next(
+            (
+                cell.cell_contents
+                for cell in (guard.__closure__ or ())
+                if isinstance(cell.cell_contents, tuple)
+                and all(isinstance(role, str) for role in cell.cell_contents)
+            ),
+            None,
+        )
+        if allowed_roles is not None:
+            return guard.__name__, allowed_roles
+
+    raise AssertionError(f"Role guard not found for {path}")
+
+
+@pytest.mark.parametrize(
+    ("path", "expected_guard", "expected_roles"),
+    [
+        (
+            "/api/v1/negotiation/offers/{offer_id}/finalize",
+            "seller_guard",
+            ("MERCHANT", "AGENT"),
+        ),
+        (
+            "/api/v1/negotiation/offers/{offer_id}/accept",
+            "role_guard",
+            ("BUYER", "AGENT"),
+        ),
+        (
+            "/api/v1/negotiation/{room_id}/messages",
+            "role_guard",
+            ("BUYER", "MERCHANT", "AGENT"),
+        ),
+    ],
+)
+def test_agent_negotiation_route_role_contracts(
+    path, expected_guard, expected_roles
+):
+    assert _route_role_guard(path) == (expected_guard, expected_roles)
