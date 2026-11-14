@@ -48,7 +48,8 @@ function response(status, body = {}) {
 function createHarness({
     authStatus = 200,
     keyStatus = 200,
-    subscriptionStatus = 200
+    subscriptionStatus = 200,
+    notificationsStatus = 200
 } = {}) {
     const ids = [
         "smh-notifications",
@@ -74,6 +75,7 @@ function createHarness({
         pushUnavailable: "Could not enable notifications"
     };
 
+    elements["smh-notifications"].hidden = true;
     elements["smh-notifications-panel"].hidden = true;
     elements["smh-notification-toast"].hidden = true;
 
@@ -133,7 +135,7 @@ function createHarness({
         }
 
         if (url === "/api/notifications?limit=20") {
-            return response(200, { unread_count: 0, items: [] });
+            return response(notificationsStatus, { unread_count: 0, items: [] });
         }
 
         if (url === "/api/notifications/push-public-key") {
@@ -193,6 +195,9 @@ function createHarness({
         elements,
         events,
         fetchCalls,
+        async clickToggle() {
+            await elements["smh-notifications-toggle"].listeners.click();
+        },
         async clickEnable() {
             await elements["smh-notifications-enable-push"].listeners.click();
         },
@@ -203,8 +208,14 @@ function createHarness({
     };
 }
 
-test("visitor must sign in before permission or service worker access", async () => {
-    const app = createHarness({ authStatus: 401 });
+test("visitor can open notifications but must sign in before enabling push", async () => {
+    const app = createHarness({ authStatus: 401, notificationsStatus: 401 });
+    assert.equal(app.elements["smh-notifications"].hidden, false);
+    await app.clickToggle();
+    assert.equal(app.elements["smh-notifications"].hidden, false);
+    assert.equal(app.elements["smh-notifications-panel"].hidden, false);
+    assert.equal(app.elements["smh-notifications-enable-push"].hidden, false);
+    assert.ok(app.fetchCalls.some(call => call.url === "/api/notifications?limit=20"));
     await app.clickEnable();
 
     assert.equal(
