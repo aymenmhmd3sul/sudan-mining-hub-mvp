@@ -16,16 +16,20 @@
             "-apple-system",
             "BlinkMacSystemFont",
             "\"Segoe UI\"",
+            "\"Noto Sans Arabic\"",
+            "\"Noto Sans\"",
+            "Tahoma",
+            "Arial",
             "sans-serif"
         ].join(", "),
         serif: "Georgia, \"Times New Roman\", serif",
-        readable: "\"Segoe UI\", Tahoma, Arial, sans-serif"
+        readable: "\"Noto Sans Arabic\", \"Noto Sans\", \"Segoe UI\", Tahoma, Arial, sans-serif"
     };
 
     const FONT_SIZES = {
-        small: "15px",
+        small: "16px",
         normal: "16px",
-        large: "18px"
+        large: "16px"
     };
 
     function normalizeSettings(value) {
