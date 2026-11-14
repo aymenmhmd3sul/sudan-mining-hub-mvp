@@ -1,0 +1,67 @@
+name: Web Push Authentication Fix
+
+on:
+  push:
+    branches:
+      - fix/notifications-auth-preflight-20261114
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "app/static/js/notifications.js"
+      - "app/templates/base/base.html"
+      - "app/translations/ar.json"
+      - "app/translations/en.json"
+      - "tests/test_web_push_service.py"
+      - "tests/test_push_subscription_registration.py"
+      - "tests/test_push_endpoint.py"
+      - "tests/test_notifications_api_isolation.py"
+      - ".github/workflows/web-push-auth-fix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web-push-auth:
+    name: Validate Web Push authentication fix
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://test:test@127.0.0.1:1/smh_test
+      SECRET_KEY: isolated-ci-only-not-a-production-secret
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install application and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pytest httpx
+
+      - name: Validate JavaScript and translations
+        run: |
+          node --check app/static/js/notifications.js
+          python -m json.tool app/translations/ar.json > /dev/null
+          python -m json.tool app/translations/en.json > /dev/null
+
+      - name: Run focused Web Push backend tests
+        run: |
+          python -m pytest -q \
+            tests/test_web_push_service.py \
+            tests/test_push_subscription_registration.py \
+            tests/test_push_endpoint.py \
+            tests/test_notifications_api_isolation.py
