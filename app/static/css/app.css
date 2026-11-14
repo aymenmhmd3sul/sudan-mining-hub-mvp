@@ -93,7 +93,7 @@ body {
     color: var(--text-primary);
 
     font-family: var(--font-family);
-    font-size: var(--font-size-base);
+    font-size: calc(var(--font-size-base) * var(--font-scale));
     font-weight: var(--font-weight-base);
     line-height: var(--line-height-base);
 }
@@ -1789,6 +1789,33 @@ h1 {
 
 .login-form .password-toggle:hover {
     background: var(--gold-soft);
+}
+
+.auth-help {
+    margin: 12px 2px 4px;
+    line-height: 1.7;
+}
+
+.auth-help a {
+    color: var(--gold-light);
+    font-size: calc(0.95rem * var(--font-scale));
+    font-weight: 750;
+    text-decoration: underline;
+    text-decoration-color: var(--gold-dim);
+    text-underline-offset: 0.22em;
+    transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.auth-help a:hover,
+.auth-help a:focus-visible {
+    color: var(--gold-light);
+    text-decoration-color: currentColor;
+}
+
+.auth-help a:focus-visible {
+    outline: 2px solid var(--gold-light);
+    outline-offset: 4px;
+    border-radius: 3px;
 }
 
 .login-form .login-status {
