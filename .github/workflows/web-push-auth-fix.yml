@@ -16,6 +16,7 @@ on:
       - "tests/test_push_subscription_registration.py"
       - "tests/test_push_endpoint.py"
       - "tests/test_notifications_api_isolation.py"
+      - "tests/test_notifications_push_auth_ui.cjs"
       - ".github/workflows/web-push-auth-fix.yml"
   workflow_dispatch:
 
@@ -57,6 +58,9 @@ jobs:
           node --check app/static/js/notifications.js
           python -m json.tool app/translations/ar.json > /dev/null
           python -m json.tool app/translations/en.json > /dev/null
+
+      - name: Run focused Web Push authentication UI tests
+        run: node --test tests/test_notifications_push_auth_ui.cjs
 
       - name: Run focused Web Push backend tests
         run: |
