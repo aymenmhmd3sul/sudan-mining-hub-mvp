@@ -31,7 +31,8 @@
         pushBlocked: root.dataset.pushBlocked || "Notifications are blocked in browser settings",
         pushBlockedHelp: root.dataset.pushBlockedHelp || "Open this site's browser permissions and allow notifications, then reload the page.",
         pushUnavailable: root.dataset.pushUnavailable || "Could not enable notifications; check server configuration",
-        pushUnsupported: root.dataset.pushUnsupported || "This browser does not support notifications"
+        pushUnsupported: root.dataset.pushUnsupported || "This browser does not support notifications",
+        pushLoginRequired: root.dataset.pushLoginRequired || "Please sign in again before enabling notifications."
     };
 
     let initialized = false;
@@ -235,20 +236,38 @@
                 { scope: "/" }
             );
 
-            const keyResponse = await requestJson(
-                "/api/notifications/push-public-key"
+            const keyResponse = await fetch(
+                "/api/notifications/push-public-key",
+                {
+                    credentials: "same-origin",
+                    cache: "no-store",
+                    headers: { Accept: "application/json" }
+                }
             );
 
+            if (keyResponse.status === 401 || keyResponse.status === 403) {
+                const error = new Error("Authentication required");
+                error.code = "AUTH_REQUIRED";
+                throw error;
+            }
+
+            if (!keyResponse.ok) {
+                throw new Error(
+                    "Push public key request failed: " + keyResponse.status
+                );
+            }
+
+            const keyData = await keyResponse.json();
+
             if (
-                !keyResponse ||
-                !keyResponse.enabled ||
-                !keyResponse.public_key ||
+                !keyData.enabled ||
+                !keyData.public_key ||
                 Notification.permission !== "granted"
             ) {
                 return false;
             }
 
-            let encodedKey = keyResponse.public_key
+            let encodedKey = keyData.public_key
                 .replace(/-/g, "+")
                 .replace(/_/g, "/");
             encodedKey += "=".repeat((4 - encodedKey.length % 4) % 4);
@@ -284,6 +303,12 @@
                 }
             );
 
+            if (response.status === 401 || response.status === 403) {
+                const error = new Error("Authentication required");
+                error.code = "AUTH_REQUIRED";
+                throw error;
+            }
+
             if (!response.ok) {
                 throw new Error(
                     "Push subscription registration failed: " + response.status
@@ -292,6 +317,10 @@
 
             return true;
         } catch (error) {
+            if (error && error.code === "AUTH_REQUIRED") {
+                throw error;
+            }
+
             console.error(
                 "Could not register web push subscription",
                 error
@@ -304,6 +333,24 @@
         pushEnable.disabled = true;
 
         try {
+            const authResponse = await fetch("/auth/me", {
+                credentials: "same-origin",
+                cache: "no-store",
+                headers: { Accept: "application/json" }
+            });
+
+            if (authResponse.status === 401 || authResponse.status === 403) {
+                showToast(labels.pushLoginRequired, "");
+                pushEnable.disabled = false;
+                return;
+            }
+
+            if (!authResponse.ok) {
+                throw new Error(
+                    "Authentication check failed: " + authResponse.status
+                );
+            }
+
             if (!("Notification" in window)) {
                 showToast(labels.pushUnsupported, "");
                 pushEnable.disabled = false;
@@ -345,7 +392,13 @@
             showToast(labels.pushEnabled, "");
         } catch (error) {
             console.error("Could not enable notifications", error);
-            showToast(labels.pushUnavailable, "");
+
+            if (error && error.code === "AUTH_REQUIRED") {
+                showToast(labels.pushLoginRequired, "");
+            } else {
+                showToast(labels.pushUnavailable, "");
+            }
+
             pushEnable.disabled = false;
         }
     });
