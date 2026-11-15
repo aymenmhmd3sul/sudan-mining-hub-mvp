@@ -206,7 +206,7 @@
     }
 
     .gateway-login-cinematic .login-form .auth-help a {
-        color: #f2d083;
+        color: var(--gold-light);
         font-weight: 700;
         text-decoration: underline;
         text-decoration-color: rgba(242,208,131,.65);
@@ -237,4 +237,9 @@
         opacity: 0 !important;
         visibility: hidden !important;
     }
+}
+
+/* Keep login help link readable on light appearance at every viewport. */
+html[data-theme="light"] .gateway-login-cinematic .login-form .auth-help a {
+    color: #704900;
 }
