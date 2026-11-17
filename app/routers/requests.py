@@ -16,7 +16,7 @@ router = APIRouter(
 def list_my_requests(
     limit: int = 100,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("BUYER")),
+    user: UserModel = Depends(require_role("BUYER", "MERCHANT")),
 ):
     requests = RequestService.list_for_buyer(
         db,

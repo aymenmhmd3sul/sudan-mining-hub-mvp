@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 import time
 from collections import defaultdict, deque
+from threading import Lock
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie, Form, Request
 from sqlalchemy.orm import Session
@@ -142,6 +143,66 @@ LOGIN_RATE_LIMIT_BLOCK_SECONDS = 300
 _login_attempts = defaultdict(deque)
 _login_blocked_until = {}
 
+# Email verification throttling: source-based, in-process MVP protection.
+EMAIL_VERIFY_RATE_WINDOW_SECONDS = 900
+EMAIL_VERIFY_RATE_MAX_ATTEMPTS = 30
+EMAIL_VERIFY_RATE_MAX_SOURCES = 10000
+EMAIL_VERIFY_RATE_CLEANUP_INTERVAL_SECONDS = 60
+
+_email_verification_attempts: dict[str, deque] = {}
+_email_verification_last_cleanup = 0.0
+_email_verification_rate_lock = Lock()
+
+
+def _check_email_verification_rate_limit(request: Request):
+    global _email_verification_last_cleanup
+
+    now = time.monotonic()
+    source = request.client.host if request.client else "unknown"
+
+    with _email_verification_rate_lock:
+        if (
+            now - _email_verification_last_cleanup
+            >= EMAIL_VERIFY_RATE_CLEANUP_INTERVAL_SECONDS
+        ):
+            cutoff = now - EMAIL_VERIFY_RATE_WINDOW_SECONDS
+            stale = [
+                key
+                for key, attempts in _email_verification_attempts.items()
+                if not attempts or attempts[-1] <= cutoff
+            ]
+            for key in stale:
+                del _email_verification_attempts[key]
+            _email_verification_last_cleanup = now
+
+        # Move an existing source to the newest position (LRU ordering).
+        attempts = _email_verification_attempts.pop(source, None)
+
+        if attempts is None:
+            if len(_email_verification_attempts) >= EMAIL_VERIFY_RATE_MAX_SOURCES:
+                # Evict the least recently used source instead of rejecting
+                # every new source when the bounded table is full.
+                oldest_source = next(iter(_email_verification_attempts))
+                del _email_verification_attempts[oldest_source]
+
+            attempts = deque()
+
+        _email_verification_attempts[source] = attempts
+
+        cutoff = now - EMAIL_VERIFY_RATE_WINDOW_SECONDS
+        while attempts and attempts[0] <= cutoff:
+            attempts.popleft()
+
+        if len(attempts) >= EMAIL_VERIFY_RATE_MAX_ATTEMPTS:
+            remaining = (
+                attempts[0]
+                + EMAIL_VERIFY_RATE_WINDOW_SECONDS
+                - now
+            )
+            return False, max(1, int(remaining) + 1)
+
+        attempts.append(now)
+        return True, 0
 
 def _login_rate_limit_key(request: Request, email: str) -> str:
     host = request.client.host if request.client else "unknown"
@@ -242,6 +303,7 @@ def login(
 
 @router.post("/verify-email")
 def verify_email(
+    request: Request,
     code: str = Form(...),
     db: Session = Depends(get_db),
 ):
@@ -251,6 +313,14 @@ def verify_email(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="رمز التحقق يجب أن يتكون من 6 أرقام",
+        )
+
+    allowed, retry_after = _check_email_verification_rate_limit(request)
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many email verification attempts. Please try again later.",
+            headers={"Retry-After": str(retry_after)},
         )
 
     code_hash = hash_verification_token(normalized_code)
