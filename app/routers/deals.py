@@ -103,7 +103,7 @@ def get_deal_contacts(
 def approve_deal(
     deal_id: int,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("BUYER")),
+    user: UserModel = Depends(require_role("BUYER", "MERCHANT")),
         _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
@@ -157,7 +157,7 @@ def deliver_deal(
 def receive_deal(
     deal_id: int,
     db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("BUYER")),
+    user: UserModel = Depends(require_role("BUYER", "MERCHANT")),
         _subscription_user: UserModel = Depends(require_active_subscription),
 ):
     deal = db.query(Deal).filter(Deal.id == deal_id).first()
