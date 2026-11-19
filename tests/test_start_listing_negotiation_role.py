@@ -135,8 +135,8 @@ def test_buyer_or_merchant_can_start_eligible_negotiation_without_database(role)
     assert db.commits == 1
 
 
-@pytest.mark.parametrize("role", [UserRole.AGENT, UserRole.ADMIN])
-def test_agent_cannot_start_negotiation_or_create_records(role):
+@pytest.mark.parametrize("role", [UserRole.ADMIN])
+def test_admin_cannot_start_negotiation_or_create_records(role):
     client, db = _client_for_authenticated_user(SimpleNamespace(id=13, role=role))
 
     with client:

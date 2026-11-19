@@ -7,18 +7,18 @@
 - Dual Language & RTL Support: Built into core schemas and UI layout from Day 1.
 
 ## 2. Role Dictionary & Naming Standards
-- Roles: `ADMIN`, `MERCHANT`, `BUYER`, `AGENT`, `GUEST`
+- Roles: `ADMIN`, `MERCHANT`, `BUYER`, `GUEST`
 - Enums: UPPERCASE (`BUYER`, `MERCHANT`)
 - DB Fields & JSON Keys: `snake_case` (`user_id`, `created_at`)
 - Classes & Models: `PascalCase` (`UserModel`, `ProductCard`)
 
 ## 3. Account Approval & Security
-- `MERCHANT` and `AGENT` accounts default to `is_approved = False`.
+- `MERCHANT` accounts default to `is_approved = False`.
 - Limited view access until manual review and activation by `ADMIN`.
 
 ## 4. Financial & Transaction Workflow
 - Subscription & Commission validation requires proof check before status update.
-- Direct contact details are masked; communications flow via order placement or verified Agents.
+- Direct contact details are masked; communications flow through the platform's order and direct negotiation workflows.
 
 ## 5. Phase-Based Backup Strategy
 - Mandatory Git Tagging (`v0.1-setup`, `v0.2-auth`, etc.) upon completing each tested phase.

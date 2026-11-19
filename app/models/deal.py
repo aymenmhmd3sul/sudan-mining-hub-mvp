@@ -73,13 +73,6 @@ class Deal(Base):
         index=True,
     )
 
-    agent_id = Column(
-        Integer,
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-        index=True,
-    )
-
     final_amount = Column(
         Numeric(18, 2),
         nullable=False,
@@ -176,11 +169,6 @@ class Deal(Base):
     merchant = relationship(
         "UserModel",
         foreign_keys=[merchant_id],
-    )
-
-    agent = relationship(
-        "UserModel",
-        foreign_keys=[agent_id],
     )
 
     items = relationship(

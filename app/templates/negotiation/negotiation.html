@@ -419,21 +419,6 @@
                     {{ t("negotiation.deliver_to_buyer") }}
                 </button>
 
-                {% elif deal.status.value == "CONFIRMED"
-                      and current_user.role.value == "AGENT"
-                      and deal.agent_id == current_user.id %}
-                <p>
-                    {{ t("negotiation.deal_confirmed_execute_delivery") }}
-                </p>
-
-                <button
-                    type="button"
-                    class="marketplace-primary-button deliver-deal-btn"
-                    data-deal-id="{{ deal.id }}"
-                >
-                    {{ t("negotiation.deliver_to_buyer") }}
-                </button>
-
                 {% elif deal.status.value == "CONFIRMED" %}
                 <p>
                     {{ t("negotiation.deal_confirmed_awaiting_delivery") }}

@@ -69,9 +69,9 @@ def test_buyer_and_merchant_can_use_buyer_deal_actions(
     service.assert_called_once_with(db, db.query.return_value.filter.return_value.first(), user.id)
 
 
-@pytest.mark.parametrize("role", [UserRole.AGENT, UserRole.ADMIN])
+@pytest.mark.parametrize("role", [UserRole.ADMIN])
 @pytest.mark.parametrize("action", ["approve", "receive"])
-def test_agent_and_admin_cannot_use_buyer_deal_actions(role, action):
+def test_admin_cannot_use_buyer_deal_actions(role, action):
     user = make_user(role)
     client, db = make_client(user)
 
