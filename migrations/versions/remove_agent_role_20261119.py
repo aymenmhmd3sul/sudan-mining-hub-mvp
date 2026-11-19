@@ -74,6 +74,38 @@ def upgrade() -> None:
             f"Unexpected public.userrole labels: {labels!r}"
         )
 
+    # Refuse to rebuild the enum while unexpected dependencies remain.
+    unexpected_dependencies = bind.execute(sa.text("""
+        SELECT array_agg(
+            pg_describe_object(d.classid, d.objid, d.objsubid)
+            ORDER BY d.classid, d.objid, d.objsubid
+        )
+        FROM pg_depend d
+        JOIN pg_type t
+          ON t.oid = d.refobjid
+          OR (t.typtype = 'e' AND t.typarray = d.refobjid)
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        JOIN pg_attribute role_attr
+          ON role_attr.attrelid = 'public.users'::regclass
+         AND role_attr.attname = 'role'
+         AND NOT role_attr.attisdropped
+        WHERE d.refclassid = 'pg_type'::regclass
+          AND n.nspname = 'public'
+          AND t.typname = 'userrole'
+          AND d.deptype <> 'i'
+          AND NOT (
+              d.classid = 'pg_class'::regclass
+              AND d.objid = 'public.users'::regclass
+              AND d.objsubid = role_attr.attnum
+          )
+    """)).scalar_one()
+
+    if unexpected_dependencies:
+        raise RuntimeError(
+            "Unexpected dependencies on public.userrole: "
+            f"{unexpected_dependencies!r}"
+        )
+
     # Verify the exact historical foreign key before dropping it.
     foreign_key_exists = bind.execute(sa.text("""
         SELECT EXISTS (
@@ -118,7 +150,7 @@ def upgrade() -> None:
               AND NOT i.indisunique
               AND i.indnatts = 1
               AND i.indnkeyatts = 1
-              AND i.indkey::smallint[] = ARRAY[a.attnum]::smallint[]
+              AND i.indkey[0] = a.attnum
         )
     """)).scalar_one()
 
