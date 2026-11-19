@@ -11,7 +11,6 @@ class UserRole(str, enum.Enum):
     ADMIN = "ADMIN"
     MERCHANT = "MERCHANT"
     BUYER = "BUYER"
-    AGENT = "AGENT"
 
 
 class UserModel(Base):

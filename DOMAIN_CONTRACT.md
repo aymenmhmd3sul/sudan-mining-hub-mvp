@@ -113,7 +113,6 @@ Values:
 - ADMIN
 - MERCHANT
 - BUYER
-- AGENT
 
 Lifecycle:
 Managed by the Identity domain.
@@ -1039,7 +1038,7 @@ The database must not infer authorization from offer ownership alone.
 
 Access is determined by explicit NegotiationParticipant records.
 
-Being a user, buyer, merchant, or agent does not automatically grant
+Being a user, buyer, or merchant does not automatically grant
 access to every negotiation.
 
 ---

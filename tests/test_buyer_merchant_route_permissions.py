@@ -186,7 +186,7 @@ def test_buyer_and_merchant_can_accept_offer(role, monkeypatch):
 
 @pytest.mark.parametrize(
     "role",
-    [UserRole.AGENT, UserRole.ADMIN],
+    [UserRole.ADMIN],
 )
 @pytest.mark.parametrize(
     "method,path,json_payload",
