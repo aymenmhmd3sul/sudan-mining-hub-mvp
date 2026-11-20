@@ -97,7 +97,6 @@
     "role": "Account type",
     "role_buyer": "Buyer",
     "role_merchant": "Merchant",
-    "role_agent": "Agent",
     "register": "Create account",
     "have_account": "Already have an account? Sign in",
     "registering": "Creating account...",

@@ -10,7 +10,6 @@ from app.models.user import UserRole
 class PublicRegistrationRole(str, Enum):
     MERCHANT = "MERCHANT"
     BUYER = "BUYER"
-    AGENT = "AGENT"
 
 
 class UserCreate(BaseModel):

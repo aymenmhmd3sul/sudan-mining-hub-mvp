@@ -6,18 +6,10 @@ from app.models.deal import Deal
 from app.services.deal_service import DealService
 from app.services.deal_access_service import DealAccessService
 from app.services.commission_service import CommissionService
-from app.models.user import UserModel, UserRole
+from app.models.user import UserModel
 from app.routers.auth import get_current_user, require_role, require_active_subscription
 
 router = APIRouter(prefix="/deals", tags=["Deals"])
-
-
-@router.get("/agent/my")
-def get_agent_deals(
-    db: Session = Depends(get_db),
-    user: UserModel = Depends(require_role("AGENT")),
-):
-    return DealService.get_for_agent(db, user.id)
 
 
 @router.get("/{deal_id}")
@@ -94,7 +86,6 @@ def get_deal_contacts(
         "deal_id": deal.id,
         "buyer": serialize_user(deal.buyer),
         "merchant": serialize_user(deal.merchant),
-        "agent": serialize_user(deal.agent),
         "locations": locations,
     }
 
@@ -130,10 +121,10 @@ def deliver_deal(
     user: UserModel = Depends(get_current_user),
     _subscription_user: UserModel = Depends(require_active_subscription),
 ):
-    if user.role not in (UserRole.MERCHANT, UserRole.AGENT):
+    if user.role != "MERCHANT":
         raise HTTPException(
             status_code=403,
-            detail="Only the merchant or assigned agent can mark the deal as delivered",
+            detail="Only the merchant can mark the deal as delivered",
         )
 
     deal = db.query(Deal).filter(Deal.id == deal_id).first()

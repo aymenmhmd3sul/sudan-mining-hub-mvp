@@ -1,7 +1,7 @@
 # PROJECT CONTEXT: Sudan Mining Hub (منصة التعدين السودانية)
 
 ## 1. System Overview
-A modular, secure digital marketplace connecting Buyers, Merchants, Agents, Admins, and Guests in Sudan's mining sector.
+A modular, secure digital marketplace connecting Buyers, Merchants, Admins, and Guests in Sudan's mining sector.
 
 ## 2. Infrastructure & Stack
 - Backend: FastAPI (Python 3) - Single Source of Truth
@@ -13,7 +13,6 @@ A modular, secure digital marketplace connecting Buyers, Merchants, Agents, Admi
 - GUEST: Browse listings, view dynamic map & market statistics.
 - BUYER: Place purchase orders, track order status.
 - MERCHANT: Manage inventory/assets, request featured ad slots (Requires Admin Approval).
-- AGENT: Verify physical assets, mediate buyer-merchant deals (Requires Admin Approval).
 - ADMIN: User account approvals, ad space management, commission verification.
 
 ## 4. Architectural Rules
