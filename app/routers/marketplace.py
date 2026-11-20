@@ -1,5 +1,5 @@
-from pathlib import Path
 import uuid
+from starlette.concurrency import run_in_threadpool
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
@@ -11,6 +11,11 @@ from app.models.user import UserModel
 from app.routers.auth import require_role, require_active_subscription
 from app.schemas.listing import ListingCreate, ListingResponse
 from app.services.listing_service import ListingService
+from app.services.object_storage import (
+    delete_stored_image,
+    resolve_media_url,
+    store_listing_image,
+)
 
 
 router = APIRouter(
@@ -114,35 +119,68 @@ async def upload_listing_image(
             detail="Invalid image content",
         )
 
-    upload_dir = Path("app/static/uploads/listings")
-    upload_dir.mkdir(parents=True, exist_ok=True)
-
     filename = f"{listing_id}-{uuid.uuid4().hex}{suffix}"
-    target = upload_dir / filename
-    target.write_bytes(data)
 
-    next_order = (
-        db.query(ListingMedia)
-        .filter(ListingMedia.listing_id == listing_id)
-        .count()
-    )
+    try:
+        storage_ref = await run_in_threadpool(
+            store_listing_image,
+            listing_id,
+            filename,
+            data,
+            file.content_type,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Image storage is unavailable or misconfigured",
+        ) from exc
 
-    media = ListingMedia(
-        listing_id=listing_id,
-        media_type=MediaType.IMAGE,
-        url=f"/uploads/listings/{filename}",
-        sort_order=next_order,
-    )
+    try:
+        display_url = resolve_media_url(storage_ref)
+    except Exception as exc:
+        try:
+            await run_in_threadpool(delete_stored_image, storage_ref)
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=503,
+            detail="Image URL could not be generated",
+        ) from exc
 
-    db.add(media)
-    db.commit()
-    db.refresh(media)
+    try:
+        next_order = (
+            db.query(ListingMedia)
+            .filter(ListingMedia.listing_id == listing_id)
+            .count()
+        )
+
+        media = ListingMedia(
+            listing_id=listing_id,
+            media_type=MediaType.IMAGE,
+            url=storage_ref,
+            sort_order=next_order,
+        )
+
+        db.add(media)
+        db.commit()
+        db.refresh(media)
+
+    except Exception as exc:
+        db.rollback()
+        try:
+            await run_in_threadpool(delete_stored_image, storage_ref)
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=500,
+            detail="Could not save image record",
+        ) from exc
 
     return {
         "id": media.id,
         "listing_id": listing_id,
         "media_type": media.media_type,
-        "url": media.url,
+        "url": display_url,
         "sort_order": media.sort_order,
     }
 
