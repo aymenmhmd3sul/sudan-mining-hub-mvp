@@ -1,9 +1,12 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    BaseModel, ConfigDict, Field, field_validator, model_validator,
+)
 
 from app.models.listing import ListingType, QuantityMode
 from app.models.listing_media import MediaType
+from app.services.object_storage import resolve_media_url
 
 
 class ListingCreate(BaseModel):
@@ -31,6 +34,11 @@ class ListingMediaResponse(BaseModel):
     media_type: MediaType
     url: str
     sort_order: int
+
+    @field_validator("url")
+    @classmethod
+    def convert_storage_key_to_url(cls, value: str) -> str:
+        return resolve_media_url(value)
 
 
 class ListingResponse(BaseModel):

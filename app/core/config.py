@@ -17,6 +17,15 @@ class Settings(BaseSettings):
     SENDER_EMAIL: str = "notifications@sudanmininghub.com"
     SENDER_NAME: str = "Sudan Mining Hub"
 
+    # Listing image storage. Switch to "s3" only after Neon credentials
+    # and the branch-specific endpoint have been configured on the service.
+    LISTING_STORAGE_BACKEND: str = "local"
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
+    AWS_ENDPOINT_URL_S3: str | None = None
+    AWS_REGION: str | None = None
+    NEON_STORAGE_BUCKET: str | None = None
+
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = 24
     PASSWORD_RESET_EXPIRE_MINUTES: int = 15
 
