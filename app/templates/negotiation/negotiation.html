@@ -126,6 +126,7 @@
                         id="negotiationMessage"
                         name="body"
                         rows="4"
+                        maxlength="2000"
                         required
                     ></textarea>
 
@@ -832,11 +833,15 @@
             const response = await fetch(
                 "/api/v1/negotiation/" +
                 encodeURIComponent(roomId) +
-                "/messages?body=" +
-                encodeURIComponent(body),
+                "/messages",
                 {
                     method: "POST",
-                    credentials: "same-origin"
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ body: body })
                 }
             );
 
@@ -848,9 +853,10 @@
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(
-                    data.detail || "{{ t('negotiation.send_failed') }}"
-                );
+                const detail = typeof data.detail === "string"
+                    ? data.detail
+                    : "{{ t('negotiation.send_failed') }}";
+                throw new Error(detail);
             }
 
             window.location.reload();

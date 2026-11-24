@@ -66,7 +66,7 @@ def test_message_creates_notifications_for_other_participants(
 
     result = ui.send_negotiation_message(
         room_id=message_route["room_id"],
-        body="  Test message  ",
+        payload=ui.NegotiationMessagePayload(body="  Test message  "),
         db=message_route["db"],
         user=SimpleNamespace(id=message_route["sender_id"]),
         _subscription_user=None,
@@ -110,7 +110,7 @@ def test_notification_failure_does_not_fail_message_response(
 
     result = ui.send_negotiation_message(
         room_id=message_route["room_id"],
-        body="Test message",
+        payload=ui.NegotiationMessagePayload(body="Test message"),
         db=db,
         user=SimpleNamespace(id=message_route["sender_id"]),
         _subscription_user=None,
@@ -138,7 +138,7 @@ def test_message_sends_web_push_to_other_participants(
 
     result = ui.send_negotiation_message(
         room_id=message_route["room_id"],
-        body="Test message",
+        payload=ui.NegotiationMessagePayload(body="Test message"),
         db=message_route["db"],
         user=SimpleNamespace(id=message_route["sender_id"]),
         _subscription_user=None,
@@ -185,7 +185,7 @@ def test_web_push_failure_does_not_fail_saved_message(
 
     result = ui.send_negotiation_message(
         room_id=message_route["room_id"],
-        body="Test message",
+        payload=ui.NegotiationMessagePayload(body="Test message"),
         db=message_route["db"],
         user=SimpleNamespace(id=message_route["sender_id"]),
         _subscription_user=None,

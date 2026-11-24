@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Depends, HTTPException, Cookie
+from pydantic import BaseModel, Field
 from app.db.session import get_db
 from app.services.listing_service import ListingService
 from app.services.negotiation_service import NegotiationService
@@ -28,6 +29,10 @@ from fastapi.templating import Jinja2Templates
 from app.translations.templates import template_context
 
 router = APIRouter(tags=["UI"])
+
+
+class NegotiationMessagePayload(BaseModel):
+    body: str = Field(min_length=1, max_length=2000)
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -711,7 +716,7 @@ def accept_negotiation_offer(
 @router.post("/api/v1/negotiation/{room_id}/messages")
 def send_negotiation_message(
     room_id: int,
-    body: str,
+    payload: NegotiationMessagePayload,
     db: Session = Depends(get_db),
     user=Depends(require_role("BUYER", "MERCHANT")),
     _subscription_user=Depends(require_active_subscription),
@@ -733,7 +738,7 @@ def send_negotiation_message(
     if participant is None:
         raise HTTPException(status_code=403, detail="You are not a participant in this negotiation")
 
-    message_body = body.strip()
+    message_body = payload.body.strip()
 
     if not message_body:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
